@@ -1,0 +1,52 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "deps:update": "npx -y npm-check-updates -u && npm i",
+    "deps:audit": "npm audit --omit=dev || true",
+    "deps:audit:fix": "npm audit fix --omit=dev || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "6.0.0",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.5",
+    "dotenv": "17.2.3",
+    "express": "5.1.0",
+    "gridfs-stream": "1.1.1",
+    "helmet": "8.1.0",
+    "jsonwebtoken": "9.0.2",
+    "mongoose": "8.19.2",
+    "morgan": "1.10.1",
+    "passport": "0.7.0",
+    "passport-google-oauth20": "2.0.0",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.10",
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.5",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/morgan": "1.9.10",
+    "@types/multer": "2.0.0",
+    "@types/node": "24.9.1",
+    "nodemon": "3.1.10",
+    "ts-node": "10.9.2",
+    "ts-node-dev": "2.0.0",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.11",
+    "npm": ">=10.5"
+  },
+  "packageManager": "npm@11.6.2",
+  "overrides": {}
+}
