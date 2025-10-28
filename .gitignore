@@ -125,3 +125,6 @@ public/uploads/
 
 # Additional logs
 yarn-error.log*
+
+package-lock.json
+package-lock
