@@ -3,8 +3,8 @@ import mongoose from 'mongoose';
 import app from './app';
 import { env } from "./config/env";
 
-const PORT = parseInt(env.PORT || '5000', 10);
-const MONGO_URI = env.MONGO_URI || 'mongodb://127.0.0.1:27017/auto-entrepreneur-dashboard';
+const PORT = parseInt(env.PORT, 10);
+const MONGO_URI = env.MONGO_URI;
 
 let server: import('http').Server | undefined;
 
