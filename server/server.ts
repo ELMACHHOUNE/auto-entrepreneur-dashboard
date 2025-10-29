@@ -2,6 +2,7 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import app from './app';
 import { env } from "./config/env";
+import './config/passport';
 
 const PORT = parseInt(env.PORT, 10);
 const MONGO_URI = env.MONGO_URI;
