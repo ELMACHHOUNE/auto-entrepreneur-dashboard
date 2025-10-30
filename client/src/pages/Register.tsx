@@ -1,12 +1,13 @@
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { UserPlus } from "lucide-react";
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { UserPlus } from 'lucide-react';
 
 export default function Register() {
   const { register } = useAuth();
   const nav = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "", fullName: "" });
+  const [form, setForm] = useState({ email: '', password: '', fullName: '' });
   const [err, setErr] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent) => {
@@ -14,9 +15,9 @@ export default function Register() {
     setErr(null);
     try {
       await register(form);
-      nav("/dashboard", { replace: true });
+      nav('/dashboard', { replace: true });
     } catch (e: any) {
-      setErr(e?.response?.data?.error || "Registration failed");
+      setErr(e?.response?.data?.error || 'Registration failed');
     }
   };
 
@@ -28,21 +29,21 @@ export default function Register() {
           className="w-full border p-2 rounded"
           placeholder="Full name"
           value={form.fullName}
-          onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+          onChange={e => setForm({ ...form, fullName: e.target.value })}
         />
         <input
           className="w-full border p-2 rounded"
           placeholder="Email"
           type="email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={e => setForm({ ...form, email: e.target.value })}
         />
         <input
           className="w-full border p-2 rounded"
           placeholder="Password"
           type="password"
           value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          onChange={e => setForm({ ...form, password: e.target.value })}
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button

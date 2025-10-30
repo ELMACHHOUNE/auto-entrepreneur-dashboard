@@ -1,14 +1,15 @@
-import { FormEvent, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { LogIn, Mail } from "lucide-react";
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { LogIn, Mail } from 'lucide-react';
 
 export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
   const loc = useLocation() as any;
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);
 
   const onSubmit = async (e: FormEvent) => {
@@ -16,9 +17,9 @@ export default function Login() {
     setErr(null);
     try {
       await login(email, password);
-      nav(loc.state?.from?.pathname || "/dashboard", { replace: true });
+      nav(loc.state?.from?.pathname || '/dashboard', { replace: true });
     } catch (e: any) {
-      setErr(e?.response?.data?.error || "Login failed");
+      setErr(e?.response?.data?.error || 'Login failed');
     }
   };
 
@@ -33,14 +34,14 @@ export default function Login() {
           placeholder="Email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
         />
         <input
           className="w-full border p-2 rounded"
           placeholder="Password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <button
