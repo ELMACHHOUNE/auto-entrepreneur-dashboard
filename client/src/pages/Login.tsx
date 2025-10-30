@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { LogIn, Mail } from 'lucide-react';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
+type ApiError = { response?: { data?: { error?: string } } };
 
 export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
-  const loc = useLocation() as any;
+  const loc = useLocation() as Location & { state?: { from?: { pathname?: string } } };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -18,8 +21,9 @@ export default function Login() {
     try {
       await login(email, password);
       nav(loc.state?.from?.pathname || '/dashboard', { replace: true });
-    } catch (e: any) {
-      setErr(e?.response?.data?.error || 'Login failed');
+    } catch (e: unknown) {
+      const apiErr = e as ApiError;
+      setErr(apiErr.response?.data?.error || 'Login failed');
     }
   };
 
@@ -44,21 +48,19 @@ export default function Login() {
           onChange={e => setPassword(e.target.value)}
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
-        <button
-          className="w-full bg-blue-600 text-white p-2 rounded flex items-center justify-center gap-2"
-          type="submit"
-        >
-          <LogIn size={18} /> Login
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <InteractiveHoverButton className="w-full" type="submit">
+            Login
+          </InteractiveHoverButton>
+          <InteractiveHoverButton
+            className="w-full"
+            type="button"
+            onClick={() => (window.location.href = googleUrl)}
+          >
+            Continue with Google
+          </InteractiveHoverButton>
+        </div>
       </form>
-      <div className="mt-4 text-center">
-        <a
-          href={googleUrl}
-          className="inline-flex items-center gap-2 border px-3 py-2 rounded hover:bg-gray-50"
-        >
-          <Mail size={18} /> Continue with Google
-        </a>
-      </div>
     </div>
   );
 }

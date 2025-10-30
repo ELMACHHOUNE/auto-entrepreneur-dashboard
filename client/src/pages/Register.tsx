@@ -2,7 +2,9 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserPlus } from 'lucide-react';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
+
+type ApiError = { response?: { data?: { error?: string } } };
 
 export default function Register() {
   const { register } = useAuth();
@@ -16,8 +18,9 @@ export default function Register() {
     try {
       await register(form);
       nav('/dashboard', { replace: true });
-    } catch (e: any) {
-      setErr(e?.response?.data?.error || 'Registration failed');
+    } catch (e: unknown) {
+      const apiErr = e as ApiError;
+      setErr(apiErr.response?.data?.error || 'Registration failed');
     }
   };
 
@@ -46,12 +49,9 @@ export default function Register() {
           onChange={e => setForm({ ...form, password: e.target.value })}
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
-        <button
-          className="w-full bg-green-600 text-white p-2 rounded flex items-center justify-center gap-2"
-          type="submit"
-        >
-          <UserPlus size={18} /> Create account
-        </button>
+        <InteractiveHoverButton className="w-full" type="submit">
+          Create account
+        </InteractiveHoverButton>
       </form>
     </div>
   );
