@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 export default function App() {
   const { user } = useAuth();
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen  text-gray-900">
       <nav className="p-4 border-b bg-white flex gap-4">
         <Link to="/">Home</Link>
         <Link to="/dashboard">Dashboard</Link>
