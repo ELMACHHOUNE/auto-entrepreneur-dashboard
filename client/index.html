@@ -8,6 +8,15 @@
     <link rel="shortcut icon" href="/logo.png" type="image/x-icon" />
   </head>
   <body>
+    <script>
+      try {
+        const t = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || (!t && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -7,20 +7,13 @@ import Admin from '@/pages/Admin';
 import RequireAuth from '@/components/RequireAuth';
 import RequireRole from '@/components/RequireRole';
 import { useAuth } from '@/context/AuthContext';
+import Navbar from '@/components/layout/Navbar';
 
 export default function App() {
-  const { user } = useAuth();
+  useAuth();
   return (
-    <div className="min-h-screen  text-gray-900">
-      <nav className="p-4 border-b bg-white flex gap-4">
-        <Link to="/">Home</Link>
-        <Link to="/dashboard">Dashboard</Link>
-        {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
-        <div className="ml-auto flex gap-4">
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
-        </div>
-      </nav>
+    <div className="min-h-screen">
+      <Navbar />
       <main className="p-6">
         <Routes>
           <Route path="/" element={<Landing />} />

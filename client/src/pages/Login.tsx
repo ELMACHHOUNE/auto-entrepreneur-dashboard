@@ -49,14 +49,8 @@ export default function Login() {
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <InteractiveHoverButton className="w-full" type="submit">
-            Login
-          </InteractiveHoverButton>
-          <InteractiveHoverButton
-            className="w-full"
-            type="button"
-            onClick={() => (window.location.href = googleUrl)}
-          >
+          <InteractiveHoverButton type="submit">Login</InteractiveHoverButton>
+          <InteractiveHoverButton type="button" onClick={() => (window.location.href = googleUrl)}>
             Continue with Google
           </InteractiveHoverButton>
         </div>

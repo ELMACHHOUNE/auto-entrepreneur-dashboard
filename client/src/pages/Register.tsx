@@ -49,9 +49,7 @@ export default function Register() {
           onChange={e => setForm({ ...form, password: e.target.value })}
         />
         {err && <p className="text-red-600 text-sm">{err}</p>}
-        <InteractiveHoverButton className="w-full" type="submit">
-          Create account
-        </InteractiveHoverButton>
+        <InteractiveHoverButton type="submit">Create account</InteractiveHoverButton>
       </form>
     </div>
   );
