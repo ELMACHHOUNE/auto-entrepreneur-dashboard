@@ -1,12 +1,12 @@
-import { Routes, Route, Navigate, Link } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Admin from "./pages/Admin";
-import RequireAuth from "./components/RequireAuth";
-import RequireRole from "./components/RequireRole";
-import { useAuth } from "./context/AuthContext";
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import Landing from '@/pages/Landing';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Dashboard from '@/pages/Dashboard';
+import Admin from '@/pages/Admin';
+import RequireAuth from '@/components/RequireAuth';
+import RequireRole from '@/components/RequireRole';
+import { useAuth } from '@/context/AuthContext';
 
 export default function App() {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ export default function App() {
       <nav className="p-4 border-b bg-white flex gap-4">
         <Link to="/">Home</Link>
         <Link to="/dashboard">Dashboard</Link>
-        {user?.role === "admin" && <Link to="/admin">Admin</Link>}
+        {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
         <div className="ml-auto flex gap-4">
           <Link to="/login">Login</Link>
           <Link to="/register">Register</Link>
