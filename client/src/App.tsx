@@ -7,7 +7,7 @@ import Admin from '@/pages/Admin';
 import RequireAuth from '@/components/RequireAuth';
 import RequireRole from '@/components/RequireRole';
 import { useAuth } from '@/context/AuthContext';
-import Navbar from '@/components/layout/Navbar';
+import Navbar from '@/components/layout2/Navbar';
 
 export default function App() {
   useAuth();

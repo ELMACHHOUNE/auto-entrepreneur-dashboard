@@ -1,19 +1,481 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { AnimatedThemeToggler } from '@/registry/magicui/animated-theme-toggler';
+import {
+  Navbar as RNavbar,
+  NavBody,
+  MobileNav,
+  MobileNavHeader,
+  MobileNavMenu,
+  MobileNavToggle,
+} from '@/components/ui/resizable-navbar';
+import { Menu, MenuItem } from '@/components/ui/navbar-menu';
 
 export default function Navbar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+
   return (
-    <nav className="p-4 border-b border-border bg-background text-foreground flex items-center gap-4">
-      <Link to="/">Home</Link>
-      <Link to="/dashboard">Dashboard</Link>
-      {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
-      <div className="ml-auto flex items-center gap-4">
-        <AnimatedThemeToggler className="p-2 rounded hover:bg-accent" aria-label="Toggle theme" />
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-      </div>
-    </nav>
+    <RNavbar className="top-0">
+      <NavBody>
+        {/* Left: Logo */}
+        <button
+          onClick={() => nav('/')}
+          className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+          aria-label="Go to home"
+        >
+          <span className="text-foreground">AutoDash</span>
+        </button>
+
+        {/* Center: Old styled menu */}
+        <div className="flex-1 flex justify-center">
+          <Menu
+            setActive={setActive}
+            className="gap-6 rounded-full border border-border dark:border-white/20 dark:bg-black bg-white shadow-input px-6 py-3"
+          >
+            <MenuItem
+              setActive={(val: string) => setActive(val)}
+              active={active}
+              item="Home"
+              onClick={() => nav('/')}
+            />
+            <MenuItem
+              setActive={(val: string) => setActive(val)}
+              active={active}
+              item="Dashboard"
+              onClick={() => nav('/dashboard')}
+            />
+            {user?.role === 'admin' && (
+              <MenuItem
+                setActive={(val: string) => setActive(val)}
+                active={active}
+                item="Admin"
+                onClick={() => nav('/admin')}
+              />
+            )}
+          </Menu>
+        </div>
+
+        {/* Right: Theme toggle + Auth actions */}
+        <div className="flex items-center gap-4">
+          <AnimatedThemeToggler
+            className="p-1.5 rounded hover:bg-accent"
+            aria-label="Toggle theme"
+          />
+          {user ? (
+            <button
+              className="underline-offset-4 hover:underline"
+              onClick={async () => {
+                await logout();
+                nav('/', { replace: true });
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <button onClick={() => nav('/login')}>Login</button>
+              <button onClick={() => nav('/register')}>Register</button>
+            </>
+          )}
+        </div>
+      </NavBody>
+
+      {/* Mobile navbar */}
+      <MobileNav>
+        <MobileNavHeader>
+          <button
+            onClick={() => nav('/')}
+            className="relative z-20 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+            aria-label="Go to home"
+          >
+            <span className="text-foreground">AutoDash</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <AnimatedThemeToggler
+              className="p-1.5 rounded hover:bg-accent"
+              aria-label="Toggle theme"
+            />
+            <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen((v) => !v)} />
+          </div>
+        </MobileNavHeader>
+
+        <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+          <button className="px-2 py-1 text-left" onClick={() => { nav('/'); setMobileOpen(false); }}>
+            Home
+          </button>
+          <button className="px-2 py-1 text-left" onClick={() => { nav('/dashboard'); setMobileOpen(false); }}>
+            Dashboard
+          </button>
+          {user?.role === 'admin' && (
+            <button className="px-2 py-1 text-left" onClick={() => { nav('/admin'); setMobileOpen(false); }}>
+              Admin
+            </button>
+          )}
+          <div className="h-px w-full bg-border my-2" />
+          {user ? (
+            <button
+              className="px-2 py-1 text-left"
+              onClick={async () => {
+                await logout();
+                setMobileOpen(false);
+                nav('/', { replace: true });
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <button className="px-2 py-1 text-left" onClick={() => { nav('/login'); setMobileOpen(false); }}>
+                Login
+              </button>
+              <button className="px-2 py-1 text-left" onClick={() => { nav('/register'); setMobileOpen(false); }}>
+                Register
+              </button>
+            </div>
+          )}
+        </MobileNavMenu>
+      </MobileNav>
+    </RNavbar>
+  );
+}import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { AnimatedThemeToggler } from '@/registry/magicui/animated-theme-toggler';
+import {
+  Navbar as RNavbar,
+  NavBody,
+  MobileNav,
+  MobileNavHeader,
+  MobileNavMenu,
+  MobileNavToggle,
+} from '@/components/ui/resizable-navbar';
+import { Menu, MenuItem } from '@/components/ui/navbar-menu';
+
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+
+  return (
+    <RNavbar className="top-0">
+      <NavBody>
+        <button
+          onClick={() => nav('/')}
+          className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+          aria-label="Go to home"
+        >
+          <span className="text-foreground">AutoDash</span>
+        </button>
+
+        <div className="flex-1 flex justify-center">
+          <Menu
+            setActive={setActive}
+            className="gap-6 rounded-full border border-border dark:border-white/20 dark:bg-black bg-white shadow-input px-6 py-3"
+          >
+            <MenuItem
+              setActive={(val: string) => setActive(val)}
+              active={active}
+              item="Home"
+              onClick={() => nav('/')}
+            />
+            <MenuItem
+              setActive={(val: string) => setActive(val)}
+              active={active}
+              item="Dashboard"
+              onClick={() => nav('/dashboard')}
+            />
+            {user?.role === 'admin' && (
+              <MenuItem
+                setActive={(val: string) => setActive(val)}
+                active={active}
+                item="Admin"
+                onClick={() => nav('/admin')}
+              />
+            )}
+          </Menu>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <AnimatedThemeToggler
+            className="p-1.5 rounded hover:bg-accent"
+            aria-label="Toggle theme"
+          />
+          {user ? (
+            <button
+              className="underline-offset-4 hover:underline"
+              onClick={async () => {
+                await logout();
+                nav('/', { replace: true });
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <button onClick={() => nav('/login')}>Login</button>
+              <button onClick={() => nav('/register')}>Register</button>
+            </>
+          )}
+        </div>
+      </NavBody>
+
+      <MobileNav>
+        <MobileNavHeader>
+          <button
+            onClick={() => nav('/')}
+            className="relative z-20 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+            aria-label="Go to home"
+          >
+            <span className="text-foreground">AutoDash</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <AnimatedThemeToggler
+              className="p-1.5 rounded hover:bg-accent"
+              aria-label="Toggle theme"
+            />
+            <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen((v) => !v)} />
+          </div>
+        </MobileNavHeader>
+
+        <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+          <button className="px-2 py-1 text-left" onClick={() => { nav('/'); setMobileOpen(false); }}>
+            Home
+          </button>
+          <button className="px-2 py-1 text-left" onClick={() => { nav('/dashboard'); setMobileOpen(false); }}>
+            Dashboard
+          </button>
+          {user?.role === 'admin' && (
+            <button className="px-2 py-1 text-left" onClick={() => { nav('/admin'); setMobileOpen(false); }}>
+              Admin
+            </button>
+          )}
+          <div className="h-px w-full bg-border my-2" />
+          {user ? (
+            <button
+              className="px-2 py-1 text-left"
+              onClick={async () => {
+                await logout();
+                setMobileOpen(false);
+                nav('/', { replace: true });
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <button className="px-2 py-1 text-left" onClick={() => { nav('/login'); setMobileOpen(false); }}>
+                Login
+              </button>
+              <button className="px-2 py-1 text-left" onClick={() => { nav('/register'); setMobileOpen(false); }}>
+                Register
+              </button>
+            </div>
+          )}
+        </MobileNavMenu>
+      </MobileNav>
+    </RNavbar>
   );
 }
+/*
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { AnimatedThemeToggler } from '@/registry/magicui/animated-theme-toggler';
+import {
+  Navbar as RNavbar,
+  NavBody,
+  MobileNav,
+  MobileNavHeader,
+  MobileNavMenu,
+  MobileNavToggle,
+} from '@/components/ui/resizable-navbar';
+
+export default function Navbar() {
+  const { user, logout } = useAuth();
+  const nav = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <RNavbar className="top-0">
+      {/* Desktop navbar */}
+      <NavBody>
+        {/* Left: Logo */}
+        <button
+          onClick={() => nav('/')}
+          className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+  import { Menu, MenuItem } from '@/components/ui/navbar-menu';
+          aria-label="Go to home"
+        >
+          <span className="text-foreground">AutoDash</span>
+        </button>
+
+    const [active, setActive] = useState<string | null>(null);
+        {/* Center: Routes */}
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center gap-6 text-sm">
+            <button className="hover:opacity-90" onClick={() => nav('/')}>
+              import { useNavigate } from 'react-router-dom';
+              import { useState } from 'react';
+              import { useAuth } from '@/context/AuthContext';
+              import { AnimatedThemeToggler } from '@/registry/magicui/animated-theme-toggler';
+              import {
+                Navbar as RNavbar,
+                NavBody,
+                MobileNav,
+                MobileNavHeader,
+                MobileNavMenu,
+                MobileNavToggle,
+              } from '@/components/ui/resizable-navbar';
+              import { Menu, MenuItem } from '@/components/ui/navbar-menu';
+
+              export default function Navbar() {
+                const { user, logout } = useAuth();
+                const nav = useNavigate();
+                const [mobileOpen, setMobileOpen] = useState(false);
+                const [active, setActive] = useState<string | null>(null);
+
+                return (
+                  <RNavbar className="top-0">
+                    {/* Desktop navbar */}
+                    <NavBody>
+                      {/* Left: Logo */}
+                      <button
+                        onClick={() => nav('/')}
+                        className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+                        aria-label="Go to home"
+                      >
+                        <span className="text-foreground">AutoDash</span>
+                      </button>
+
+                      {/* Center: Routes */}
+                      <div className="flex-1 flex justify-center">
+                        <Menu
+                          setActive={setActive}
+                          className="gap-6 rounded-full border border-border dark:border-white/20 dark:bg-black bg-white shadow-input px-6 py-3"
+                        >
+                          <MenuItem
+                            setActive={(val: string) => setActive(val)}
+                            active={active}
+                            item="Home"
+                            onClick={() => nav('/')}
+                          />
+                          <MenuItem
+                            setActive={(val: string) => setActive(val)}
+                            active={active}
+                            item="Dashboard"
+                            onClick={() => nav('/dashboard')}
+                          />
+                          {user?.role === 'admin' && (
+                            <MenuItem
+                              setActive={(val: string) => setActive(val)}
+                              active={active}
+                              item="Admin"
+                              onClick={() => nav('/admin')}
+                            />
+                          )}
+                        </Menu>
+                      </div>
+
+                      {/* Right: Theme toggle + Auth actions */}
+                      <div className="flex items-center gap-4">
+                        <AnimatedThemeToggler
+                          className="p-1.5 rounded hover:bg-accent"
+                          aria-label="Toggle theme"
+                        />
+                        {user ? (
+                          <button
+                            className="underline-offset-4 hover:underline"
+                            onClick={async () => {
+                              await logout();
+                              nav('/', { replace: true });
+                            }}
+                          >
+                            Logout
+                          </button>
+                        ) : (
+                          <>
+                            <button onClick={() => nav('/login')}>Login</button>
+                            <button onClick={() => nav('/register')}>Register</button>
+                          </>
+                        )}
+                      </div>
+                    </NavBody>
+
+                    {/* Mobile navbar */}
+                    <MobileNav>
+                      <MobileNavHeader>
+                        <button
+                          onClick={() => nav('/')}
+                          className="relative z-20 flex items-center space-x-2 px-2 py-1 text-sm font-semibold"
+                          aria-label="Go to home"
+                        >
+                          <span className="text-foreground">AutoDash</span>
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                          <AnimatedThemeToggler
+                            className="p-1.5 rounded hover:bg-accent"
+                            aria-label="Toggle theme"
+                          />
+                          <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen((v) => !v)} />
+                        </div>
+                      </MobileNavHeader>
+
+                      <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+                        <button className="px-2 py-1 text-left" onClick={() => { nav('/'); setMobileOpen(false); }}>
+                          Home
+                        </button>
+                        <button className="px-2 py-1 text-left" onClick={() => { nav('/dashboard'); setMobileOpen(false); }}>
+                          Dashboard
+                        </button>
+                        {user?.role === 'admin' && (
+                          <button className="px-2 py-1 text-left" onClick={() => { nav('/admin'); setMobileOpen(false); }}>
+                            Admin
+                          </button>
+                        )}
+                        <div className="h-px w-full bg-border my-2" />
+                        {user ? (
+                          <button
+                            className="px-2 py-1 text-left"
+                            onClick={async () => {
+                              await logout();
+                              setMobileOpen(false);
+                              nav('/', { replace: true });
+                            }}
+                          >
+                            Logout
+                          </button>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            <button className="px-2 py-1 text-left" onClick={() => { nav('/login'); setMobileOpen(false); }}>
+                              Login
+                            </button>
+                            <button className="px-2 py-1 text-left" onClick={() => { nav('/register'); setMobileOpen(false); }}>
+                              Register
+                            </button>
+                          </div>
+                        )}
+                      </MobileNavMenu>
+                    </MobileNav>
+                  </RNavbar>
+                );
+              }
+                }}
+              >
+                Register
+              </button>
+            </div>
+          )}
+        </MobileNavMenu>
+      </MobileNav>
+    </RNavbar>
+  );
+}
+*/
