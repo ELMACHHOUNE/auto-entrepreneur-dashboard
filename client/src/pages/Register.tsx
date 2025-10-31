@@ -14,6 +14,8 @@ import {
   Briefcase,
   Chrome,
   UserPlus,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 type ApiError = { response?: { data?: { error?: string } } };
@@ -32,6 +34,7 @@ export default function Register() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null); // placeholder only, not uploaded
   const [err, setErr] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'));
@@ -147,12 +150,20 @@ export default function Register() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
                 <input
-                  className="w-full border p-2 pl-9 rounded"
+                  className="w-full border p-2 pl-9 pr-10 rounded"
                   placeholder="Password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                 />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword(s => !s)}
+                  className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
 
