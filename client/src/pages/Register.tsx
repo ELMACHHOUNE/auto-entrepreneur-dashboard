@@ -82,157 +82,159 @@ export default function Register() {
   };
 
   return (
-    <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8 overflow-auto">
-      <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="w-full max-w-sm p-0">
-        <div className="border-border border-b p-4 [.border-b]:pb-4">
-          <h3 className="text-lg font-semibold">Create account</h3>
-          <p className="text-sm text-muted-foreground">Fill in your details to get started</p>
-        </div>
-        <div className="p-4">
-          <form id="register-form" onSubmit={onSubmit} className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full  overflow-hidden flex items-center justify-center border">
-                {avatarFile ? (
-                  <img
-                    src={URL.createObjectURL(avatarFile)}
-                    alt="avatar preview"
-                    className="w-full h-full object-cover"
+    <AuthSplit rightClassName="flex h-full w-full items-center p-4 sm:p-6 md:p-8 overflow-auto">
+      <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="h-full w-full p-0">
+        <div className="flex h-full flex-col">
+          <div className="border-border border-b p-4 [.border-b]:pb-4">
+            <h3 className="text-lg font-semibold">Create account</h3>
+            <p className="text-sm text-muted-foreground">Fill in your details to get started</p>
+          </div>
+          <div className="flex-1 overflow-auto p-4">
+            <form id="register-form" onSubmit={onSubmit} className="space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full  overflow-hidden flex items-center justify-center border">
+                  {avatarFile ? (
+                    <img
+                      src={URL.createObjectURL(avatarFile)}
+                      alt="avatar preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs">Avatar</span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Profile picture (optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onAvatarChange}
+                    className="mt-1 block w-full text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold "
                   />
-                ) : (
-                  <span className="text-gray-400 text-xs">Avatar</span>
-                )}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Profile picture (optional)</label>
+
+              <div className="relative">
+                <UserIcon
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onAvatarChange}
-                  className="mt-1 block w-full text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold "
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="Full name"
+                  value={form.fullName}
+                  onChange={e => setForm({ ...form, fullName: e.target.value })}
                 />
               </div>
-            </div>
+              {errors.fullName && <p className="text-red-600 text-sm">{errors.fullName}</p>}
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="Email"
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                />
+              </div>
+              {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="Password"
+                  type="password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                />
+              </div>
+              {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
 
-            <div className="relative">
-              <UserIcon
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="Full name"
-                value={form.fullName}
-                onChange={e => setForm({ ...form, fullName: e.target.value })}
-              />
-            </div>
-            {errors.fullName && <p className="text-red-600 text-sm">{errors.fullName}</p>}
-            <div className="relative">
-              <Mail
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="Email"
-                type="email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
-            <div className="relative">
-              <Lock
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="Password"
-                type="password"
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-              />
-            </div>
-            {errors.password && <p className="text-red-600 text-sm">{errors.password}</p>}
+              <div className="relative">
+                <Phone
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="Phone"
+                  value={form.phone}
+                  onChange={e => setForm({ ...form, phone: e.target.value })}
+                />
+              </div>
+              {errors.phone && <p className="text-red-600 text-sm">{errors.phone}</p>}
 
-            <div className="relative">
-              <Phone
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="Phone"
-                value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            {errors.phone && <p className="text-red-600 text-sm">{errors.phone}</p>}
-
-            <div className="relative">
-              <IdCard
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="ICE (15 digits)"
-                value={form.ICE}
-                onChange={e => setForm({ ...form, ICE: e.target.value })}
-              />
-            </div>
-            {errors.ICE && <p className="text-red-600 text-sm">{errors.ICE}</p>}
-            <div className="relative">
-              <Briefcase
-                size={16}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <select
-                className="w-full border p-2 pl-9 rounded bg-background text-foreground"
-                value={form.service}
-                onChange={e => setForm({ ...form, service: e.target.value })}
-              >
-                <option value="">Select service</option>
-                <option value="consulting">Consulting</option>
-                <option value="design">Design</option>
-                <option value="development">Development</option>
-                <option value="marketing">Marketing</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            {errors.service && <p className="text-red-600 text-sm ">{errors.service}</p>}
-            {err && <p className="text-red-600 text-sm">{err}</p>}
-          </form>
-        </div>
-        <div className="border-border border-t p-4 [.border-t]:pt-4">
-          <div className="flex flex-col gap-3">
-            <InteractiveHoverButton
-              className="w-full"
-              form="register-form"
-              type="submit"
-              disabled={!isValid}
-            >
-              <span className="inline-flex items-center gap-2">
-                <UserPlus size={16} />
-                Create account
-              </span>
-            </InteractiveHoverButton>
-            <InteractiveHoverButton
-              type="button"
-              onClick={() => (window.location.href = googleUrl)}
-            >
-              <span className="inline-flex items-center gap-2">
-                <Chrome size={16} />
-                Continue with Google
-              </span>
-            </InteractiveHoverButton>
+              <div className="relative">
+                <IdCard
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="ICE (15 digits)"
+                  value={form.ICE}
+                  onChange={e => setForm({ ...form, ICE: e.target.value })}
+                />
+              </div>
+              {errors.ICE && <p className="text-red-600 text-sm">{errors.ICE}</p>}
+              <div className="relative">
+                <Briefcase
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <select
+                  className="w-full border p-2 pl-9 rounded bg-background text-foreground"
+                  value={form.service}
+                  onChange={e => setForm({ ...form, service: e.target.value })}
+                >
+                  <option value="">Select service</option>
+                  <option value="consulting">Consulting</option>
+                  <option value="design">Design</option>
+                  <option value="development">Development</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              {errors.service && <p className="text-red-600 text-sm ">{errors.service}</p>}
+              {err && <p className="text-red-600 text-sm">{err}</p>}
+            </form>
           </div>
-          <p className="mt-3 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link className="text-primary underline-offset-4 hover:underline" to="/login">
-              Login
-            </Link>
-          </p>
+          <div className="border-border border-t p-4 [.border-t]:pt-4">
+            <div className="flex flex-col gap-3">
+              <InteractiveHoverButton
+                className="w-full"
+                form="register-form"
+                type="submit"
+                disabled={!isValid}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <UserPlus size={16} />
+                  Create account
+                </span>
+              </InteractiveHoverButton>
+              <InteractiveHoverButton
+                type="button"
+                onClick={() => (window.location.href = googleUrl)}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Chrome size={16} />
+                  Continue with Google
+                </span>
+              </InteractiveHoverButton>
+            </div>
+            <p className="mt-3 text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link className="text-primary underline-offset-4 hover:underline" to="/login">
+                Login
+              </Link>
+            </p>
+          </div>
         </div>
       </MagicCard>
     </AuthSplit>

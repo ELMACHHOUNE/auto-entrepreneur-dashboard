@@ -41,75 +41,77 @@ export default function Login() {
   return (
     <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8 overflow-auto">
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="w-full max-w-sm p-0">
-        <div className="border-border border-b p-4 [.border-b]:pb-4">
-          <h3 className="text-lg font-semibold">Login</h3>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to access your account
-          </p>
-        </div>
-        <div className="p-4">
-          <form id="login-form" onSubmit={onSubmit} className="space-y-3">
-            <div className="relative">
-              <Mail
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 rounded"
-                placeholder="Email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Lock
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                className="w-full border p-2 pl-9 pr-10 rounded"
-                placeholder="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                onClick={() => setShowPassword(s => !s)}
-                className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            {err && <p className="text-red-600 text-sm">{err}</p>}
-          </form>
-        </div>
-        <div className="border-border border-t p-4 [.border-t]:pt-4">
-          <div className="flex flex-col gap-3">
-            <InteractiveHoverButton type="submit" form="login-form">
-              <span className="inline-flex items-center gap-2">
-                <LogIn size={16} />
-                Login
-              </span>
-            </InteractiveHoverButton>
-            <InteractiveHoverButton
-              type="button"
-              onClick={() => (window.location.href = googleUrl)}
-            >
-              <span className="inline-flex items-center gap-2">
-                <Chrome size={16} />
-                Continue with Google
-              </span>
-            </InteractiveHoverButton>
+        <div className="flex h-full flex-col">
+          <div className="border-border border-b p-4 [.border-b]:pb-4">
+            <h3 className="text-lg font-semibold">Login</h3>
+            <p className="text-sm text-muted-foreground">
+              Enter your credentials to access your account
+            </p>
           </div>
-          <p className="mt-3 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link className="text-primary underline-offset-4 hover:underline" to="/register">
-              Register
-            </Link>
-          </p>
+          <div className="p-4">
+            <form id="login-form" onSubmit={onSubmit} className="space-y-3">
+              <div className="relative">
+                <Mail
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 rounded"
+                  placeholder="Email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="relative">
+                <Lock
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  className="w-full border p-2 pl-9 pr-10 rounded"
+                  placeholder="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword(s => !s)}
+                  className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {err && <p className="text-red-600 text-sm">{err}</p>}
+            </form>
+          </div>
+          <div className="border-border border-t p-4 [.border-t]:pt-4">
+            <div className="flex flex-col gap-3">
+              <InteractiveHoverButton type="submit" form="login-form">
+                <span className="inline-flex items-center gap-2">
+                  <LogIn size={16} />
+                  Login
+                </span>
+              </InteractiveHoverButton>
+              <InteractiveHoverButton
+                type="button"
+                onClick={() => (window.location.href = googleUrl)}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Chrome size={16} />
+                  Continue with Google
+                </span>
+              </InteractiveHoverButton>
+            </div>
+            <p className="mt-3 text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{' '}
+              <Link className="text-primary underline-offset-4 hover:underline" to="/register">
+                Register
+              </Link>
+            </p>
+          </div>
         </div>
       </MagicCard>
     </AuthSplit>

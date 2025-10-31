@@ -36,7 +36,7 @@ export default function AuthSplit({
 
         {/* main content card */}
         <div
-          className={`relative grid overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/5 md:grid-cols-2 ${fixedHeight}`}
+          className={`relative grid overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-black/5 dark:bg-black/50 dark:ring-white/5 md:grid-cols-2 ${fixedHeight}`}
         >
           {/* left image */}
           <div className="relative hidden md:block">
