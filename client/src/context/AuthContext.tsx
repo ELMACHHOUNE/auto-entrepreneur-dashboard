@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { api } from "@/api/axios";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState } from 'react';
+import { api } from '@/api/axios';
 
-export type UserRole = "user" | "admin";
+export type UserRole = 'user' | 'admin';
 export interface User {
   _id: string;
   email: string;
@@ -10,6 +11,7 @@ export interface User {
   phone?: string;
   ICE?: string;
   service?: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -26,6 +28,15 @@ interface AuthContextType {
   }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  updateProfile: (data: {
+    email?: string;
+    fullName?: string;
+    phone?: string;
+    ICE?: string;
+    service?: string;
+  }) => Promise<void>;
+  changePassword: (data: { currentPassword?: string; newPassword: string }) => Promise<void>;
+  updateAvatar: (file: File) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = async () => {
     try {
-      const { data } = await api.get("/api/auth/me");
+      const { data } = await api.get('/api/auth/me');
       setUser(data.user);
     } catch {
       setUser(null);
@@ -50,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    await api.post("/api/auth/login", { email, password });
+    await api.post('/api/auth/login', { email, password });
     await refresh();
   };
 
@@ -62,18 +73,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ICE?: string;
     service?: string;
   }) => {
-    await api.post("/api/auth/register", payload);
+    await api.post('/api/auth/register', payload);
     await refresh();
   };
 
   const logout = async () => {
-    await api.post("/api/auth/logout");
+    await api.post('/api/auth/logout');
     setUser(null);
+  };
+
+  const updateProfile = async (payload: {
+    email?: string;
+    fullName?: string;
+    phone?: string;
+    ICE?: string;
+    service?: string;
+  }) => {
+    await api.put('/api/auth/me', payload);
+    await refresh();
+  };
+
+  const changePassword = async (payload: { currentPassword?: string; newPassword: string }) => {
+    await api.put('/api/auth/me/password', payload);
+  };
+
+  const updateAvatar = async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    await api.put('/api/auth/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    await refresh();
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, refresh }}
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        refresh,
+        updateProfile,
+        changePassword,
+        updateAvatar,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -82,6 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

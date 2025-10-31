@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -11,11 +12,19 @@ import './config/passport';
 const app = express();
 
 // Middlewares
-app.use(helmet());
-app.use(cors({
-  origin: env.CORS_ORIGINS,
-  credentials: true
-}));
+// Configure Helmet to allow loading static images from another origin (e.g., Vite dev server)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+app.use(
+  cors({
+    origin: env.CORS_ORIGINS,
+    credentials: true,
+  })
+);
 if (env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
@@ -23,6 +32,20 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(env.COOKIE_SECRET));
 app.use(passport.initialize());
+
+// Static serving for uploaded images (ensure CORP allows cross-origin loads in dev)
+const uploadsDirDistSibling = path.resolve(__dirname, '../uploads/images');
+const uploadsDirSource = path.resolve(process.cwd(), 'server/uploads/images');
+const staticOpts = {
+  setHeaders: (res: express.Response) => {
+    // Allow loading images from different origins (e.g., Vite dev server)
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  },
+};
+
+// Serve from both potential locations (dist sibling and source), whichever has the file
+app.use('/uploads/images', express.static(uploadsDirDistSibling, staticOpts as any));
+app.use('/uploads/images', express.static(uploadsDirSource, staticOpts as any));
 
 // Health check
 app.get('/health', (_req, res) => {

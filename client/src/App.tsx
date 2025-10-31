@@ -3,6 +3,7 @@ import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import Profile from '@/pages/Profile';
 import Admin from '@/pages/Admin';
 import RequireAuth from '@/components/RequireAuth';
 import RequireRole from '@/components/RequireRole';
@@ -24,6 +25,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <Dashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Profile />
               </RequireAuth>
             }
           />
