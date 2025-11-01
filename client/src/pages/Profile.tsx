@@ -152,10 +152,16 @@ export default function Profile() {
               className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Email"
               value={form.email}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'email-error' : undefined}
               onChange={e => setForm({ ...form, email: e.target.value })}
             />
           </div>
-          {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+          {errors.email && (
+            <p id="email-error" className="text-sm text-red-600">
+              {errors.email}
+            </p>
+          )}
           <div className="relative">
             <UserIcon
               size={16}
@@ -165,10 +171,16 @@ export default function Profile() {
               className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Full name"
               value={form.fullName}
+              aria-invalid={Boolean(errors.fullName)}
+              aria-describedby={errors.fullName ? 'fullName-error' : undefined}
               onChange={e => setForm({ ...form, fullName: e.target.value })}
             />
           </div>
-          {errors.fullName && <p className="text-sm text-red-600">{errors.fullName}</p>}
+          {errors.fullName && (
+            <p id="fullName-error" className="text-sm text-red-600">
+              {errors.fullName}
+            </p>
+          )}
           <div className="relative">
             <Phone
               size={16}
@@ -182,10 +194,16 @@ export default function Profile() {
               className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Phone"
               value={form.phone}
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? 'phone-error' : undefined}
               onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })}
             />
           </div>
-          {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
+          {errors.phone && (
+            <p id="phone-error" className="text-sm text-red-600">
+              {errors.phone}
+            </p>
+          )}
           <div className="relative">
             <IdCard
               size={16}
@@ -198,10 +216,16 @@ export default function Profile() {
               className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="ICE (15 digits)"
               value={form.ICE}
+              aria-invalid={Boolean(errors.ICE)}
+              aria-describedby={errors.ICE ? 'ice-error' : undefined}
               onChange={e => setForm({ ...form, ICE: e.target.value.replace(/\D/g, '') })}
             />
           </div>
-          {errors.ICE && <p className="text-sm text-red-600">{errors.ICE}</p>}
+          {errors.ICE && (
+            <p id="ice-error" className="text-sm text-red-600">
+              {errors.ICE}
+            </p>
+          )}
           <div className="relative">
             <Briefcase
               size={16}

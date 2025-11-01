@@ -1,15 +1,25 @@
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
+import compression from 'compression';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env';
 import passport from 'passport';
 import authRoutes from './routes/auth.routes';
+import meRoutes from './routes/me.routes';
+import rateLimit from 'express-rate-limit';
 import './config/passport';
 
 const app = express();
+
+// Compression (gzip/brotli if supported)
+app.use(
+  compression({
+    threshold: 1024, // compress responses > 1KB
+  })
+);
 
 // Middlewares
 // Configure Helmet to allow loading static images from another origin (e.g., Vite dev server)
@@ -32,6 +42,20 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(env.COOKIE_SECRET));
 app.use(passport.initialize());
+// Rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(generalLimiter);
 
 // Static serving for uploaded images (ensure CORP allows cross-origin loads in dev)
 const uploadsDirDistSibling = path.resolve(__dirname, '../uploads/images');
@@ -58,7 +82,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/me', meRoutes);
 
 // 404 handler
 app.use((_req, res) => {
