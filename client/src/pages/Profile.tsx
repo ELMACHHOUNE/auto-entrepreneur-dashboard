@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
-import { Briefcase, IdCard, Phone, User as UserIcon, Mail, Lock } from 'lucide-react';
+import { Briefcase, IdCard, Phone, User as UserIcon, Mail, Lock, CloudUpload } from 'lucide-react';
+import { FileUploader, FileInput, type DropzoneOptions } from '@/components/ui/file-upload';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function Profile() {
@@ -60,12 +61,7 @@ export default function Profile() {
     }
   };
 
-  const onAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.type.startsWith('image/')) return;
-    setAvatarFile(f);
-  };
+  // Dropzone handles avatar selection; legacy input handler removed
 
   const onChangePassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -105,41 +101,95 @@ export default function Profile() {
           onSubmit={onSubmit}
           className="space-y-3 rounded-lg border p-4 bg-success/50 text-success-foreground"
         >
-          {/* Avatar */}
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border">
-              {avatarFile ? (
-                <img
-                  src={URL.createObjectURL(avatarFile)}
-                  alt="avatar"
-                  className="h-full w-full object-cover"
-                  width={64}
-                  height={64}
-                  decoding="async"
-                  loading="lazy"
-                />
-              ) : user?.avatarUrl ? (
-                <img
-                  src={`${resolvedBase}${user.avatarUrl}`}
-                  alt="avatar"
-                  className="h-full w-full object-cover"
-                  width={64}
-                  height={64}
-                  decoding="async"
-                  loading="lazy"
-                />
-              ) : (
-                <span className="text-xs text-muted-foreground">Avatar</span>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Profile picture</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={onAvatarChange}
-                className="mt-1 block w-full text-sm text-foreground file:mr-4 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-semibold"
-              />
+          {/* Avatar section: refined layout for better UX */}
+          <div className="rounded-md bg-card/50 p-4">
+            <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-5 sm:gap-6">
+              {/* Left: label + helper text */}
+              <div className="sm:col-span-2">
+                <label
+                  id="profile-picture-label"
+                  className="block text-sm font-medium text-foreground"
+                >
+                  Profile picture
+                </label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Square image (1:1) works best. PNG, JPG, GIF, or WEBP up to 2MB.
+                </p>
+              </div>
+
+              {/* Center: avatar preview */}
+              <div className="sm:col-span-1 flex flex-col items-center gap-2">
+                <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center overflow-hidden rounded-full border bg-background">
+                  {avatarFile ? (
+                    <img
+                      src={URL.createObjectURL(avatarFile)}
+                      alt="avatar preview"
+                      className="h-full w-full object-cover"
+                      width={96}
+                      height={96}
+                      decoding="async"
+                      loading="lazy"
+                    />
+                  ) : user?.avatarUrl ? (
+                    <img
+                      src={`${resolvedBase}${user.avatarUrl}`}
+                      alt="current avatar"
+                      className="h-full w-full object-cover"
+                      width={96}
+                      height={96}
+                      decoding="async"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No avatar</span>
+                  )}
+                </div>
+                {avatarFile && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatarFile(null)}
+                    className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                  >
+                    Clear selection
+                  </button>
+                )}
+              </div>
+
+              {/* Right: drag & drop uploader */}
+              <div className="sm:col-span-2 sm:justify-self-end w-full sm:max-w-60">
+                <FileUploader
+                  value={avatarFile ? [avatarFile] : []}
+                  onValueChange={files => setAvatarFile(files?.[0] ?? null)}
+                  dropzoneOptions={
+                    {
+                      accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp'] },
+                      multiple: false,
+                      maxFiles: 1,
+                      maxSize: 2 * 1024 * 1024,
+                    } as DropzoneOptions
+                  }
+                  className="w-full"
+                >
+                  <FileInput
+                    aria-label="Upload profile picture"
+                    className="rounded-md border border-dashed border-muted bg-background/60 outline-none transition hover:bg-muted/30"
+                  >
+                    <div className="flex w-full flex-col items-center justify-center px-3 py-3 text-center text-foreground">
+                      <CloudUpload
+                        className="mb-1 h-6 w-6 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <p className="mb-1 text-xs">
+                        <span className="font-semibold">Click to upload</span>&nbsp; or drag and
+                        drop
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        PNG, JPG, GIF, WEBP (max 2MB)
+                      </p>
+                    </div>
+                  </FileInput>
+                </FileUploader>
+              </div>
             </div>
           </div>
           {/* Email */}
