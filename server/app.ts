@@ -37,9 +37,15 @@ app.use(passport.initialize());
 const uploadsDirDistSibling = path.resolve(__dirname, '../uploads/images');
 const uploadsDirSource = path.resolve(process.cwd(), 'server/uploads/images');
 const staticOpts = {
+  // Conservative cache: 1h in production, no cache in dev
+  maxAge: env.NODE_ENV === 'production' ? '1h' : 0,
   setHeaders: (res: express.Response) => {
     // Allow loading images from different origins (e.g., Vite dev server)
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    // Client-side caching. Avoid immutable since filenames are deterministic and can be overwritten.
+    const cacheControl =
+      env.NODE_ENV === 'production' ? 'public, max-age=3600' : 'public, max-age=0, must-revalidate';
+    res.setHeader('Cache-Control', cacheControl);
   },
 };
 
