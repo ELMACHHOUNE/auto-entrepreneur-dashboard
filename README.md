@@ -76,3 +76,25 @@ auto-entrepreneur-dashboard/
 git clone https://github.com/ELMACHHOUNE/auto-entrepreneur-dashboard.git
 cd auto-entrepreneur-dashboard
 ```
+
+---
+
+## 🧪 Dev-only helper: absolute URL history patch
+
+Some mobile simulators and browser extensions hook the History API and call `new URL(url)` without a base. When a relative path like `/dashboard` is passed, that hook can throw `TypeError: Failed to construct 'URL': Invalid URL` and sometimes force a full page reload.
+
+To keep SPA navigation smooth in development and avoid those false errors, we install a tiny, idempotent patch during app boot in dev:
+
+- File: `client/src/lib/history-absolute-url-patch.ts`
+- Purpose: normalize `history.pushState` / `replaceState` URLs to absolute (prefix `window.location.origin`).
+- Install point: `client/src/main.tsx`
+- Scope: development only — guarded by `if (import.meta.env.DEV) { ... }`.
+
+Disable or remove
+
+- To disable, comment out the `installAbsoluteUrlHistoryPatch()` call in `client/src/main.tsx`.
+- This utility is safe to keep in the codebase; it does not run in production builds.
+
+Why not needed in production?
+
+- Real browsers handle relative URLs fine, and we don’t expect simulator hooks in production. Keeping it dev-only avoids any chance of side-effects and keeps bundles minimal.

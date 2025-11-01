@@ -30,7 +30,7 @@ export const MenuItem = ({
       <motion.p
         onClick={onClick}
         transition={{ duration: 0.3 }}
-        className="cursor-pointer hover:opacity-90"
+        className="cursor-pointer hover:opacity-90 hover:text-accent "
       >
         {item}
       </motion.p>

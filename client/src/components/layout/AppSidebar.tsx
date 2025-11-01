@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { LayoutDashboard, User as UserIcon, LogOut } from 'lucide-react';
 
@@ -12,15 +12,20 @@ export default function AppSidebar({
 }) {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const baseURL = useMemo(() => import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '', []);
+  const resolvedBase = useMemo(
+    () => baseURL || (typeof window !== 'undefined' ? window.location.origin : ''),
+    [baseURL]
+  );
 
   const linkCls = (active: boolean) =>
     collapsed
-      ? `flex items-center justify-center rounded p-2 hover:bg-muted ${
-          active ? 'bg-muted font-medium' : ''
+      ? `flex items-center justify-center rounded p-2 hover:bg-accent ${
+          active ? 'bg-accent font-medium' : ''
         }`
-      : `flex items-center gap-2 rounded px-3 py-2 hover:bg-muted ${
-          active ? 'bg-muted font-medium' : ''
+      : `flex items-center gap-2 rounded px-3 py-2 hover:bg-accent ${
+          active ? 'bg-accent font-medium' : ''
         }`;
 
   return (
@@ -30,7 +35,7 @@ export default function AppSidebar({
           {user?.avatarUrl ? (
             // Note: avatarUrl is like /uploads/images/filename
             <img
-              src={`${baseURL}${user.avatarUrl}`}
+              src={`${resolvedBase}${user.avatarUrl}`}
               alt="avatar"
               className="h-full w-full object-cover"
               width={40}
@@ -51,26 +56,30 @@ export default function AppSidebar({
         )}
       </div>
       <nav className={`flex flex-col ${collapsed ? 'items-center gap-1' : 'gap-2'}`}>
-        <Link
-          to="/dashboard"
-          onClick={onNavigate}
+        <button
+          onClick={() => {
+            navigate('/dashboard');
+            onNavigate?.();
+          }}
           className={linkCls(pathname === '/dashboard')}
           title="Dashboard"
           aria-label="Dashboard"
         >
           <LayoutDashboard size={18} />
           {!collapsed && <span>Dashboard</span>}
-        </Link>
-        <Link
-          to="/profile"
-          onClick={onNavigate}
+        </button>
+        <button
+          onClick={() => {
+            navigate('/profile');
+            onNavigate?.();
+          }}
           className={linkCls(pathname === '/profile')}
           title="Profile"
           aria-label="Profile"
         >
           <UserIcon size={18} />
           {!collapsed && <span>Profile</span>}
-        </Link>
+        </button>
         <button
           onClick={async () => {
             await logout();

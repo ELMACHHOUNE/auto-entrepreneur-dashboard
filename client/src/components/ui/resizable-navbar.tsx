@@ -2,6 +2,7 @@
 import { cn } from '@/lib/utils';
 import { Menu as IconMenu, X as IconX } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/react';
+import { Link } from 'react-router-dom';
 
 import React, { useRef, useState } from 'react';
 
@@ -45,10 +46,8 @@ interface MobileNavMenuProps {
 
 export const Navbar = ({ children, className }: NavbarProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll({
-    target: ref,
-    offset: ['start start', 'end start'],
-  });
+  // Use viewport scroll to avoid container warnings; we only need global scrollY here
+  const { scrollY } = useScroll();
   const [visible, setVisible] = useState<boolean>(false);
 
   useMotionValueEvent(scrollY, 'change', latest => {
@@ -60,17 +59,19 @@ export const Navbar = ({ children, className }: NavbarProps) => {
   });
 
   return (
-    <motion.div
-      ref={ref}
-      // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
-      className={cn('sticky inset-x-0 top-20 z-40 w-full', className)}
-    >
-      {React.Children.map(children, child =>
-        React.isValidElement(child)
-          ? React.cloneElement(child as React.ReactElement<{ visible?: boolean }>, { visible })
-          : child
-      )}
-    </motion.div>
+    // Wrapper must be non-static for framer-motion's useScroll offset calculations
+    <div ref={ref} className="relative">
+      <motion.div
+        // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
+        className={cn('sticky inset-x-0 top-20 z-40 w-full', className)}
+      >
+        {React.Children.map(children, child =>
+          React.isValidElement(child)
+            ? React.cloneElement(child as React.ReactElement<{ visible?: boolean }>, { visible })
+            : child
+        )}
+      </motion.div>
+    </div>
   );
 };
 
@@ -78,10 +79,10 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
   return (
     <motion.div
       animate={{
-        backdropFilter: visible ? 'blur(10px)' : 'none',
+        backdropFilter: visible ? 'blur(10px)' : 'blur(0px)',
         boxShadow: visible
           ? '0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset'
-          : 'none',
+          : '0 0 0 rgba(0,0,0,0)',
         width: visible ? '40%' : '100%',
         y: visible ? 20 : 0,
       }}
@@ -116,12 +117,12 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
       )}
     >
       {items.map((item, idx) => (
-        <a
+        <Link
+          to={item.link}
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
           className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300"
           key={`link-${idx}`}
-          href={item.link}
         >
           {hovered === idx && (
             <motion.div
@@ -130,7 +131,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
             />
           )}
           <span className="relative z-20">{item.name}</span>
-        </a>
+        </Link>
       ))}
     </motion.div>
   );
@@ -140,10 +141,10 @@ export const MobileNav = ({ children, className, visible }: MobileNavProps) => {
   return (
     <motion.div
       animate={{
-        backdropFilter: visible ? 'blur(10px)' : 'none',
+        backdropFilter: visible ? 'blur(10px)' : 'blur(0px)',
         boxShadow: visible
           ? '0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset'
-          : 'none',
+          : '0 0 0 rgba(0,0,0,0)',
         width: visible ? '90%' : '100%',
         paddingRight: visible ? '12px' : '0px',
         paddingLeft: visible ? '12px' : '0px',
@@ -197,24 +198,29 @@ export const MobileNavMenu = ({ children, className, isOpen, onClose }: MobileNa
 };
 
 export const MobileNavToggle = ({ isOpen, onClick }: { isOpen: boolean; onClick: () => void }) => {
-  return isOpen ? (
-    <IconX className="text-foreground" onClick={onClick} />
-  ) : (
-    <IconMenu className="text-foreground" onClick={onClick} />
+  return (
+    <button
+      type="button"
+      aria-label={isOpen ? 'Close menu' : 'Open menu'}
+      onClick={onClick}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+    >
+      {isOpen ? <IconX className="h-5 w-5" /> : <IconMenu className="h-5 w-5" />}
+    </button>
   );
 };
 
-export const NavbarLogo = () => {
-  return (
-    <a
-      href="#"
-      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-foreground"
-    >
-      <img src="https://assets.aceternity.com/logo-dark.png" alt="logo" width={30} height={30} />
-      <span className="font-medium text-foreground">Startup</span>
-    </a>
-  );
-};
+// export const NavbarLogo = () => {
+//   return (
+//     <Link
+//       to="/"
+//       className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-foreground"
+//     >
+//       <img src="https://assets.aceternity.com/logo-dark.png" alt="logo" width={30} height={30} />
+//       <span className="font-medium text-foreground">Startup</span>
+//     </Link>
+//   );
+// };
 
 export const NavbarButton = ({
   href,

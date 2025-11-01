@@ -91,6 +91,12 @@ export default function Profile() {
     }
   };
 
+  const baseURL = useMemo(() => import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '', []);
+  const resolvedBase = useMemo(
+    () => baseURL || (typeof window !== 'undefined' ? window.location.origin : ''),
+    [baseURL]
+  );
+
   return (
     <DashboardLayout>
       <div className="mx-auto w-full max-w-3xl">
@@ -111,7 +117,7 @@ export default function Profile() {
                 />
               ) : user?.avatarUrl ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL?.replace(/\/$/, '')}${user.avatarUrl}`}
+                  src={`${resolvedBase}${user.avatarUrl}`}
                   alt="avatar"
                   className="h-full w-full object-cover"
                   width={64}

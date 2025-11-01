@@ -27,14 +27,14 @@ export default function Navbar() {
           className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold text-foreground hover:text-primary"
           aria-label="Go to home"
         >
-          <span className="text-foreground">AutoDash</span>
+          <span className="text-foreground hover:underline hover:text-accent">AutoDash</span>
         </button>
 
         {/* Center: Old styled menu */}
         <div className="flex-1 flex justify-center">
           <Menu
             setActive={setActive}
-            className="gap-6 rounded-full border border-border bg-card text-card-foreground shadow-input px-6 py-3"
+            className="gap-6 rounded-full border  border-border bg-card text-card-foreground shadow-input px-6 py-3"
           >
             <MenuItem
               setActive={(val: string) => setActive(val)}
@@ -67,7 +67,7 @@ export default function Navbar() {
           />
           {user ? (
             <button
-              className="text-foreground underline-offset-4 hover:underline hover:text-primary"
+              className="text-foreground underline-offset-4 hover:underline hover:text-accent"
               onClick={async () => {
                 await logout();
                 nav('/', { replace: true });
@@ -113,7 +113,7 @@ export default function Navbar() {
 
         <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
           <button
-            className="px-2 py-1 text-left text-foreground hover:bg-accent/40 rounded-md"
+            className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
             onClick={() => {
               nav('/');
               setMobileOpen(false);
@@ -122,7 +122,7 @@ export default function Navbar() {
             Home
           </button>
           <button
-            className="px-2 py-1 text-left text-foreground hover:bg-accent/40 rounded-md"
+            className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
             onClick={() => {
               nav('/dashboard');
               setMobileOpen(false);
@@ -132,7 +132,7 @@ export default function Navbar() {
           </button>
           {user?.role === 'admin' && (
             <button
-              className="px-2 py-1 text-left text-foreground hover:bg-accent/40 rounded-md"
+              className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
               onClick={() => {
                 nav('/admin');
                 setMobileOpen(false);
@@ -144,7 +144,7 @@ export default function Navbar() {
           <div className="h-px w-full bg-border my-2" />
           {user ? (
             <button
-              className="px-2 py-1 text-left text-foreground hover:bg-accent/40 rounded-md"
+              className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
               onClick={async () => {
                 await logout();
                 setMobileOpen(false);

@@ -39,13 +39,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -280, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-background p-4"
+            className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-background p-4 "
             id="app-sidebar"
           >
-            <div className="mb-3 flex items-center justify-end">
+            <div className="mb-3 flex items-center justify-end ">
               <button
                 onClick={() => setOpen(false)}
-                className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-sm"
+                className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-sm hover:bg-accent"
                 aria-label="Close sidebar"
                 title="Close sidebar"
               >
@@ -61,13 +61,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Collapsed sidebar (md+ only) when closed */}
       {!open && (
         <aside
-          className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-16 border-r bg-background p-2 md:block"
+          className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-16 border-r bg-background  p-2 md:block"
           id="app-sidebar-collapsed"
         >
           <div className="mb-2 flex items-center justify-center">
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center justify-center rounded-md border p-2"
+              className="inline-flex items-center justify-center rounded-md border p-2 hover:bg-accent"
               aria-label="Open sidebar"
               title="Open sidebar"
             >
@@ -78,19 +78,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
       )}
 
-      {/* Mobile-only trigger to open sidebar when closed */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed left-2 top-20 z-30 inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 md:hidden"
-          aria-label="Open menu"
-          title="Open menu"
-        >
-          <Menu size={18} />
-          <span className="text-sm">Menu</span>
-        </button>
-      )}
-
       {/* Backdrop for mobile when sidebar open; below navbar */}
       <AnimatePresence initial={false}>
         {open && (
@@ -99,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-x-0 bottom-0 top-16 z-30 bg-black/20 md:hidden"
+            className="fixed inset-x-0 bottom-0 top-16 z-30 bg-black/20 md:hidden "
             onClick={() => setOpen(false)}
           />
         )}
@@ -111,6 +98,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           open ? 'md:ml-64' : 'md:ml-16'
         }`}
       >
+        {/* Mobile-only inline trigger shown when sidebar is closed; scrolls with content */}
+        {!open && (
+          <div className="mb-3 md:hidden ">
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md border bg-background hover:bg-accent px-3 py-2"
+              aria-label="Open menu"
+              title="Open menu"
+            >
+              <Menu size={18} />
+              <span className="text-sm">Menu</span>
+            </button>
+          </div>
+        )}
         {children}
       </main>
     </div>
