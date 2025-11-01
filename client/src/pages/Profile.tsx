@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { Briefcase, IdCard, Phone, User as UserIcon, Mail, Lock, CloudUpload } from 'lucide-react';
 import { FileUploader, FileInput, type DropzoneOptions } from '@/components/ui/file-upload';
+import AlertBanner from '@/components/ui/alert-banner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function Profile() {
@@ -22,6 +23,8 @@ export default function Profile() {
   const [pwd, setPwd] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [pwdOk, setPwdOk] = useState(false);
   const [pwdErr, setPwdErr] = useState<string | null>(null);
+  // Bust browser cache for avatar after successful upload
+  const [avatarVersion, setAvatarVersion] = useState(0);
 
   useEffect(() => {
     // keep email in sync if user changes via refresh
@@ -52,6 +55,8 @@ export default function Profile() {
       if (avatarFile) {
         await updateAvatar(avatarFile);
         setAvatarFile(null);
+        // increment version to force img reload even if URL path is identical
+        setAvatarVersion(v => v + 1);
       }
       setOk(true);
     } catch {
@@ -132,7 +137,9 @@ export default function Profile() {
                     />
                   ) : user?.avatarUrl ? (
                     <img
-                      src={`${resolvedBase}${user.avatarUrl}`}
+                      src={`${resolvedBase}${user.avatarUrl}${
+                        avatarVersion ? `?v=${avatarVersion}` : ''
+                      }`}
                       alt="current avatar"
                       className="h-full w-full object-cover"
                       width={96}
@@ -294,8 +301,21 @@ export default function Profile() {
               <option value="other">Other</option>
             </select>
           </div>
-          {err && <p className="text-sm text-red-600">{err}</p>}
-          {ok && <p className="text-sm text-success-foreground/90">Profile updated</p>}
+          <AlertBanner
+            open={Boolean(err)}
+            variant="error"
+            title="Update failed"
+            description={err || 'Failed to update profile'}
+            onClose={() => setErr(null)}
+          />
+          <AlertBanner
+            open={ok}
+            variant="success"
+            title="Profile updated"
+            description="Your changes have been saved."
+            autoClose={3000}
+            onClose={() => setOk(false)}
+          />
           <div>
             <InteractiveHoverButton
               type="submit"
@@ -352,8 +372,21 @@ export default function Profile() {
               onChange={e => setPwd({ ...pwd, confirm: e.target.value })}
             />
           </div>
-          {pwdErr && <p className="text-sm text-red-600">{pwdErr}</p>}
-          {pwdOk && <p className="text-sm text-success-foreground/90">Password changed</p>}
+          <AlertBanner
+            open={Boolean(pwdErr)}
+            variant="error"
+            title="Password update failed"
+            description={pwdErr || 'Failed to change password'}
+            onClose={() => setPwdErr(null)}
+          />
+          <AlertBanner
+            open={pwdOk}
+            variant="success"
+            title="Password changed"
+            description="Your password was updated successfully."
+            autoClose={3000}
+            onClose={() => setPwdOk(false)}
+          />
           <div>
             <InteractiveHoverButton
               type="submit"

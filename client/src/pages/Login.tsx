@@ -5,6 +5,7 @@ import type { Location } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { MagicCard } from '@/components/ui/magic-card';
+import AlertBanner from '@/components/ui/alert-banner';
 import AuthSplit from '@/components/layout/AuthSplit';
 import { Eye, EyeOff, Mail, Lock, LogIn, Chrome } from 'lucide-react';
 
@@ -39,7 +40,7 @@ export default function Login() {
   const googleUrl = `${import.meta.env.VITE_API_URL}api/auth/google`;
 
   return (
-    <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8 overflow-auto">
+    <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8">
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="w-full max-w-sm p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">
@@ -84,7 +85,13 @@ export default function Login() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {err && <p className="text-red-600 text-sm">{err}</p>}
+              <AlertBanner
+                open={Boolean(err)}
+                variant="error"
+                title="Login failed"
+                description={err || 'Login failed'}
+                onClose={() => setErr(null)}
+              />
             </form>
           </div>
           <div className="border-border border-t p-4 [.border-t]:pt-4">

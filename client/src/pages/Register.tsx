@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 import { MagicCard } from '@/components/ui/magic-card';
+import AlertBanner from '@/components/ui/alert-banner';
+import { FileUploader, FileInput, type DropzoneOptions } from '@/components/ui/file-upload';
 import AuthSplit from '@/components/layout/AuthSplit';
 import {
   User as UserIcon,
@@ -16,12 +18,13 @@ import {
   UserPlus,
   Eye,
   EyeOff,
+  CloudUpload,
 } from 'lucide-react';
 
 type ApiError = { response?: { data?: { error?: string } } };
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, updateAvatar } = useAuth();
   const nav = useNavigate();
   const [form, setForm] = useState({
     email: '',
@@ -60,12 +63,7 @@ export default function Register() {
 
   const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
-  const onAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.type.startsWith('image/')) return;
-    setAvatarFile(f);
-  };
+  // Avatar selection handled by FileUploader dropzone
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -77,6 +75,16 @@ export default function Register() {
     try {
       const { email, password, fullName, phone, ICE, service } = form;
       await register({ email, password, fullName, phone, ICE, service });
+      // If user selected an avatar, upload it immediately after register (cookie already set)
+      if (avatarFile) {
+        try {
+          await updateAvatar(avatarFile);
+        } catch {
+          // Surface avatar upload failure but keep the user on the page to retry
+          setErr('Account created, but failed to upload avatar. Please try again.');
+          return;
+        }
+      }
       nav('/dashboard', { replace: true });
     } catch (e: unknown) {
       const apiErr = e as ApiError;
@@ -85,35 +93,89 @@ export default function Register() {
   };
 
   return (
-    <AuthSplit rightClassName="flex h-full w-full items-center p-4 sm:p-6 md:p-8 overflow-auto">
+    <AuthSplit rightClassName="flex h-full w-full items-stretch p-4 sm:p-6 md:p-8">
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="h-full w-full p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">
             <h3 className="text-lg font-semibold">Create account</h3>
             <p className="text-sm text-muted-foreground">Fill in your details to get started</p>
           </div>
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 p-4">
             <form id="register-form" onSubmit={onSubmit} className="space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full  overflow-hidden flex items-center justify-center border">
-                  {avatarFile ? (
-                    <img
-                      src={URL.createObjectURL(avatarFile)}
-                      alt="avatar preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-gray-400 text-xs">Avatar</span>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium">Profile picture (optional)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={onAvatarChange}
-                    className="mt-1 block w-full text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold "
-                  />
+              {/* Avatar section: mirror Profile page UX */}
+              <div className="rounded-md bg-card/50 p-4">
+                <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-5 sm:gap-6">
+                  {/* Left: label + helper text */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium">Profile picture (optional)</label>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Square image (1:1). PNG, JPG, GIF, or WEBP up to 2MB.
+                    </p>
+                  </div>
+
+                  {/* Center: avatar preview */}
+                  <div className="sm:col-span-1 flex flex-col items-center gap-2">
+                    <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center overflow-hidden rounded-full border bg-background">
+                      {avatarFile ? (
+                        <img
+                          src={URL.createObjectURL(avatarFile)}
+                          alt="avatar preview"
+                          className="h-full w-full object-cover"
+                          width={96}
+                          height={96}
+                          decoding="async"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No avatar</span>
+                      )}
+                    </div>
+                    {avatarFile && (
+                      <button
+                        type="button"
+                        onClick={() => setAvatarFile(null)}
+                        className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                      >
+                        Clear selection
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Right: drag & drop uploader */}
+                  <div className="sm:col-span-2 sm:justify-self-end w-full sm:max-w-60">
+                    <FileUploader
+                      value={avatarFile ? [avatarFile] : []}
+                      onValueChange={files => setAvatarFile(files?.[0] ?? null)}
+                      dropzoneOptions={
+                        {
+                          accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp'] },
+                          multiple: false,
+                          maxFiles: 1,
+                          maxSize: 2 * 1024 * 1024,
+                        } as DropzoneOptions
+                      }
+                      className="w-full"
+                    >
+                      <FileInput
+                        aria-label="Upload profile picture"
+                        className="rounded-md border border-dashed border-muted bg-background/60 outline-none transition hover:bg-muted/30"
+                      >
+                        <div className="flex w-full flex-col items-center justify-center px-3 py-3 text-center text-foreground">
+                          <CloudUpload
+                            className="mb-1 h-6 w-6 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                          <p className="mb-1 text-xs">
+                            <span className="font-semibold">Click to upload</span>&nbsp; or drag and
+                            drop
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            PNG, JPG, GIF, WEBP (max 2MB)
+                          </p>
+                        </div>
+                      </FileInput>
+                    </FileUploader>
+                  </div>
                 </div>
               </div>
 
@@ -213,7 +275,13 @@ export default function Register() {
                 </select>
               </div>
               {errors.service && <p className="text-red-600 text-sm ">{errors.service}</p>}
-              {err && <p className="text-red-600 text-sm">{err}</p>}
+              <AlertBanner
+                open={Boolean(err)}
+                variant="error"
+                title="Registration failed"
+                description={err || 'Registration failed'}
+                onClose={() => setErr(null)}
+              />
             </form>
           </div>
           <div className="border-border border-t p-4 [.border-t]:pt-4">

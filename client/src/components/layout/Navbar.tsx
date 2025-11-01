@@ -77,11 +77,14 @@ export default function Navbar() {
             </button>
           ) : (
             <>
-              <button className="text-foreground hover:text-primary" onClick={() => nav('/login')}>
+              <button
+                className="text-foreground hover:text-accent hover:underline"
+                onClick={() => nav('/login')}
+              >
                 Login
               </button>
               <button
-                className="text-foreground hover:text-primary"
+                className="text-foreground hover:text-accent hover:underline"
                 onClick={() => nav('/register')}
               >
                 Register
