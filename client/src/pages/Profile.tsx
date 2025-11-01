@@ -99,9 +99,12 @@ export default function Profile() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl ">
         <h2 className="mb-4 text-2xl font-semibold">Profile settings</h2>
-        <form onSubmit={onSubmit} className="space-y-3 rounded-lg border p-4">
+        <form
+          onSubmit={onSubmit}
+          className="space-y-3 rounded-lg border p-4 bg-success/50 text-success-foreground"
+        >
           {/* Avatar */}
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border">
@@ -135,7 +138,7 @@ export default function Profile() {
                 type="file"
                 accept="image/*"
                 onChange={onAvatarChange}
-                className="mt-1 block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-semibold"
+                className="mt-1 block w-full text-sm text-foreground file:mr-4 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-semibold"
               />
             </div>
           </div>
@@ -146,7 +149,7 @@ export default function Profile() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
-              className="w-full rounded border p-2 pl-9"
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Email"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
@@ -159,7 +162,7 @@ export default function Profile() {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
-              className="w-full rounded border p-2 pl-9"
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Full name"
               value={form.fullName}
               onChange={e => setForm({ ...form, fullName: e.target.value })}
@@ -172,10 +175,14 @@ export default function Profile() {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
-              className="w-full rounded border p-2 pl-9"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]{9,15}"
+              maxLength={15}
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Phone"
               value={form.phone}
-              onChange={e => setForm({ ...form, phone: e.target.value })}
+              onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })}
             />
           </div>
           {errors.phone && <p className="text-sm text-red-600">{errors.phone}</p>}
@@ -185,10 +192,13 @@ export default function Profile() {
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <input
-              className="w-full rounded border p-2 pl-9"
+              inputMode="numeric"
+              pattern="[0-9]{15}"
+              maxLength={15}
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="ICE (15 digits)"
               value={form.ICE}
-              onChange={e => setForm({ ...form, ICE: e.target.value })}
+              onChange={e => setForm({ ...form, ICE: e.target.value.replace(/\D/g, '') })}
             />
           </div>
           {errors.ICE && <p className="text-sm text-red-600">{errors.ICE}</p>}
@@ -198,7 +208,7 @@ export default function Profile() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
             <select
-              className="w-full rounded border bg-background p-2 pl-9 text-foreground"
+              className="w-full rounded border bg-card p-2 pl-9 text-foreground"
               value={form.service}
               onChange={e => setForm({ ...form, service: e.target.value })}
             >
@@ -211,16 +221,23 @@ export default function Profile() {
             </select>
           </div>
           {err && <p className="text-sm text-red-600">{err}</p>}
-          {ok && <p className="text-sm text-emerald-600">Profile updated</p>}
+          {ok && <p className="text-sm text-success-foreground/90">Profile updated</p>}
           <div>
-            <InteractiveHoverButton type="submit" disabled={!isValid || saving} className="w-full">
+            <InteractiveHoverButton
+              type="submit"
+              disabled={!isValid || saving}
+              className="w-full bg-accent/80 text-accent-foreground"
+            >
               Save changes
             </InteractiveHoverButton>
           </div>
         </form>
 
         {/* Change Password */}
-        <form onSubmit={onChangePassword} className="mt-6 space-y-3 rounded-lg border p-4">
+        <form
+          onSubmit={onChangePassword}
+          className="mt-6 space-y-3 rounded-lg border p-4 bg-success/50 text-success-foreground"
+        >
           <h3 className="text-lg font-medium">Change password</h3>
           <div className="relative">
             <Lock
@@ -229,7 +246,7 @@ export default function Profile() {
             />
             <input
               type="password"
-              className="w-full rounded border p-2 pl-9"
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Current password (if set)"
               value={pwd.currentPassword}
               onChange={e => setPwd({ ...pwd, currentPassword: e.target.value })}
@@ -242,7 +259,7 @@ export default function Profile() {
             />
             <input
               type="password"
-              className="w-full rounded border p-2 pl-9"
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="New password"
               value={pwd.newPassword}
               onChange={e => setPwd({ ...pwd, newPassword: e.target.value })}
@@ -255,16 +272,19 @@ export default function Profile() {
             />
             <input
               type="password"
-              className="w-full rounded border p-2 pl-9"
+              className="w-full rounded border bg-card text-foreground placeholder:text-muted-foreground p-2 pl-9"
               placeholder="Confirm new password"
               value={pwd.confirm}
               onChange={e => setPwd({ ...pwd, confirm: e.target.value })}
             />
           </div>
           {pwdErr && <p className="text-sm text-red-600">{pwdErr}</p>}
-          {pwdOk && <p className="text-sm text-emerald-600">Password changed</p>}
+          {pwdOk && <p className="text-sm text-success-foreground/90">Password changed</p>}
           <div>
-            <InteractiveHoverButton type="submit" className="w-full">
+            <InteractiveHoverButton
+              type="submit"
+              className="w-full bg-accent/80 text-accent-foreground"
+            >
               Update password
             </InteractiveHoverButton>
           </div>

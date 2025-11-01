@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, CookieOptions } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { verifyToken, JwtPayload } from '../utils/jwt';
@@ -57,10 +57,10 @@ export function requireRole(role: 'admin' | 'user') {
 }
 
 // Cookie options helper
-export const cookieOpts = (isProd: boolean, maxAgeMs: number) => ({
+export const cookieOpts = (isProd: boolean, maxAgeMs: number): CookieOptions => ({
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? 'none' : 'lax' as const,
+  sameSite: isProd ? 'none' : 'lax',
   maxAge: maxAgeMs,
   path: '/',
 });

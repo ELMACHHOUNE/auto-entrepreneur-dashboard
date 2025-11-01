@@ -88,8 +88,28 @@ export async function updateMe(req: AuthRequest, res: Response) {
     const { fullName, phone, ICE, service, email } = req.body || {};
     const update: Record<string, unknown> = {};
     if (typeof fullName !== 'undefined') update.fullName = fullName;
-    if (typeof phone !== 'undefined') update.phone = phone;
-    if (typeof ICE !== 'undefined') update.ICE = ICE;
+    // Phone: allow empty, otherwise must be 9–15 digits
+    if (typeof phone !== 'undefined') {
+      const p = String(phone).trim();
+      if (p === '') {
+        update.phone = '';
+      } else if (!/^\d{9,15}$/.test(p)) {
+        return res.status(400).json({ error: 'Phone must be 9–15 digits' });
+      } else {
+        update.phone = p;
+      }
+    }
+    // ICE: allow empty, otherwise must be exactly 15 digits
+    if (typeof ICE !== 'undefined') {
+      const ice = String(ICE).trim();
+      if (ice === '') {
+        update.ICE = '';
+      } else if (!/^\d{15}$/.test(ice)) {
+        return res.status(400).json({ error: 'ICE must be exactly 15 digits' });
+      } else {
+        update.ICE = ice;
+      }
+    }
     if (typeof service !== 'undefined') update.service = service;
     if (typeof email !== 'undefined') {
       // normalize and ensure uniqueness

@@ -22,8 +22,26 @@ const UserSchema = new Schema<IUser>(
     password: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
     fullName: { type: String },
-    phone: { type: String },
-    ICE: { type: String },
+    phone: {
+      type: String,
+      validate: {
+        validator: function (v: string | undefined) {
+          if (v == null || v === '') return true; // allow empty
+          return /^\d{9,15}$/.test(v);
+        },
+        message: 'Phone must be 9-15 digits',
+      },
+    },
+    ICE: {
+      type: String,
+      validate: {
+        validator: function (v: string | undefined) {
+          if (v == null || v === '') return true; // allow empty
+          return /^\d{15}$/.test(v);
+        },
+        message: 'ICE must be exactly 15 digits',
+      },
+    },
     service: { type: String },
     avatarUrl: { type: String },
     googleId: { type: String },
