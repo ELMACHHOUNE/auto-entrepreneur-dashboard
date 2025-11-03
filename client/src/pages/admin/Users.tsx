@@ -196,9 +196,7 @@ export default function Users() {
             label="Email"
             placeholder="email@example.com"
             value={form.email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setForm(f => ({ ...f, email: e.currentTarget.value }))
-            }
+            onChange={e => setForm(f => ({ ...f, email: e?.currentTarget?.value ?? '' }))}
             required
           />
           {!editing && (
@@ -206,9 +204,7 @@ export default function Users() {
               label="Password"
               placeholder="At least 6 characters"
               value={form.password || ''}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setForm(f => ({ ...f, password: e.currentTarget.value }))
-              }
+              onChange={e => setForm(f => ({ ...f, password: e?.currentTarget?.value ?? '' }))}
               required
             />
           )}
@@ -226,30 +222,22 @@ export default function Users() {
           <TextInput
             label="Full name"
             value={form.fullName || ''}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setForm(f => ({ ...f, fullName: e.currentTarget.value }))
-            }
+            onChange={e => setForm(f => ({ ...f, fullName: e?.currentTarget?.value ?? '' }))}
           />
           <TextInput
             label="Phone"
             value={form.phone || ''}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setForm(f => ({ ...f, phone: e.currentTarget.value }))
-            }
+            onChange={e => setForm(f => ({ ...f, phone: e?.currentTarget?.value ?? '' }))}
           />
           <TextInput
             label="ICE"
             value={form.ICE || ''}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setForm(f => ({ ...f, ICE: e.currentTarget.value }))
-            }
+            onChange={e => setForm(f => ({ ...f, ICE: e?.currentTarget?.value ?? '' }))}
           />
           <TextInput
             label="Service"
             value={form.service || ''}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setForm(f => ({ ...f, service: e.currentTarget.value }))
-            }
+            onChange={e => setForm(f => ({ ...f, service: e?.currentTarget?.value ?? '' }))}
           />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setModalOpen(false)}>
