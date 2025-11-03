@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
 import { Button, Group, Modal, Select, Stack, TextInput } from '@mantine/core';
+import guideData from '@/assets/data.json';
 import { api } from '@/api/axios';
 
 type UserRole = 'user' | 'admin';
@@ -126,11 +127,26 @@ export default function Users() {
     ICE?: string;
     service?: string;
     password?: string;
-  }>({ email: '', role: 'user' });
+    // structured fields
+    profileKind?: '' | 'guide_auto_entrepreneur' | 'company_guide';
+    serviceCategory?: string;
+    serviceType?: string;
+    serviceActivity?: string;
+    companyTypeCode?: string;
+  }>({ email: '', role: 'user', profileKind: '' });
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ email: '', role: 'user', password: '' });
+    setForm({
+      email: '',
+      role: 'user',
+      password: '',
+      profileKind: '',
+      serviceCategory: '',
+      serviceType: '',
+      serviceActivity: '',
+      companyTypeCode: '',
+    });
     setModalOpen(true);
   };
   const openEdit = (u: IUser) => {
@@ -142,16 +158,37 @@ export default function Users() {
       phone: u.phone || '',
       ICE: u.ICE || '',
       service: u.service || '',
+      profileKind: (u.profileKind as '' | 'guide_auto_entrepreneur' | 'company_guide') || '',
+      serviceCategory: u.serviceCategory || '',
+      serviceType: u.serviceType || '',
+      serviceActivity: u.serviceActivity || '',
+      companyTypeCode: u.companyTypeCode || '',
     });
     setModalOpen(true);
   };
 
   const handleSubmit = async () => {
+    // derive service to keep legacy field in sync
+    let derivedService = form.service;
+    if (form.profileKind === 'guide_auto_entrepreneur') {
+      derivedService = form.serviceActivity || '';
+    } else if (form.profileKind === 'company_guide') {
+      derivedService = form.companyTypeCode || '';
+    }
+    const payload = {
+      ...form,
+      service: derivedService,
+      // narrow type for profileKind
+      profileKind: (form.profileKind === '' ? undefined : form.profileKind) as
+        | 'guide_auto_entrepreneur'
+        | 'company_guide'
+        | undefined,
+    } as Partial<IUser> & { password?: string };
     if (editing) {
-      await updateMutation.mutateAsync({ id: editing._id, payload: form });
+      await updateMutation.mutateAsync({ id: editing._id, payload });
     } else {
       if (!form.password || form.password.length < 6) return; // basic client check
-      await createMutation.mutateAsync(form as Partial<IUser> & { password: string });
+      await createMutation.mutateAsync(payload as Partial<IUser> & { password: string });
     }
     setModalOpen(false);
   };
@@ -255,11 +292,116 @@ export default function Users() {
             value={form.ICE || ''}
             onChange={e => setForm(f => ({ ...f, ICE: e?.currentTarget?.value ?? '' }))}
           />
-          <TextInput
-            label="Service"
-            value={form.service || ''}
-            onChange={e => setForm(f => ({ ...f, service: e?.currentTarget?.value ?? '' }))}
-          />
+          {/* Profile kind selector */}
+          <div>
+            <label className="mb-1 block text-sm font-medium">Profile type</label>
+            <select
+              className="w-full rounded border bg-card p-2 text-foreground"
+              value={form.profileKind}
+              onChange={e =>
+                setForm(f => ({
+                  ...f,
+                  profileKind: e.target.value as '' | 'guide_auto_entrepreneur' | 'company_guide',
+                  serviceCategory: '',
+                  serviceType: '',
+                  serviceActivity: '',
+                  companyTypeCode: '',
+                }))
+              }
+            >
+              <option value="">None</option>
+              <option value="guide_auto_entrepreneur">Auto-entrepreneur guide</option>
+              <option value="company_guide">Company guide</option>
+            </select>
+          </div>
+
+          {form.profileKind === 'guide_auto_entrepreneur' && (
+            <>
+              {/* Category */}
+              <div>
+                <label className="mb-1 block text-sm font-medium">Category</label>
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceCategory || ''}
+                  onChange={e => {
+                    const nextCat = e.target.value;
+                    const section = guideData.guide_auto_entrepreneur.sections.find(
+                      s => s.category === nextCat
+                    );
+                    setForm(f => ({
+                      ...f,
+                      serviceCategory: nextCat,
+                      serviceType: section?.type || '',
+                      serviceActivity: '',
+                    }));
+                  }}
+                >
+                  <option value="">Select category</option>
+                  {guideData.guide_auto_entrepreneur.sections.map(sec => (
+                    <option key={sec.category} value={sec.category}>
+                      {sec.category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Type */}
+              <div>
+                <label className="mb-1 block text-sm font-medium">Type</label>
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceType || ''}
+                  onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))}
+                >
+                  <option value="">Select type</option>
+                  {form.serviceCategory &&
+                    (() => {
+                      const section = guideData.guide_auto_entrepreneur.sections.find(
+                        s => s.category === form.serviceCategory
+                      );
+                      return section ? <option value={section.type}>{section.type}</option> : null;
+                    })()}
+                </select>
+              </div>
+              {/* Activity */}
+              <div>
+                <label className="mb-1 block text-sm font-medium">Activity</label>
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceActivity || ''}
+                  onChange={e => setForm(f => ({ ...f, serviceActivity: e.target.value }))}
+                  disabled={!form.serviceCategory}
+                >
+                  <option value="">Select activity</option>
+                  {form.serviceCategory &&
+                    guideData.guide_auto_entrepreneur.sections
+                      .find(s => s.category === form.serviceCategory)
+                      ?.activities.map((act: string) => (
+                        <option key={act} value={act}>
+                          {act}
+                        </option>
+                      ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {form.profileKind === 'company_guide' && (
+            <div>
+              <label className="mb-1 block text-sm font-medium">Company type code</label>
+              <select
+                className="w-full rounded border bg-card p-2 text-foreground"
+                value={form.companyTypeCode || ''}
+                onChange={e => setForm(f => ({ ...f, companyTypeCode: e.target.value }))}
+              >
+                <option value="">Select company type code</option>
+                {guideData.company_guide.types.map(t => (
+                  <option key={t.code} value={t.code}>
+                    {t.code} — {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setModalOpen(false)}>
               Cancel

@@ -34,7 +34,20 @@ export async function listUsers(req: Request, res: Response) {
 // POST /api/admin/users
 export async function createUser(req: Request, res: Response) {
   try {
-    const { email, password, role, fullName, phone, ICE, service } = req.body || {};
+    const {
+      email,
+      password,
+      role,
+      fullName,
+      phone,
+      ICE,
+      service,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
+    } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
     const exists = await User.findOne({ email });
@@ -49,6 +62,11 @@ export async function createUser(req: Request, res: Response) {
       phone,
       ICE,
       service,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
     });
     return res.status(201).json({ user });
   } catch (e) {
@@ -60,7 +78,20 @@ export async function createUser(req: Request, res: Response) {
 export async function updateUser(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { email, role, fullName, phone, ICE, service, password } = req.body || {};
+    const {
+      email,
+      role,
+      fullName,
+      phone,
+      ICE,
+      service,
+      password,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
+    } = req.body || {};
 
     const update: Record<string, unknown> = {};
     if (typeof email !== 'undefined') {
@@ -74,6 +105,11 @@ export async function updateUser(req: Request, res: Response) {
     if (typeof phone !== 'undefined') update.phone = phone;
     if (typeof ICE !== 'undefined') update.ICE = ICE;
     if (typeof service !== 'undefined') update.service = service;
+    if (typeof profileKind !== 'undefined') update.profileKind = profileKind;
+    if (typeof serviceCategory !== 'undefined') update.serviceCategory = serviceCategory;
+    if (typeof serviceType !== 'undefined') update.serviceType = serviceType;
+    if (typeof serviceActivity !== 'undefined') update.serviceActivity = serviceActivity;
+    if (typeof companyTypeCode !== 'undefined') update.companyTypeCode = companyTypeCode;
     if (typeof password !== 'undefined' && String(password).length > 0) {
       update.password = await bcrypt.hash(String(password), 10);
     }
