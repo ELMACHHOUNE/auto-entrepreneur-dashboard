@@ -6,10 +6,13 @@ const Register = lazy(() => import('@/pages/Register'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Admin = lazy(() => import('@/pages/Admin'));
+const AdminUsers = lazy(() => import('@/pages/admin/Users.tsx'));
+const AdminServices = lazy(() => import('@/pages/admin/Services.tsx'));
 import RequireAuth from '@/components/RequireAuth';
 import RequireRole from '@/components/RequireRole';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/layout/Navbar';
+import AdminLayout from '@/components/layout/AdminLayout';
 
 export default function App() {
   useAuth();
@@ -43,11 +46,15 @@ export default function App() {
               element={
                 <RequireAuth>
                   <RequireRole role="admin">
-                    <Admin />
+                    <AdminLayout />
                   </RequireRole>
                 </RequireAuth>
               }
-            />
+            >
+              <Route index element={<Admin />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="services" element={<AdminServices />} />
+            </Route>
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
