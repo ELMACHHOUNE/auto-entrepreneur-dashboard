@@ -30,13 +30,15 @@ export default function Users() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [globalFilter, setGlobalFilter] = useState('');
 
+  const safeSearch = (globalFilter ?? '').trim();
+
   const { data, isLoading, isError } = useQuery<UsersResponse>({
-    queryKey: ['admin-users', pagination.pageIndex, pagination.pageSize, globalFilter],
+    queryKey: ['admin-users', pagination.pageIndex, pagination.pageSize, safeSearch],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(pagination.pageIndex + 1),
         limit: String(pagination.pageSize),
-        search: globalFilter,
+        search: safeSearch,
       });
       const { data } = await api.get(`/api/admin/users?${params.toString()}`);
       return data;
@@ -148,7 +150,7 @@ export default function Users() {
       globalFilter,
       pagination,
     },
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: v => setGlobalFilter(v ?? ''),
     onPaginationChange: setPagination,
     renderTopToolbarCustomActions: () => (
       <Button onClick={openCreate} size="xs" variant="default">

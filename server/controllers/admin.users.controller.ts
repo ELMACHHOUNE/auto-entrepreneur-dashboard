@@ -7,7 +7,9 @@ export async function listUsers(req: Request, res: Response) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
-    const search = String(req.query.search || '').trim();
+    // Coerce accidental 'undefined' or 'null' string query values to empty
+    const rawSearch = String(req.query.search ?? '').trim();
+    const search = ['undefined', 'null'].includes(rawSearch.toLowerCase()) ? '' : rawSearch;
 
     const query: any = {};
     if (search) {
