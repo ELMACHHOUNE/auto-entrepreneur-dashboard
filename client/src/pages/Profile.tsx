@@ -6,6 +6,7 @@ import { Briefcase, IdCard, Phone, User as UserIcon, Mail, Lock, CloudUpload } f
 import { FileUploader, FileInput, type DropzoneOptions } from '@/components/ui/file-upload';
 import AlertBanner from '@/components/ui/alert-banner';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import guideData from '@/assets/data.json';
 
 export default function Profile() {
   const { user, updateProfile, changePassword, updateAvatar } = useAuth();
@@ -15,6 +16,12 @@ export default function Profile() {
     phone: user?.phone || '',
     ICE: user?.ICE || '',
     service: user?.service || '',
+    // structured fields
+    profileKind: (user?.profileKind as '' | 'guide_auto_entrepreneur' | 'company_guide') || '',
+    serviceCategory: user?.serviceCategory || '',
+    serviceType: user?.serviceType || '',
+    serviceActivity: user?.serviceActivity || '',
+    companyTypeCode: user?.companyTypeCode || '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -27,9 +34,32 @@ export default function Profile() {
   const [avatarVersion, setAvatarVersion] = useState(0);
 
   useEffect(() => {
-    // keep email in sync if user changes via refresh
-    setForm(f => ({ ...f, email: user?.email || f.email }));
-  }, [user?.email]);
+    // Sync all fields from loaded user (covers first load and later refreshes)
+    setForm(f => ({
+      ...f,
+      email: user?.email || '',
+      fullName: user?.fullName || '',
+      phone: user?.phone || '',
+      ICE: user?.ICE || '',
+      service: user?.service || '',
+      profileKind: (user?.profileKind as '' | 'guide_auto_entrepreneur' | 'company_guide') || '',
+      serviceCategory: user?.serviceCategory || '',
+      serviceType: user?.serviceType || '',
+      serviceActivity: user?.serviceActivity || '',
+      companyTypeCode: user?.companyTypeCode || '',
+    }));
+  }, [
+    user?.email,
+    user?.fullName,
+    user?.phone,
+    user?.ICE,
+    user?.service,
+    user?.profileKind,
+    user?.serviceCategory,
+    user?.serviceType,
+    user?.serviceActivity,
+    user?.companyTypeCode,
+  ]);
 
   const errors = useMemo(() => {
     const e: Partial<Record<keyof typeof form, string>> = {};
@@ -51,7 +81,29 @@ export default function Profile() {
     if (!isValid) return;
     try {
       setSaving(true);
-      await updateProfile(form);
+      // derive service similar to Register
+      let derivedService = form.service;
+      if (form.profileKind === 'guide_auto_entrepreneur') {
+        derivedService = form.serviceActivity || '';
+      } else if (form.profileKind === 'company_guide') {
+        derivedService = form.companyTypeCode || '';
+      }
+
+      await updateProfile({
+        email: form.email,
+        fullName: form.fullName,
+        phone: form.phone,
+        ICE: form.ICE,
+        service: derivedService,
+        profileKind: (form.profileKind === '' ? undefined : form.profileKind) as
+          | 'guide_auto_entrepreneur'
+          | 'company_guide'
+          | undefined,
+        serviceCategory: form.serviceCategory || undefined,
+        serviceType: form.serviceType || undefined,
+        serviceActivity: form.serviceActivity || undefined,
+        companyTypeCode: form.companyTypeCode || undefined,
+      });
       if (avatarFile) {
         await updateAvatar(avatarFile);
         setAvatarFile(null);
@@ -283,6 +335,7 @@ export default function Profile() {
               {errors.ICE}
             </p>
           )}
+          {/* Profile kind selector */}
           <div className="relative">
             <Briefcase
               size={16}
@@ -290,17 +343,110 @@ export default function Profile() {
             />
             <select
               className="w-full rounded border bg-card p-2 pl-9 text-foreground"
-              value={form.service}
-              onChange={e => setForm({ ...form, service: e.target.value })}
+              value={form.profileKind}
+              onChange={e =>
+                setForm(f => ({
+                  ...f,
+                  profileKind: e.target.value as '' | 'guide_auto_entrepreneur' | 'company_guide',
+                  // Reset dependent fields when kind changes
+                  serviceCategory: '',
+                  serviceType: '',
+                  serviceActivity: '',
+                  companyTypeCode: '',
+                }))
+              }
             >
-              <option value="">Select service</option>
-              <option value="consulting">Consulting</option>
-              <option value="design">Design</option>
-              <option value="development">Development</option>
-              <option value="marketing">Marketing</option>
-              <option value="other">Other</option>
+              <option value="">Select profile type</option>
+              <option value="guide_auto_entrepreneur">Auto-entrepreneur guide</option>
+              <option value="company_guide">Company guide</option>
             </select>
           </div>
+
+          {/* Conditional selects for Auto-entrepreneur */}
+          {form.profileKind === 'guide_auto_entrepreneur' && (
+            <>
+              {/* Category */}
+              <div className="relative">
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceCategory}
+                  onChange={e => {
+                    const nextCat = e.target.value;
+                    const section = guideData.guide_auto_entrepreneur.sections.find(
+                      s => s.category === nextCat
+                    );
+                    setForm(f => ({
+                      ...f,
+                      serviceCategory: nextCat,
+                      serviceType: section?.type || '',
+                      serviceActivity: '',
+                    }));
+                  }}
+                >
+                  <option value="">Select category</option>
+                  {guideData.guide_auto_entrepreneur.sections.map(sec => (
+                    <option key={sec.category} value={sec.category}>
+                      {sec.category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Type (derived from category) */}
+              <div className="relative">
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceType}
+                  onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))}
+                >
+                  <option value="">Select type</option>
+                  {form.serviceCategory &&
+                    (() => {
+                      const section = guideData.guide_auto_entrepreneur.sections.find(
+                        s => s.category === form.serviceCategory
+                      );
+                      return section ? <option value={section.type}>{section.type}</option> : null;
+                    })()}
+                </select>
+              </div>
+              {/* Activity */}
+              <div className="relative">
+                <select
+                  className="w-full rounded border bg-card p-2 text-foreground"
+                  value={form.serviceActivity}
+                  onChange={e => setForm(f => ({ ...f, serviceActivity: e.target.value }))}
+                  disabled={!form.serviceCategory}
+                >
+                  <option value="">Select activity</option>
+                  {form.serviceCategory &&
+                    guideData.guide_auto_entrepreneur.sections
+                      .find(s => s.category === form.serviceCategory)
+                      ?.activities.map(act => (
+                        <option key={act} value={act}>
+                          {act}
+                        </option>
+                      ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* Conditional select for Company */}
+          {form.profileKind === 'company_guide' && (
+            <div className="relative">
+              <select
+                className="w-full rounded border bg-card p-2 text-foreground"
+                value={form.companyTypeCode}
+                onChange={e => setForm(f => ({ ...f, companyTypeCode: e.target.value }))}
+              >
+                <option value="">Select company type code</option>
+                {guideData.company_guide.types.map(t => (
+                  <option key={t.code} value={t.code}>
+                    {t.code} — {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <AlertBanner
             open={Boolean(err)}
             variant="error"

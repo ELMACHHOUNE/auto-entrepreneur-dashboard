@@ -9,13 +9,20 @@ export default function AdminSidebar({
   onNavigate?: () => void;
   collapsed?: boolean;
 }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const links: SidebarLink[] = [
     { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { to: '/admin/users', label: 'Manage users', icon: <Users size={18} /> },
     { to: '/admin/services', label: 'Manage services', icon: <Settings size={18} /> },
-    { to: '/login', label: 'Logout', icon: <LogOut size={18} /> },
+    {
+      to: '/login',
+      label: 'Logout',
+      icon: <LogOut size={18} />,
+      onClick: async () => {
+        await logout();
+      },
+    },
   ];
 
   const handleNavigate = async () => {

@@ -5,6 +5,7 @@ export interface SidebarLink {
   to: string;
   label: string;
   icon?: React.ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
 }
 
 export interface SidebarProps {
@@ -70,7 +71,10 @@ function SidebarComponent({
           <NavLink
             key={link.to}
             to={link.to}
-            onClick={onNavigate}
+            onClick={e => {
+              link.onClick?.(e);
+              onNavigate?.();
+            }}
             className={({ isActive }) =>
               classNames(
                 collapsed

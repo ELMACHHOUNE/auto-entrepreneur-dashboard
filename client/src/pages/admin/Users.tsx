@@ -13,6 +13,12 @@ type IUser = {
   phone?: string;
   ICE?: string;
   service?: string;
+  // Structured service fields
+  profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+  serviceCategory?: string;
+  serviceType?: string;
+  serviceActivity?: string;
+  companyTypeCode?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -90,6 +96,21 @@ export default function Users() {
       { accessorKey: 'phone', header: 'Phone' },
       { accessorKey: 'ICE', header: 'ICE' },
       { accessorKey: 'service', header: 'Service' },
+      // New structured columns (read-only display)
+      {
+        header: 'Profile',
+        accessorFn: (row: IUser) =>
+          row.profileKind === 'guide_auto_entrepreneur'
+            ? 'Auto-entrepreneur'
+            : row.profileKind === 'company_guide'
+            ? 'Company'
+            : '',
+        id: 'profileKindLabel',
+      },
+      { accessorKey: 'serviceCategory', header: 'Category' },
+      { accessorKey: 'serviceType', header: 'Type' },
+      { accessorKey: 'serviceActivity', header: 'Activity' },
+      { accessorKey: 'companyTypeCode', header: 'Company code' },
     ],
     []
   );

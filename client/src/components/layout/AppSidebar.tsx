@@ -10,13 +10,21 @@ export default function AppSidebar({
   onNavigate?: () => void;
   collapsed?: boolean;
 }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const links: SidebarLink[] = [
     { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { to: '/profile', label: 'Profile', icon: <UserIcon size={18} /> },
-    // Logout as a link surrogate: we'll handle click to perform logout then rely on auth guard
-    { to: '/login', label: 'Logout', icon: <LogOut size={18} /> },
+    {
+      to: '/login',
+      label: 'Logout',
+      icon: <LogOut size={18} />,
+      onClick: async () => {
+        // Trigger logout to clear auth state immediately so Navbar updates
+        // Don't prevent navigation; after logout, router will navigate to /login
+        await logout();
+      },
+    },
   ];
 
   const handleNavigate = async () => {
