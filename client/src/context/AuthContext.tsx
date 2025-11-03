@@ -12,6 +12,12 @@ export interface User {
   ICE?: string;
   service?: string;
   avatarUrl?: string;
+  // New structured service fields
+  profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+  serviceCategory?: string;
+  serviceType?: string;
+  serviceActivity?: string;
+  companyTypeCode?: string;
 }
 
 interface AuthContextType {
@@ -25,6 +31,12 @@ interface AuthContextType {
     phone?: string;
     ICE?: string;
     service?: string;
+    // structured fields
+    profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+    serviceCategory?: string;
+    serviceType?: string;
+    serviceActivity?: string;
+    companyTypeCode?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -34,6 +46,12 @@ interface AuthContextType {
     phone?: string;
     ICE?: string;
     service?: string;
+    // structured fields
+    profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+    serviceCategory?: string;
+    serviceType?: string;
+    serviceActivity?: string;
+    companyTypeCode?: string;
   }) => Promise<void>;
   changePassword: (data: { currentPassword?: string; newPassword: string }) => Promise<void>;
   updateAvatar: (file: File) => Promise<void>;
@@ -72,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone?: string;
     ICE?: string;
     service?: string;
+    profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+    serviceCategory?: string;
+    serviceType?: string;
+    serviceActivity?: string;
+    companyTypeCode?: string;
   }) => {
     await api.post('/api/auth/register', payload);
     await refresh();
@@ -88,6 +111,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     phone?: string;
     ICE?: string;
     service?: string;
+    profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+    serviceCategory?: string;
+    serviceType?: string;
+    serviceActivity?: string;
+    companyTypeCode?: string;
   }) => {
     await api.put('/api/auth/me', payload);
     await refresh();

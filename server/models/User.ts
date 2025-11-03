@@ -14,6 +14,12 @@ export interface IUser extends Document {
   googleId?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Structured service fields
+  profileKind?: 'guide_auto_entrepreneur' | 'company_guide';
+  serviceCategory?: string;
+  serviceType?: string;
+  serviceActivity?: string;
+  companyTypeCode?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -43,6 +49,17 @@ const UserSchema = new Schema<IUser>(
       },
     },
     service: { type: String },
+    // New structured fields (all optional)
+    profileKind: {
+      type: String,
+      enum: ['guide_auto_entrepreneur', 'company_guide'],
+      required: false,
+      index: true,
+    },
+    serviceCategory: { type: String },
+    serviceType: { type: String },
+    serviceActivity: { type: String },
+    companyTypeCode: { type: String },
     avatarUrl: { type: String },
     googleId: { type: String },
   },

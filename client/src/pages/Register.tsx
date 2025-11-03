@@ -7,6 +7,7 @@ import { MagicCard } from '@/components/ui/magic-card';
 import AlertBanner from '@/components/ui/alert-banner';
 import { FileUploader, FileInput, type DropzoneOptions } from '@/components/ui/file-upload';
 import AuthSplit from '@/components/layout/AuthSplit';
+import guideData from '@/assets/data.json';
 import {
   User as UserIcon,
   Mail,
@@ -33,6 +34,12 @@ export default function Register() {
     phone: '',
     ICE: '',
     service: '',
+    // structured service fields
+    profileKind: '' as '' | 'guide_auto_entrepreneur' | 'company_guide',
+    serviceCategory: '',
+    serviceType: '',
+    serviceActivity: '',
+    companyTypeCode: '',
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null); // placeholder only, not uploaded
   const [err, setErr] = useState<string | null>(null);
@@ -46,7 +53,7 @@ export default function Register() {
   const googleUrl = `${import.meta.env.VITE_API_URL}api/auth/google`;
 
   const errors = useMemo(() => {
-    const e: Partial<Record<keyof typeof form, string>> = {};
+    const e: Partial<Record<string, string>> = {};
     if (!form.fullName || form.fullName.trim().length < 2) e.fullName = 'Full name is required';
     // Phone: allow +, spaces, parentheses, dashes; must contain 9-15 digits total
     const digits = form.phone.replace(/\D/g, '');
@@ -54,7 +61,15 @@ export default function Register() {
     // ICE: 15 digits
     const iceDigits = form.ICE.replace(/\D/g, '');
     if (iceDigits.length !== 15) e.ICE = 'ICE must be 15 digits';
-    if (!form.service) e.service = 'Please select a service';
+    // New selection flow validation
+    if (!form.profileKind) e.profileKind = 'Please select a profile type';
+    if (form.profileKind === 'guide_auto_entrepreneur') {
+      if (!form.serviceCategory) e.serviceCategory = 'Select a category';
+      if (!form.serviceType) e.serviceType = 'Select a type';
+      if (!form.serviceActivity) e.serviceActivity = 'Select an activity';
+    } else if (form.profileKind === 'company_guide') {
+      if (!form.companyTypeCode) e.companyTypeCode = 'Select company type code';
+    }
     if (!form.email) e.email = 'Email is required';
     if (!form.password || form.password.length < 6)
       e.password = 'Password must be at least 6 characters';
@@ -73,8 +88,28 @@ export default function Register() {
       return;
     }
     try {
-      const { email, password, fullName, phone, ICE, service } = form;
-      await register({ email, password, fullName, phone, ICE, service });
+      // Derive service string based on selection
+      let derivedService = form.service;
+      if (form.profileKind === 'guide_auto_entrepreneur') {
+        derivedService = form.serviceActivity || '';
+      } else if (form.profileKind === 'company_guide') {
+        derivedService = form.companyTypeCode || '';
+      }
+
+      const { email, password, fullName, phone, ICE } = form;
+      await register({
+        email,
+        password,
+        fullName,
+        phone,
+        ICE,
+        service: derivedService,
+        profileKind: form.profileKind || undefined,
+        serviceCategory: form.serviceCategory || undefined,
+        serviceType: form.serviceType || undefined,
+        serviceActivity: form.serviceActivity || undefined,
+        companyTypeCode: form.companyTypeCode || undefined,
+      });
       // If user selected an avatar, upload it immediately after register (cookie already set)
       if (avatarFile) {
         try {
@@ -256,6 +291,7 @@ export default function Register() {
                 />
               </div>
               {errors.ICE && <p className="text-red-600 text-sm">{errors.ICE}</p>}
+              {/* Profile kind selector */}
               <div className="relative">
                 <Briefcase
                   size={16}
@@ -263,18 +299,128 @@ export default function Register() {
                 />
                 <select
                   className="w-full border p-2 pl-9 rounded bg-background text-foreground"
-                  value={form.service}
-                  onChange={e => setForm({ ...form, service: e.target.value })}
+                  value={form.profileKind}
+                  onChange={e =>
+                    setForm(f => ({
+                      ...f,
+                      profileKind: e.target.value as
+                        | ''
+                        | 'guide_auto_entrepreneur'
+                        | 'company_guide',
+                      // reset dependent fields when kind changes
+                      serviceCategory: '',
+                      serviceType: '',
+                      serviceActivity: '',
+                      companyTypeCode: '',
+                    }))
+                  }
                 >
-                  <option value="">Select service</option>
-                  <option value="consulting">Consulting</option>
-                  <option value="design">Design</option>
-                  <option value="development">Development</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="other">Other</option>
+                  <option value="">Select profile type</option>
+                  <option value="guide_auto_entrepreneur">Auto-entrepreneur guide</option>
+                  <option value="company_guide">Company guide</option>
                 </select>
               </div>
-              {errors.service && <p className="text-red-600 text-sm ">{errors.service}</p>}
+              {errors.profileKind && <p className="text-red-600 text-sm">{errors.profileKind}</p>}
+
+              {/* Conditional selects */}
+              {form.profileKind === 'guide_auto_entrepreneur' && (
+                <>
+                  {/* Category */}
+                  <div className="relative">
+                    <select
+                      className="w-full border p-2 rounded bg-background text-foreground"
+                      value={form.serviceCategory}
+                      onChange={e => {
+                        const nextCat = e.target.value;
+                        // Find the section for category to derive type
+                        const section = guideData.guide_auto_entrepreneur.sections.find(
+                          s => s.category === nextCat
+                        );
+                        setForm(f => ({
+                          ...f,
+                          serviceCategory: nextCat,
+                          serviceType: section?.type || '',
+                          serviceActivity: '', // reset activity when category changes
+                        }));
+                      }}
+                    >
+                      <option value="">Select category</option>
+                      {guideData.guide_auto_entrepreneur.sections.map(sec => (
+                        <option key={sec.category} value={sec.category}>
+                          {sec.category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.serviceCategory && (
+                    <p className="text-red-600 text-sm">{errors.serviceCategory}</p>
+                  )}
+                  {/* Type (derived from category; still selectable if needed) */}
+                  <div className="relative">
+                    <select
+                      className="w-full border p-2 rounded bg-background text-foreground"
+                      value={form.serviceType}
+                      onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))}
+                    >
+                      <option value="">Select type</option>
+                      {/* Only one type per category in the data; offer whatever is on the section */}
+                      {form.serviceCategory &&
+                        (() => {
+                          const section = guideData.guide_auto_entrepreneur.sections.find(
+                            s => s.category === form.serviceCategory
+                          );
+                          return section ? (
+                            <option value={section.type}>{section.type}</option>
+                          ) : null;
+                        })()}
+                    </select>
+                  </div>
+                  {errors.serviceType && (
+                    <p className="text-red-600 text-sm">{errors.serviceType}</p>
+                  )}
+                  {/* Activity */}
+                  <div className="relative">
+                    <select
+                      className="w-full border p-2 rounded bg-background text-foreground"
+                      value={form.serviceActivity}
+                      onChange={e => setForm(f => ({ ...f, serviceActivity: e.target.value }))}
+                      disabled={!form.serviceCategory}
+                    >
+                      <option value="">Select activity</option>
+                      {form.serviceCategory &&
+                        guideData.guide_auto_entrepreneur.sections
+                          .find(s => s.category === form.serviceCategory)
+                          ?.activities.map(act => (
+                            <option key={act} value={act}>
+                              {act}
+                            </option>
+                          ))}
+                    </select>
+                  </div>
+                  {errors.serviceActivity && (
+                    <p className="text-red-600 text-sm">{errors.serviceActivity}</p>
+                  )}
+                </>
+              )}
+              {form.profileKind === 'company_guide' && (
+                <div className="relative">
+                  <select
+                    className="w-full border p-2 rounded bg-background text-foreground"
+                    value={form.companyTypeCode}
+                    onChange={e => setForm(f => ({ ...f, companyTypeCode: e.target.value }))}
+                  >
+                    <option value="">Select company type code</option>
+                    {guideData.company_guide.types.map(t => (
+                      <option key={t.code} value={t.code}>
+                        {t.code}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.companyTypeCode && (
+                    <p className="text-red-600 text-sm">{errors.companyTypeCode}</p>
+                  )}
+                </div>
+              )}
               <AlertBanner
                 open={Boolean(err)}
                 variant="error"

@@ -12,7 +12,19 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function register(req: Request, res: Response) {
   try {
-    const { email, password, fullName, phone, ICE, service } = req.body || {};
+    const {
+      email,
+      password,
+      fullName,
+      phone,
+      ICE,
+      service,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
+    } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
     const existing = await User.findOne({ email });
@@ -27,6 +39,11 @@ export async function register(req: Request, res: Response) {
       phone,
       ICE,
       service,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
     });
 
     const token = signToken({ sub: user.id, role: user.role, email: user.email });
@@ -85,7 +102,18 @@ export async function updateMe(req: AuthRequest, res: Response) {
     if (!id) return res.status(401).json({ error: 'Unauthorized' });
 
     // Allow only specific fields to be updated
-    const { fullName, phone, ICE, service, email } = req.body || {};
+    const {
+      fullName,
+      phone,
+      ICE,
+      service,
+      email,
+      profileKind,
+      serviceCategory,
+      serviceType,
+      serviceActivity,
+      companyTypeCode,
+    } = req.body || {};
     const update: Record<string, unknown> = {};
     if (typeof fullName !== 'undefined') update.fullName = fullName;
     // Phone: allow empty, otherwise must be 9–15 digits
@@ -111,6 +139,11 @@ export async function updateMe(req: AuthRequest, res: Response) {
       }
     }
     if (typeof service !== 'undefined') update.service = service;
+    if (typeof profileKind !== 'undefined') update.profileKind = profileKind;
+    if (typeof serviceCategory !== 'undefined') update.serviceCategory = serviceCategory;
+    if (typeof serviceType !== 'undefined') update.serviceType = serviceType;
+    if (typeof serviceActivity !== 'undefined') update.serviceActivity = serviceActivity;
+    if (typeof companyTypeCode !== 'undefined') update.companyTypeCode = companyTypeCode;
     if (typeof email !== 'undefined') {
       // normalize and ensure uniqueness
       const nextEmail = String(email).toLowerCase();
