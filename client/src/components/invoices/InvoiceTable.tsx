@@ -296,6 +296,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <TextInput
             label="Invoice No."
+            type="number"
             value={invNumber}
             onChange={e => setInvNumber(e.currentTarget.value)}
             ref={addFirstFieldRef}
@@ -338,6 +339,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           />
           <TextInput
             label="VAT %"
+            type="number"
             description="Type any value (e.g. 0.5 or 20)"
             value={invTvaRateInput}
             onChange={e => setInvTvaRateInput(e.currentTarget.value)}
@@ -380,6 +382,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <TextInput
               label="Invoice No."
+              type="number"
               value={editDraft.invoiceNumber as string}
               onChange={e => setEditDraft({ ...editDraft, invoiceNumber: e.currentTarget.value })}
               ref={editFirstFieldRef}
