@@ -53,7 +53,10 @@ interface InvoiceTableProps {
   onQuarterSummaryChange?: (summary: {
     year: number;
     totals: { T1: number; T2: number; T3: number; T4: number };
-    onePercent: { T1: number; T2: number; T3: number; T4: number };
+    // Keep per-quarter totals; percentage amounts can be computed by consumer using a selected rate
+    // Provide yearly rollups for convenience
+    totalYearAmount: number;
+    totalYearTva: number;
   }) => void;
 }
 
@@ -105,16 +108,16 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       T3: 0,
       T4: 0,
     };
+    let totalYearAmount = 0;
+    let totalYearTva = 0;
     rowsForYear.forEach(r => {
       buckets[r.quarter] += r.amount;
+      totalYearAmount += r.amount;
+      totalYearTva += computeTvaAmount(r);
     });
-    const onePercent = {
-      T1: parseFloat((buckets.T1 * 0.01).toFixed(2)),
-      T2: parseFloat((buckets.T2 * 0.01).toFixed(2)),
-      T3: parseFloat((buckets.T3 * 0.01).toFixed(2)),
-      T4: parseFloat((buckets.T4 * 0.01).toFixed(2)),
-    } as const;
-    onQuarterSummaryChange({ year, totals: buckets, onePercent });
+    totalYearAmount = parseFloat(totalYearAmount.toFixed(2));
+    totalYearTva = parseFloat(totalYearTva.toFixed(2));
+    onQuarterSummaryChange({ year, totals: buckets, totalYearAmount, totalYearTva });
   }, [rowsForYear, year, onQuarterSummaryChange]);
 
   const addInvoice = useCallback(() => {
@@ -219,7 +222,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </Group>
         )}
         renderTopToolbarCustomActions={() => (
-          <div className="w-full grid grid-cols-3 items-center gap-2">
+          <div className="grid grid-cols-3 items-center gap-2">
             <div className="justify-self-start">
               <Button
                 size="xs"

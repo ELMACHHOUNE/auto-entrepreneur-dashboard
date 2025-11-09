@@ -24,8 +24,9 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   manualFiltering?: boolean;
   pagination?: { pageIndex: number; pageSize: number };
   onPaginationChange?: MRT_TableOptions<T>['onPaginationChange'];
-  globalFilter?: string;
-  onGlobalFilterChange?: (val: string) => void;
+  // Leave global filter unmanaged by default so built-in search works out of the box
+  globalFilter?: string; // kept for backward compatibility (not used when undefined)
+  onGlobalFilterChange?: (val: string) => void; // kept for backward compatibility (not used when undefined)
   renderRowActions?: (props: { row: MRT_Row<T> }) => React.ReactNode;
   renderTopToolbarCustomActions?: () => React.ReactNode;
   // Customize border color of the surrounding card/container
@@ -73,14 +74,23 @@ export function DataTable<T extends Record<string, unknown>>({
     data,
     rowCount,
     enableRowActions,
+    enableGlobalFilter: true,
     manualFiltering: manualFiltering,
     manualPagination: manualPagination,
     state: {
       isLoading: loading,
-      globalFilter,
       pagination: safePagination,
     },
-    onGlobalFilterChange: v => onGlobalFilterChange?.(v ?? ''),
+    // If consumer provides controlled globalFilter handlers, use them; otherwise let MRT manage internally
+    ...(globalFilter !== undefined && {
+      state: {
+        isLoading: loading,
+        globalFilter,
+        pagination: safePagination,
+      },
+      onGlobalFilterChange: (v: string | undefined) => onGlobalFilterChange?.(v ?? ''),
+    }),
+    initialState: { showGlobalFilter: true },
     onPaginationChange,
     renderRowActions,
     renderTopToolbarCustomActions,
