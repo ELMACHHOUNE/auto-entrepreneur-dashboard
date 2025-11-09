@@ -275,6 +275,7 @@ export default function Users() {
         <Stack>
           <TextInput
             label="Email"
+            type="email"
             placeholder="email@example.com"
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e?.currentTarget?.value ?? '' }))}
@@ -285,6 +286,7 @@ export default function Users() {
           {!editing && (
             <TextInput
               label="Password"
+              type="password"
               placeholder="At least 6 characters"
               value={form.password || ''}
               onChange={e => setForm(f => ({ ...f, password: e?.currentTarget?.value ?? '' }))}
@@ -315,6 +317,7 @@ export default function Users() {
           />
           <TextInput
             label="Phone"
+            type="number"
             value={form.phone || ''}
             onChange={e => setForm(f => ({ ...f, phone: e?.currentTarget?.value ?? '' }))}
             variant="filled"
@@ -322,6 +325,7 @@ export default function Users() {
           />
           <TextInput
             label="ICE"
+            type="number"
             value={form.ICE || ''}
             onChange={e => setForm(f => ({ ...f, ICE: e?.currentTarget?.value ?? '' }))}
             variant="filled"
