@@ -31,8 +31,13 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
     }
   };
 
+  // Layout strategy adjustment:
+  // Previously main content was constrained by max-w-7xl and centered, leaving large horizontal gaps
+  // between the fixed sidebars and the main area. We switch to full-width container so the main
+  // naturally fills the space between left and right panels. Margins simply reserve horizontal
+  // space equal to sidebar widths. This reduces wasted space and makes the dashboard feel denser.
   return (
-    <div className="relative mx-auto max-w-7xl">
+    <div className="relative w-full">
       {/* Note: toggle controls are rendered inside the sidebar itself now */}
 
       {/* Sidebar below the navbar (assume navbar ~4rem height) */}
@@ -40,11 +45,11 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
         {open && (
           <motion.aside
             key="sidebar"
-            initial={{ x: -280, opacity: 0 }}
+            initial={{ x: -240, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -280, opacity: 0 }}
+            exit={{ x: -240, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-background p-4 "
+            className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-56 border-r bg-background p-3"
             id="app-sidebar"
           >
             <div className="mb-3 flex items-center justify-end ">
@@ -66,7 +71,7 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       {/* Collapsed sidebar (md+ only) when closed */}
       {!open && (
         <aside
-          className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-16 border-r bg-background  p-2 md:block"
+          className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-16 border-r bg-background p-2 md:block"
           id="app-sidebar-collapsed"
         >
           <div className="mb-2 flex items-center justify-center">
@@ -100,7 +105,7 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       {/* Optional right sidebar (md+) */}
       {rightSidebar && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-72 border-l bg-background p-3 md:block"
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l bg-background p-3 md:block"
           aria-label="Right insights panel"
         >
           {rightSidebar}
@@ -110,8 +115,8 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       {/* Main content shifts when sidebars are open on md+ */}
       <main
         className={`min-h-[60vh] transition-all duration-300 md:pt-2 text-foreground ${
-          open ? 'md:ml-64' : 'md:ml-16'
-        } ${rightSidebar ? 'md:mr-72' : ''}`}
+          open ? 'md:ml-56' : 'md:ml-16'
+        } ${rightSidebar ? 'md:mr-64' : ''} px-4`}
       >
         {/* Mobile-only inline trigger shown when sidebar is closed; scrolls with content */}
         {!open && (
