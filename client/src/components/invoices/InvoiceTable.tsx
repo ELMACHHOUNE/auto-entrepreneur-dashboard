@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Select, TextInput, Modal, Group, ActionIcon, Tooltip } from '@mantine/core';
+import {
+  selectFilledStyles,
+  inputFilledStyles,
+  buttonAccentStyles,
+  buttonNeutralStyles,
+  modalStyles,
+} from '@/components/ui/mantineStyles';
 import { DataTable } from '@/components/table/DataTable';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -71,7 +78,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   // Add Invoice modal
   const [addOpen, setAddOpen] = useState(false);
-  const [invMonth, setInvMonth] = useState<Month>(MONTHS[new Date().getMonth()] || 'Janvier');
+  const [invMonth, setInvMonth] = useState<Month>(MONTHS[new Date().getMonth()] || 'January');
   const [invYear, setInvYear] = useState<number>(year);
   const [invClient, setInvClient] = useState('');
   const [invNumber, setInvNumber] = useState('');
@@ -95,6 +102,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   // Edit Invoice modal
   const [editOpen, setEditOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<InvoiceRow | null>(null);
+
+  // Autofocus refs for better UX
+  const addFirstFieldRef = useRef<HTMLInputElement | null>(null);
+  const editFirstFieldRef = useRef<HTMLInputElement | null>(null);
 
   const rowsForYear = useMemo(() => invoices.filter(i => i.year === year), [invoices, year]);
 
@@ -164,6 +175,19 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     setInvoices(prev => prev.filter(r => r.id !== row.id));
   }, []);
 
+  // Focus first input when modals open
+  useEffect(() => {
+    if (addOpen) {
+      // next tick to ensure Modal content mounted
+      setTimeout(() => addFirstFieldRef.current?.focus(), 0);
+    }
+  }, [addOpen]);
+  useEffect(() => {
+    if (editOpen) {
+      setTimeout(() => editFirstFieldRef.current?.focus(), 0);
+    }
+  }, [editOpen]);
+
   const columns = useMemo<MRT_ColumnDef<InvoiceRow>[]>(
     () => [
       { accessorKey: 'invoiceNumber', header: 'Invoice No.', size: 150 },
@@ -200,6 +224,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   return (
     <div className="space-y-3">
+      {/** Reusable token-aligned styles for Selects to match table/search inputs (applied inline below) */}
       <DataTable<InvoiceRow>
         columns={columns}
         data={rowsForYear}
@@ -226,6 +251,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <div className="justify-self-start">
               <Button
                 size="xs"
+                styles={buttonAccentStyles}
                 onClick={() => {
                   setInvYear(year);
                   setAddOpen(true);
@@ -237,7 +263,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <div className="justify-self-center text-xs text-muted-foreground">
               Invoices: <strong>{rowsForYear.length}</strong>
             </div>
-            <div className="justify-self-end">
+            <div className="justify-self-end ">
               <Select
                 placeholder="Year"
                 size="xs"
@@ -247,6 +273,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   label: y.toString(),
                 }))}
                 onChange={v => setYear(parseInt(v || year.toString(), 10))}
+                variant="filled"
+                styles={selectFilledStyles}
                 style={{ width: 110 }}
               />
             </div>
@@ -255,23 +283,39 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       />
 
       {/* Add Invoice Modal */}
-      <Modal opened={addOpen} onClose={() => setAddOpen(false)} title="Add Invoice" size="md">
+      <Modal
+        opened={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Invoice"
+        size="md"
+        radius="md"
+        shadow="md"
+        overlayProps={{ opacity: 0.35, blur: 2 }}
+        styles={modalStyles.success}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <TextInput
             label="Invoice No."
             value={invNumber}
             onChange={e => setInvNumber(e.currentTarget.value)}
+            ref={addFirstFieldRef}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           <TextInput
             label="Client Name"
             value={invClient}
             onChange={e => setInvClient(e.currentTarget.value)}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           <Select
             label="Month"
             data={MONTHS.map(m => ({ value: m, label: m }))}
             value={invMonth}
-            onChange={v => setInvMonth((v as Month) || 'Janvier')}
+            onChange={v => setInvMonth((v as Month) || 'January')}
+            variant="filled"
+            styles={selectFilledStyles}
           />
           <Select
             label="Year"
@@ -281,12 +325,16 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             }))}
             value={invYear.toString()}
             onChange={v => setInvYear(parseInt(v || year.toString(), 10))}
+            variant="filled"
+            styles={selectFilledStyles}
           />
           <TextInput
             label="Amount (DH)"
             type="number"
             value={invAmount}
             onChange={e => setInvAmount(e.currentTarget.value)}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           <TextInput
             label="VAT %"
@@ -298,31 +346,52 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               const num = parseTvaRate(e.currentTarget.value);
               setInvTvaRateInput(num.toString());
             }}
+            variant="filled"
+            styles={inputFilledStyles}
           />
         </div>
-        <Group mt="md" justify="flex-end">
-          <Button size="xs" variant="default" onClick={() => setAddOpen(false)}>
+        <Group mt="md" justify="flex-end" gap="xs">
+          <Button
+            size="xs"
+            variant="outline"
+            styles={buttonNeutralStyles}
+            onClick={() => setAddOpen(false)}
+          >
             Cancel
           </Button>
-          <Button size="xs" onClick={addInvoice}>
-            Add
+          <Button size="xs" styles={buttonAccentStyles} onClick={addInvoice}>
+            Add Invoice
           </Button>
         </Group>
       </Modal>
 
       {/* Edit Invoice Modal */}
-      <Modal opened={editOpen} onClose={() => setEditOpen(false)} title="Edit Invoice" size="md">
+      <Modal
+        opened={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Invoice"
+        size="md"
+        radius="md"
+        shadow="md"
+        overlayProps={{ opacity: 0.35, blur: 2 }}
+        styles={modalStyles.accent}
+      >
         {editDraft && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <TextInput
               label="Invoice No."
               value={editDraft.invoiceNumber as string}
               onChange={e => setEditDraft({ ...editDraft, invoiceNumber: e.currentTarget.value })}
+              ref={editFirstFieldRef}
+              variant="filled"
+              styles={inputFilledStyles}
             />
             <TextInput
               label="Client Name"
               value={editDraft.clientName as string}
               onChange={e => setEditDraft({ ...editDraft, clientName: e.currentTarget.value })}
+              variant="filled"
+              styles={inputFilledStyles}
             />
             <Select
               label="Month"
@@ -339,6 +408,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     : d
                 )
               }
+              variant="filled"
+              styles={selectFilledStyles}
             />
             <Select
               label="Year"
@@ -350,6 +421,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               onChange={v =>
                 setEditDraft(d => (d ? { ...d, year: parseInt(v || d.year.toString(), 10) } : d))
               }
+              variant="filled"
+              styles={selectFilledStyles}
             />
             <TextInput
               label="Amount (DH)"
@@ -358,6 +431,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               onChange={e =>
                 setEditDraft({ ...editDraft, amount: parseFloat(e.currentTarget.value || '0') })
               }
+              variant="filled"
+              styles={inputFilledStyles}
             />
             <TextInput
               label="VAT %"
@@ -372,15 +447,22 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 const num = parseTvaRate(e.currentTarget.value);
                 setEditDraft(d => (d ? { ...d, tvaRate: num } : d));
               }}
+              variant="filled"
+              styles={inputFilledStyles}
             />
           </div>
         )}
-        <Group mt="md" justify="flex-end">
-          <Button size="xs" variant="default" onClick={() => setEditOpen(false)}>
+        <Group mt="md" justify="flex-end" gap="xs">
+          <Button
+            size="xs"
+            variant="outline"
+            styles={buttonNeutralStyles}
+            onClick={() => setEditOpen(false)}
+          >
             Cancel
           </Button>
-          <Button size="xs" onClick={saveEdit}>
-            Save
+          <Button size="xs" styles={buttonAccentStyles} onClick={saveEdit}>
+            Save Changes
           </Button>
         </Group>
       </Modal>

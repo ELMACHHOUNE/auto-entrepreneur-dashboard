@@ -2,6 +2,13 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Button, Group, Modal, Select, Stack, TextInput, ActionIcon, Tooltip } from '@mantine/core';
+import {
+  selectFilledStyles,
+  inputFilledStyles,
+  buttonAccentStyles,
+  buttonNeutralStyles,
+  modalStyles,
+} from '@/components/ui/mantineStyles';
 import { Pencil, Trash2 } from 'lucide-react';
 import DataTable from '@/components/table/DataTable';
 import guideData from '@/assets/data.json';
@@ -226,7 +233,7 @@ export default function Users() {
   );
 
   const topActions = () => (
-    <Button onClick={openCreate} size="xs" variant="default">
+    <Button onClick={openCreate} size="xs" styles={buttonAccentStyles}>
       Create user
     </Button>
   );
@@ -259,6 +266,11 @@ export default function Users() {
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editing ? 'Edit user' : 'Create user'}
+        size="md"
+        radius="md"
+        shadow="md"
+        overlayProps={{ opacity: 0.35, blur: 2 }}
+        styles={editing ? modalStyles.accent : modalStyles.success}
       >
         <Stack>
           <TextInput
@@ -267,6 +279,8 @@ export default function Users() {
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e?.currentTarget?.value ?? '' }))}
             required
+            variant="filled"
+            styles={inputFilledStyles}
           />
           {!editing && (
             <TextInput
@@ -275,6 +289,8 @@ export default function Users() {
               value={form.password || ''}
               onChange={e => setForm(f => ({ ...f, password: e?.currentTarget?.value ?? '' }))}
               required
+              variant="filled"
+              styles={inputFilledStyles}
             />
           )}
           <Select
@@ -287,21 +303,29 @@ export default function Users() {
               { label: 'User', value: 'user' },
               { label: 'Admin', value: 'admin' },
             ]}
+            variant="filled"
+            styles={selectFilledStyles}
           />
           <TextInput
             label="Full name"
             value={form.fullName || ''}
             onChange={e => setForm(f => ({ ...f, fullName: e?.currentTarget?.value ?? '' }))}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           <TextInput
             label="Phone"
             value={form.phone || ''}
             onChange={e => setForm(f => ({ ...f, phone: e?.currentTarget?.value ?? '' }))}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           <TextInput
             label="ICE"
             value={form.ICE || ''}
             onChange={e => setForm(f => ({ ...f, ICE: e?.currentTarget?.value ?? '' }))}
+            variant="filled"
+            styles={inputFilledStyles}
           />
           {/* Profile kind selector */}
           <div>
@@ -413,11 +437,16 @@ export default function Users() {
               </select>
             </div>
           )}
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={() => setModalOpen(false)}>
+          <Group justify="flex-end" mt="md" gap="xs">
+            <Button
+              variant="outline"
+              styles={buttonNeutralStyles}
+              onClick={() => setModalOpen(false)}
+            >
               Cancel
             </Button>
             <Button
+              styles={buttonAccentStyles}
               onClick={handleSubmit}
               loading={createMutation.isPending || updateMutation.isPending}
             >

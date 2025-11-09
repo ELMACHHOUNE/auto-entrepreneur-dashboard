@@ -1,8 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -139,4 +137,18 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* Match Mantine Selects in table bottom toolbar (page size selector) to token-based styling */
+.mrt-themed-bottom .mantine-Select-input {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--input);
+}
+.mrt-themed-bottom .mantine-Select-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+}
+.mrt-themed-bottom .mantine-Select-option {
+  color: var(--foreground);
 }

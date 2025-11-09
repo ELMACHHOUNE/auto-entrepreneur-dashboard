@@ -63,6 +63,29 @@ export function DataTable<T extends Record<string, unknown>>({
   const groupSepVar =
     groupSeparatorTone === 'border' ? 'var(--border)' : `var(--${groupSeparatorTone})`;
 
+  // Memoized style objects for stable references (avoid re-renders in Mantine components)
+  const paginationStyles = useMemo(
+    () => ({
+      control: {
+        background: 'var(--card)',
+        color: 'var(--foreground)',
+        borderColor: 'var(--border)',
+      },
+      dots: { color: 'var(--muted-foreground)' },
+    }),
+    []
+  );
+  const searchInputStyles = useMemo(
+    () => ({
+      input: {
+        background: 'var(--card)',
+        color: 'var(--foreground)',
+        borderColor: 'var(--input)',
+      },
+    }),
+    []
+  );
+
   // Provide a safe default pagination object if none is supplied to avoid runtime errors in MRT
   const safePagination = pagination ?? {
     pageIndex: 0,
@@ -195,21 +218,20 @@ export function DataTable<T extends Record<string, unknown>>({
       },
     },
     mantineBottomToolbarProps: {
+      className: 'mrt-themed-bottom',
       style: {
         background: 'var(--card)',
         borderTop: '1px solid var(--border)',
       },
     },
+    // Style pagination controls (prev/next, numbers)
+    mantinePaginationProps: {
+      styles: paginationStyles,
+    },
     mantineSearchTextInputProps: {
       variant: 'filled',
       placeholder: 'Search…',
-      styles: {
-        input: {
-          background: 'var(--card)',
-          color: 'var(--foreground)',
-          borderColor: 'var(--input)',
-        },
-      },
+      styles: searchInputStyles,
     },
   });
 

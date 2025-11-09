@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import InvoiceTable from '@/components/invoices/InvoiceTable';
 import { useState, useCallback } from 'react';
 import { Select } from '@mantine/core';
+import { selectFilledStyles } from '@/components/ui/mantineStyles';
 
 export default function Dashboard() {
   const [quarterTotals, setQuarterTotals] = useState({ T1: 0, T2: 0, T3: 0, T4: 0 });
@@ -35,7 +36,8 @@ export default function Dashboard() {
           size="xs"
           value={rateDisplay.toString()}
           onChange={v => setRateDisplay(parseFloat(v || '1'))}
-          styles={{ input: { minWidth: 70 } }}
+          variant="filled"
+          styles={{ ...selectFilledStyles, input: { ...selectFilledStyles.input, minWidth: 70 } }}
         />
       </div>
       {(['T1', 'T2', 'T3', 'T4'] as const).map(label => {
