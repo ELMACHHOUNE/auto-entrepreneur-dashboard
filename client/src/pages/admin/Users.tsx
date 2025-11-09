@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MantineReactTable, useMantineReactTable, type MRT_ColumnDef } from 'mantine-react-table';
-import { Button, Group, Modal, Select, Stack, TextInput } from '@mantine/core';
+import type { MRT_ColumnDef } from 'mantine-react-table';
+import { Button, Group, Modal, Select, Stack, TextInput, ActionIcon, Tooltip } from '@mantine/core';
+import { Pencil, Trash2 } from 'lucide-react';
+import DataTable from '@/components/table/DataTable';
 import guideData from '@/assets/data.json';
 import { api } from '@/api/axios';
 
@@ -196,44 +198,38 @@ export default function Users() {
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
 
-  const table = useMantineReactTable<IUser>({
-    columns,
-    data: items,
-    rowCount: total,
-    enableRowActions: true,
-    manualFiltering: true,
-    manualPagination: true,
-    state: {
-      isLoading,
-      globalFilter,
-      pagination,
-    },
-    onGlobalFilterChange: v => setGlobalFilter(v ?? ''),
-    onPaginationChange: setPagination,
-    renderTopToolbarCustomActions: () => (
-      <Button onClick={openCreate} size="xs" variant="default">
-        Create user
-      </Button>
-    ),
-    renderRowActions: ({ row }: { row: { original: IUser } }) => (
-      <Group gap="xs">
-        <Button size="xs" variant="subtle" onClick={() => openEdit(row.original)}>
-          Edit
-        </Button>
-        <Button
-          size="xs"
-          color="red"
+  const renderRowActions = ({ row }: { row: { original: IUser } }) => (
+    <Group gap="xs">
+      <Tooltip label="Edit" withArrow>
+        <ActionIcon
           variant="subtle"
+          color="primary"
+          size="sm"
+          aria-label="Edit user"
+          onClick={() => openEdit(row.original)}
+        >
+          <Pencil size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Delete" withArrow>
+        <ActionIcon
+          variant="subtle"
+          color="red"
+          size="sm"
+          aria-label="Delete user"
           onClick={() => deleteMutation.mutate(row.original._id)}
         >
-          Delete
-        </Button>
-      </Group>
-    ),
-    mantineToolbarAlertBannerProps: isError
-      ? { color: 'red', children: 'Error loading users' }
-      : undefined,
-  });
+          <Trash2 size={16} />
+        </ActionIcon>
+      </Tooltip>
+    </Group>
+  );
+
+  const topActions = () => (
+    <Button onClick={openCreate} size="xs" variant="default">
+      Create user
+    </Button>
+  );
 
   return (
     <section className="mx-auto max-w-7xl p-2">
@@ -241,8 +237,23 @@ export default function Users() {
         <h1 className="text-2xl font-semibold">Manage users</h1>
         <p className="text-sm text-muted-foreground">Create, update, and delete user accounts.</p>
       </header>
-
-      <MantineReactTable table={table} />
+      <DataTable<IUser>
+        columns={columns}
+        data={items}
+        rowCount={total}
+        enableRowActions
+        manualFiltering
+        manualPagination
+        loading={isLoading}
+        error={isError}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        globalFilter={globalFilter}
+        onGlobalFilterChange={setGlobalFilter}
+        renderRowActions={renderRowActions}
+        renderTopToolbarCustomActions={topActions}
+        borderTone="accent"
+      />
 
       <Modal
         opened={modalOpen}
