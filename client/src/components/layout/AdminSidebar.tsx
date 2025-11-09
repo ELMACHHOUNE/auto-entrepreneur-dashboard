@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Settings, LogOut } from 'lucide-react';
+import { Users, Settings, LogOut } from 'lucide-react';
 import Sidebar, { type SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,7 +12,6 @@ export default function AdminSidebar({
   const { user, logout } = useAuth();
 
   const links: SidebarLink[] = [
-    { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { to: '/admin/users', label: 'Manage users', icon: <Users size={18} /> },
     { to: '/admin/services', label: 'Manage services', icon: <Settings size={18} /> },
     {
@@ -26,9 +25,6 @@ export default function AdminSidebar({
   ];
 
   const handleNavigate = async () => {
-    // On Logout link click, NavLink will navigate to /login, while this callback can also process logout.
-    // We cannot distinguish which link here; a robust pattern is to add an onClick handler per link, but to keep API simple
-    // we rely on AdminLayout/Auth guards to redirect after logout actions elsewhere.
     onNavigate?.();
   };
 
