@@ -53,6 +53,12 @@ export function DataTable<T extends Record<string, unknown>>({
 
   const borderVar = borderTone === 'border' ? 'var(--border)' : `var(--${borderTone})`;
 
+  // Provide a safe default pagination object if none is supplied to avoid runtime errors in MRT
+  const safePagination = pagination ?? {
+    pageIndex: 0,
+    pageSize: data.length > 0 ? data.length : 10,
+  };
+
   const table = useMantineReactTable<T>({
     columns: memoCols,
     data,
@@ -63,7 +69,7 @@ export function DataTable<T extends Record<string, unknown>>({
     state: {
       isLoading: loading,
       globalFilter,
-      pagination,
+      pagination: safePagination,
     },
     onGlobalFilterChange: v => onGlobalFilterChange?.(v ?? ''),
     onPaginationChange,

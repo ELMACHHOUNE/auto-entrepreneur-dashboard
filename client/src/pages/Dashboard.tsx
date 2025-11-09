@@ -1,5 +1,6 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import InvoiceTable from '@/components/invoices/InvoiceTable';
 
 export default function Dashboard() {
   return (
@@ -17,9 +18,7 @@ export default function Dashboard() {
           <Table size={18} />
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
-        <div className="text-muted-foreground">
-          <div className="h-[480px] w-full rounded-md border border-dashed"></div>
-        </div>
+        <InvoiceTable />
       </section>
     </DashboardLayout>
   );
