@@ -28,7 +28,7 @@ export default function Dashboard() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold tracking-wide text-foreground">
-          Totaux Trimestriels {year}
+          Quarterly Totals {year}
         </h4>
         <Select
           data={[0.5, 1, 20].map(r => ({ value: r.toString(), label: r + '%' }))}
@@ -53,21 +53,21 @@ export default function Dashboard() {
               {quarterTotals[label].toLocaleString('fr-MA')} DH
             </div>
             <div className="text-xs text-secondary">
-              {rateDisplay}%: {rateAmount.toLocaleString('fr-MA')} DH
+              {rateDisplay}%: {rateAmount.toLocaleString('en-US')} DH
             </div>
           </div>
         );
       })}
       <div className="rounded-md border border-accent/60 p-3 bg-card/50 flex flex-col gap-1 text-foreground mt-2">
         <div className="text-xs font-medium flex justify-between">
-          <span>Total Annuel</span>
-          <span className="text-secondary">TVA</span>
+          <span>Yearly Total</span>
+          <span className="text-secondary">VAT</span>
         </div>
         <div className="text-sm font-semibold text-success">
-          {yearTotals.amount.toLocaleString('fr-MA')} DH
+          {yearTotals.amount.toLocaleString('en-US')} DH
         </div>
         <div className="text-xs text-secondary">
-          TVA Totale: {yearTotals.tva.toLocaleString('fr-MA')} DH
+          Total VAT: {yearTotals.tva.toLocaleString('en-US')} DH
         </div>
       </div>
     </div>

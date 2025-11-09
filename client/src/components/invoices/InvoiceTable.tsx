@@ -6,20 +6,20 @@ import { Pencil, Trash2 } from 'lucide-react';
 
 // TVA is now a free numeric input (supports comma), so predefined rates array removed.
 
-// French months
+// Months (English labels)
 const MONTHS = [
-  'Janvier',
-  'Février',
-  'Mars',
-  'Avril',
-  'Mai',
-  'Juin',
-  'Juillet',
-  'Août',
-  'Septembre',
-  'Octobre',
-  'Novembre',
-  'Décembre',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ] as const;
 
 type Month = (typeof MONTHS)[number];
@@ -160,38 +160,38 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   }, [editDraft]);
 
   const deleteRow = useCallback((row: InvoiceRow) => {
-    if (typeof window !== 'undefined' && !window.confirm('Supprimer cette facture ?')) return;
+    if (typeof window !== 'undefined' && !window.confirm('Delete this invoice?')) return;
     setInvoices(prev => prev.filter(r => r.id !== row.id));
   }, []);
 
   const columns = useMemo<MRT_ColumnDef<InvoiceRow>[]>(
     () => [
-      { accessorKey: 'invoiceNumber', header: 'Numéro de facture', size: 150 },
-      { accessorKey: 'quarter', header: 'Trimestre', size: 80 },
-      { accessorKey: 'year', header: 'Année', size: 80 },
-      { accessorKey: 'month', header: 'Mois', size: 120 },
+      { accessorKey: 'invoiceNumber', header: 'Invoice No.', size: 150 },
+      { accessorKey: 'quarter', header: 'Quarter', size: 80 },
+      { accessorKey: 'year', header: 'Year', size: 80 },
+      { accessorKey: 'month', header: 'Month', size: 120 },
       { accessorKey: 'clientName', header: 'Client', size: 160 },
       {
         id: 'amount',
-        header: 'Prix Total',
+        header: 'Total Amount',
         accessorFn: row => row.amount,
         Cell: ({ row }) => (
-          <span style={{ fontWeight: 500 }}>{row.original.amount.toLocaleString('fr-MA')} DH</span>
+          <span style={{ fontWeight: 500 }}>{row.original.amount.toLocaleString('en-US')} DH</span>
         ),
         size: 120,
       },
       {
         id: 'tvaRate',
-        header: 'TVA %',
+        header: 'VAT %',
         accessorFn: row => row.tvaRate,
         Cell: ({ row }) => <span>{row.original.tvaRate}%</span>,
         size: 80,
       },
       {
         id: 'tvaAmount',
-        header: 'TVA Montant',
+        header: 'VAT Amount',
         accessorFn: row => computeTvaAmount(row),
-        Cell: ({ row }) => <span>{computeTvaAmount(row.original).toLocaleString('fr-MA')} DH</span>,
+        Cell: ({ row }) => <span>{computeTvaAmount(row.original).toLocaleString('en-US')} DH</span>,
         size: 120,
       },
     ],
@@ -209,12 +209,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         enableRowActions
         renderRowActions={({ row }) => (
           <Group gap={4}>
-            <Tooltip label="Modifier">
+            <Tooltip label="Edit">
               <ActionIcon variant="subtle" onClick={() => startEdit(row.original)}>
                 <Pencil size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Supprimer">
+            <Tooltip label="Delete">
               <ActionIcon color="red" variant="subtle" onClick={() => deleteRow(row.original)}>
                 <Trash2 size={16} />
               </ActionIcon>
@@ -231,15 +231,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   setAddOpen(true);
                 }}
               >
-                Ajouter une facture
+                Add Invoice
               </Button>
             </div>
             <div className="justify-self-center text-xs text-muted-foreground">
-              Factures: <strong>{rowsForYear.length}</strong>
+              Invoices: <strong>{rowsForYear.length}</strong>
             </div>
             <div className="justify-self-end">
               <Select
-                placeholder="Année"
+                placeholder="Year"
                 size="xs"
                 value={year.toString()}
                 data={[year - 1, year, year + 1].map(y => ({
@@ -255,31 +255,26 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       />
 
       {/* Add Invoice Modal */}
-      <Modal
-        opened={addOpen}
-        onClose={() => setAddOpen(false)}
-        title="Ajouter une facture"
-        size="md"
-      >
+      <Modal opened={addOpen} onClose={() => setAddOpen(false)} title="Add Invoice" size="md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <TextInput
-            label="Numéro de facture"
+            label="Invoice No."
             value={invNumber}
             onChange={e => setInvNumber(e.currentTarget.value)}
           />
           <TextInput
-            label="Nom du client"
+            label="Client Name"
             value={invClient}
             onChange={e => setInvClient(e.currentTarget.value)}
           />
           <Select
-            label="Mois"
+            label="Month"
             data={MONTHS.map(m => ({ value: m, label: m }))}
             value={invMonth}
             onChange={v => setInvMonth((v as Month) || 'Janvier')}
           />
           <Select
-            label="Année"
+            label="Year"
             data={[year - 1, year, year + 1].map(y => ({
               value: y.toString(),
               label: y.toString(),
@@ -288,14 +283,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             onChange={v => setInvYear(parseInt(v || year.toString(), 10))}
           />
           <TextInput
-            label="Montant (DH)"
+            label="Amount (DH)"
             type="number"
             value={invAmount}
             onChange={e => setInvAmount(e.currentTarget.value)}
           />
           <TextInput
-            label="TVA %"
-            description="Tapez une valeur libre (ex: 0,5 ou 20)"
+            label="VAT %"
+            description="Type any value (e.g. 0.5 or 20)"
             value={invTvaRateInput}
             onChange={e => setInvTvaRateInput(e.currentTarget.value)}
             onBlur={e => {
@@ -307,35 +302,30 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         </div>
         <Group mt="md" justify="flex-end">
           <Button size="xs" variant="default" onClick={() => setAddOpen(false)}>
-            Annuler
+            Cancel
           </Button>
           <Button size="xs" onClick={addInvoice}>
-            Ajouter
+            Add
           </Button>
         </Group>
       </Modal>
 
       {/* Edit Invoice Modal */}
-      <Modal
-        opened={editOpen}
-        onClose={() => setEditOpen(false)}
-        title="Modifier la facture"
-        size="md"
-      >
+      <Modal opened={editOpen} onClose={() => setEditOpen(false)} title="Edit Invoice" size="md">
         {editDraft && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <TextInput
-              label="Numéro de facture"
+              label="Invoice No."
               value={editDraft.invoiceNumber as string}
               onChange={e => setEditDraft({ ...editDraft, invoiceNumber: e.currentTarget.value })}
             />
             <TextInput
-              label="Nom du client"
+              label="Client Name"
               value={editDraft.clientName as string}
               onChange={e => setEditDraft({ ...editDraft, clientName: e.currentTarget.value })}
             />
             <Select
-              label="Mois"
+              label="Month"
               data={MONTHS.map(m => ({ value: m, label: m }))}
               value={editDraft.month as Month}
               onChange={v =>
@@ -351,7 +341,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               }
             />
             <Select
-              label="Année"
+              label="Year"
               data={[year - 1, year, year + 1].map(y => ({
                 value: y.toString(),
                 label: y.toString(),
@@ -362,7 +352,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               }
             />
             <TextInput
-              label="Montant (DH)"
+              label="Amount (DH)"
               type="number"
               value={String(editDraft.amount)}
               onChange={e =>
@@ -370,8 +360,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               }
             />
             <TextInput
-              label="TVA %"
-              description="Tapez une valeur libre (ex: 0,5 ou 20)"
+              label="VAT %"
+              description="Type any value (e.g. 0.5 or 20)"
               value={String(editDraft.tvaRate)}
               onChange={e => {
                 const raw = e.currentTarget.value;
@@ -387,10 +377,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         )}
         <Group mt="md" justify="flex-end">
           <Button size="xs" variant="default" onClick={() => setEditOpen(false)}>
-            Annuler
+            Cancel
           </Button>
           <Button size="xs" onClick={saveEdit}>
-            Enregistrer
+            Save
           </Button>
         </Group>
       </Modal>
