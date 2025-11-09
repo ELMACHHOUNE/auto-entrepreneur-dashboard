@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="mb-3 flex items-center justify-end ">
               <button
                 onClick={() => setOpen(false)}
-                className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-sm hover:bg-accent"
+                className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-sm hover:bg-accent text-foreground"
                 aria-label="Close sidebar"
                 title="Close sidebar"
               >
@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content shifts when sidebar is open on md+ */}
       <main
-        className={`min-h-[60vh] transition-all duration-300 md:pt-2 ${
+        className={`min-h-[60vh] transition-all duration-300 md:pt-2 text-foreground ${
           open ? 'md:ml-64' : 'md:ml-16'
         }`}
       >

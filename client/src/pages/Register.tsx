@@ -128,12 +128,12 @@ export default function Register() {
   };
 
   return (
-    <AuthSplit rightClassName="flex h-full w-full items-stretch p-4 sm:p-6 md:p-8">
+    <AuthSplit rightClassName="flex h-full w-full items-stretch p-4 sm:p-6 md:p-8 text-foreground">
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="h-full w-full p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">
             <h3 className="text-lg font-semibold">Create account</h3>
-            <p className="text-sm text-muted-foreground">Fill in your details to get started</p>
+            <p className="text-sm ">Fill in your details to get started</p>
           </div>
           <div className="flex-1 p-4">
             <form id="register-form" onSubmit={onSubmit} className="space-y-3">

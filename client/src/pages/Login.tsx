@@ -40,7 +40,7 @@ export default function Login() {
   const googleUrl = `${import.meta.env.VITE_API_URL}api/auth/google`;
 
   return (
-    <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8">
+    <AuthSplit rightClassName="flex h-full w-full items-center justify-center p-4 sm:p-6 md:p-8 text-foreground">
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="w-full max-w-sm p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">

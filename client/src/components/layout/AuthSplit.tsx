@@ -50,7 +50,7 @@ export default function AuthSplit({
           </div>
 
           {/* right content */}
-          <div className={rightClassName ?? 'flex h-full w-full items-stretch p-4 sm:p-6 md:p-8'}>
+          <div className={rightClassName ?? 'flex h-full w-full items-stretch p-4 sm:p-6 md:p-8 text-foreground'}>
             {children}
           </div>
         </div>

@@ -58,7 +58,7 @@ function SidebarComponent({
           <div className="min-w-0">
             {title && <div className="text-sm text-muted-foreground">{title}</div>}
             {userEmail && (
-              <div className="truncate font-medium" title={userEmail}>
+              <div className="truncate font-medium text-foreground" title={userEmail}>
                 {userEmail}
               </div>
             )}
@@ -78,8 +78,8 @@ function SidebarComponent({
             className={({ isActive }) =>
               classNames(
                 collapsed
-                  ? 'flex items-center justify-center rounded p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                  : 'flex items-center gap-2 rounded px-3 py-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  ? 'flex items-center justify-center rounded p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground'
+                  : 'flex items-center gap-2 rounded px-3 py-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground',
                 isActive && 'bg-accent font-medium'
               )
             }

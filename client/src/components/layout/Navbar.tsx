@@ -62,7 +62,7 @@ export default function Navbar() {
         {/* Right: Theme toggle + Auth actions */}
         <div className="flex items-center gap-4">
           <AnimatedThemeToggler
-            className="p-1.5 rounded hover:bg-accent"
+            className="p-1.5 rounded hover:bg-accent text-foreground"
             aria-label="Toggle theme"
           />
           {user ? (
@@ -107,7 +107,7 @@ export default function Navbar() {
 
           <div className="flex items-center gap-3">
             <AnimatedThemeToggler
-              className="p-1.5 rounded hover:bg-accent"
+              className="p-1.5 rounded hover:bg-accent text-foreground"
               aria-label="Toggle theme"
             />
             <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen(v => !v)} />
