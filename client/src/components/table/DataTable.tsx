@@ -1,3 +1,4 @@
+import 'mantine-react-table/styles.css';
 import {
   MantineReactTable,
   type MRT_ColumnDef,

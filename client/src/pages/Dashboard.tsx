@@ -1,9 +1,10 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import InvoiceTable from '@/components/invoices/InvoiceTable';
-import { useState, useCallback } from 'react';
+import { Suspense, lazy, useState, useCallback } from 'react';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
+
+const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
 export default function Dashboard() {
   const [quarterTotals, setQuarterTotals] = useState({ T1: 0, T2: 0, T3: 0, T4: 0 });
@@ -57,7 +58,9 @@ export default function Dashboard() {
           <Table size={18} />
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
-        <InvoiceTable onQuarterSummaryChange={handleQuarterSummary} />
+        <Suspense fallback={<div className="text-xs text-muted-foreground">Loading table…</div>}>
+          <InvoiceTable onQuarterSummaryChange={handleQuarterSummary} />
+        </Suspense>
       </section>
     </DashboardLayout>
   );
