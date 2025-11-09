@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import InvoiceTable from '@/components/invoices/InvoiceTable';
 import { useState, useCallback } from 'react';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
+import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
 
 export default function Dashboard() {
   const [quarterTotals, setQuarterTotals] = useState({ T1: 0, T2: 0, T3: 0, T4: 0 });
@@ -33,9 +34,16 @@ export default function Dashboard() {
       onRateDisplayChange={setRateDisplay}
     />
   );
+  const rightSidebarCollapsed = (
+    <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} rateDisplay={rateDisplay} />
+  );
 
   return (
-    <DashboardLayout rightSidebar={rightSidebar} rightCollapsible>
+    <DashboardLayout
+      rightSidebar={rightSidebar}
+      rightSidebarCollapsed={rightSidebarCollapsed}
+      rightCollapsible
+    >
       {/* Chart + Table layout scaffold */}
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border p-4">Chart A</div>

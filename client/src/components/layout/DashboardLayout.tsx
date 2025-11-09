@@ -5,13 +5,15 @@ import AppSidebar from './AppSidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  rightSidebar?: React.ReactNode; // content component for right-side panel
+  rightSidebar?: React.ReactNode; // content component for right-side panel (expanded)
+  rightSidebarCollapsed?: React.ReactNode; // content when right panel is collapsed
   rightCollapsible?: boolean; // enable collapse behavior for right sidebar
 }
 
 export default function DashboardLayout({
   children,
   rightSidebar,
+  rightSidebarCollapsed,
   rightCollapsible = false,
 }: DashboardLayoutProps) {
   // Persist open state so it doesn't change on navigation
@@ -148,10 +150,10 @@ export default function DashboardLayout({
       )}
       {rightSidebar && rightCollapsible && !rightOpen && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-14 border-l bg-background p-2 md:block"
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-40 border-l bg-background p-2 md:block"
           id="right-sidebar-collapsed"
         >
-          <div className="flex items-center justify-center">
+          <div className="mb-2 flex items-center justify-center">
             <button
               onClick={() => setRightOpen(true)}
               className="inline-flex items-center justify-center rounded-md border p-2 hover:bg-accent text-foreground"
@@ -162,6 +164,7 @@ export default function DashboardLayout({
               <Menu size={16} />
             </button>
           </div>
+          {rightSidebarCollapsed}
         </aside>
       )}
       {rightSidebar && !rightCollapsible && (
@@ -182,7 +185,7 @@ export default function DashboardLayout({
             ? rightCollapsible
               ? rightOpen
                 ? 'md:mr-64'
-                : 'md:mr-14'
+                : 'md:mr-40'
               : 'md:mr-64'
             : ''
         } px-4`}
