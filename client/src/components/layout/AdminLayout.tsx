@@ -62,7 +62,7 @@ export default function AdminLayout() {
           <div className="mb-2 flex items-center justify-center">
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center justify-center rounded-md border p-2 hover:bg-accent"
+              className="inline-flex items-center justify-center text-foreground   rounded-md border p-2 hover:bg-accent"
               aria-label="Open sidebar"
               title="Open sidebar"
             >

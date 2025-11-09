@@ -5,10 +5,15 @@ import AppSidebar from './AppSidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  rightSidebar?: React.ReactNode; // optional right-side panel (e.g., quarterly KPIs)
+  rightSidebar?: React.ReactNode; // content component for right-side panel
+  rightCollapsible?: boolean; // enable collapse behavior for right sidebar
 }
 
-export default function DashboardLayout({ children, rightSidebar }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  rightSidebar,
+  rightCollapsible = false,
+}: DashboardLayoutProps) {
   // Persist open state so it doesn't change on navigation
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -30,6 +35,21 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       setOpen(false);
     }
   };
+
+  // Right sidebar open state (desktop only). Persist separate key.
+  const [rightOpen, setRightOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = window.localStorage.getItem('app-right-sidebar-open');
+    return saved === null ? true : saved !== '0';
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('app-right-sidebar-open', rightOpen ? '1' : '0');
+    } catch {
+      /* noop */
+    }
+  }, [rightOpen]);
 
   return (
     <div className="relative w-full">
@@ -70,7 +90,7 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
           <div className="mb-2 flex items-center justify-center">
             <button
               onClick={() => setOpen(true)}
-              className="inline-flex items-center justify-center rounded-md border p-2 hover:bg-accent"
+              className="inline-flex items-center justify-center text-foreground rounded-md border p-2 hover:bg-accent"
               aria-label="Open sidebar"
               title="Open sidebar"
             >
@@ -96,7 +116,55 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       </AnimatePresence>
 
       {/* Optional right sidebar (md+) */}
-      {rightSidebar && (
+      {rightSidebar && rightCollapsible && (
+        <AnimatePresence initial={false}>
+          {rightOpen && (
+            <motion.aside
+              key="right-sidebar"
+              initial={{ x: 240, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 240, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+              className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l border-accent bg-background p-3 md:block"
+              aria-label="Right insights panel"
+              id="right-sidebar"
+            >
+              <div className="mb-3 flex items-center justify-end">
+                <button
+                  onClick={() => setRightOpen(false)}
+                  className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs hover:bg-accent text-foreground"
+                  aria-label="Close insights panel"
+                  aria-controls="right-sidebar"
+                  aria-expanded={rightOpen}
+                >
+                  <X size={14} />
+                  <span className="hidden sm:inline">Close</span>
+                </button>
+              </div>
+              {rightSidebar}
+            </motion.aside>
+          )}
+        </AnimatePresence>
+      )}
+      {rightSidebar && rightCollapsible && !rightOpen && (
+        <aside
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-14 border-l bg-background p-2 md:block"
+          id="right-sidebar-collapsed"
+        >
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => setRightOpen(true)}
+              className="inline-flex items-center justify-center rounded-md border p-2 hover:bg-accent text-foreground"
+              aria-label="Open insights panel"
+              aria-controls="right-sidebar"
+              aria-expanded={rightOpen}
+            >
+              <Menu size={16} />
+            </button>
+          </div>
+        </aside>
+      )}
+      {rightSidebar && !rightCollapsible && (
         <aside
           className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l border-accent bg-background p-3 md:block"
           aria-label="Right insights panel"
@@ -109,7 +177,15 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       <main
         className={`min-h-[60vh] transition-all duration-300 md:pt-2 text-foreground ${
           open ? 'md:ml-56' : 'md:ml-16'
-        } ${rightSidebar ? 'md:mr-64' : ''} px-4`}
+        } ${
+          rightSidebar
+            ? rightCollapsible
+              ? rightOpen
+                ? 'md:mr-64'
+                : 'md:mr-14'
+              : 'md:mr-64'
+            : ''
+        } px-4`}
       >
         {/* Mobile-only inline trigger shown when sidebar is closed; scrolls with content */}
         {!open && (
