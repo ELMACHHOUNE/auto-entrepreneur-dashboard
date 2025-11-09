@@ -23,17 +23,22 @@ export default function Dashboard() {
 
   const rightSidebar = (
     <div className="flex flex-col gap-3">
-      <h4 className="text-sm font-semibold tracking-wide">Totaux Trimestriels {year}</h4>
+      <h4 className="text-sm font-semibold tracking-wide text-foreground">
+        Totaux Trimestriels {year}
+      </h4>
       {(['T1', 'T2', 'T3', 'T4'] as const).map(label => (
-        <div key={label} className="rounded-md border p-3 bg-card/50 flex flex-col gap-1">
+        <div
+          key={label}
+          className="rounded-md border border-accent/60 p-3 bg-card/50 flex flex-col gap-1 text-foreground"
+        >
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium">{label}</span>
-            <span className="text-muted-foreground">1%</span>
+            <span className="text-secondary font-medium">1%</span>
           </div>
-          <div className="text-sm font-semibold">
+          <div className="text-sm font-semibold text-success">
             {quarterTotals[label].toLocaleString('fr-MA')} DH
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-secondary">
             1%: {onePercent[label].toLocaleString('fr-MA')} DH
           </div>
         </div>

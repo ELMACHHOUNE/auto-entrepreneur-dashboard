@@ -31,15 +31,8 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
     }
   };
 
-  // Layout strategy adjustment:
-  // Previously main content was constrained by max-w-7xl and centered, leaving large horizontal gaps
-  // between the fixed sidebars and the main area. We switch to full-width container so the main
-  // naturally fills the space between left and right panels. Margins simply reserve horizontal
-  // space equal to sidebar widths. This reduces wasted space and makes the dashboard feel denser.
   return (
     <div className="relative w-full">
-      {/* Note: toggle controls are rendered inside the sidebar itself now */}
-
       {/* Sidebar below the navbar (assume navbar ~4rem height) */}
       <AnimatePresence initial={false}>
         {open && (
@@ -105,7 +98,7 @@ export default function DashboardLayout({ children, rightSidebar }: DashboardLay
       {/* Optional right sidebar (md+) */}
       {rightSidebar && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l bg-background p-3 md:block"
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l border-accent bg-background p-3 md:block"
           aria-label="Right insights panel"
         >
           {rightSidebar}

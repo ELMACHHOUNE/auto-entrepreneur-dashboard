@@ -4,8 +4,7 @@ import { DataTable } from '@/components/table/DataTable';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Pencil, Trash2 } from 'lucide-react';
 
-// Allowed TVA percentages
-const TVA_RATES = [0.5, 1, 20];
+// TVA is now a free numeric input (supports comma), so predefined rates array removed.
 
 // French months
 const MONTHS = [
@@ -74,7 +73,21 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   const [invClient, setInvClient] = useState('');
   const [invNumber, setInvNumber] = useState('');
   const [invAmount, setInvAmount] = useState('');
-  const [invTvaRate, setInvTvaRate] = useState<number>(1);
+  // Free-form TVA input (accepts comma or dot). We'll store the raw string separately and parse when saving.
+  const [invTvaRateInput, setInvTvaRateInput] = useState<string>('1');
+
+  // Helper to parse TVA input to a bounded numeric rate (0 - 100)
+  const parseTvaRate = useCallback((raw: string): number => {
+    if (!raw) return 0;
+    // Replace comma with dot, keep digits and at most one dot
+    const cleaned = raw
+      .replace(/,/g, '.')
+      .replace(/[^0-9.]/g, '')
+      .replace(/(\..*)\./, '$1'); // keep first dot only
+    const num = parseFloat(cleaned);
+    if (isNaN(num)) return 0;
+    return Math.min(100, Math.max(0, parseFloat(num.toFixed(3))));
+  }, []);
 
   // Edit Invoice modal
   const [editOpen, setEditOpen] = useState(false);
@@ -82,11 +95,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   const rowsForYear = useMemo(() => invoices.filter(i => i.year === year), [invoices, year]);
 
-  const totals = useMemo(() => {
-    const totalAmount = rowsForYear.reduce((s, r) => s + r.amount, 0);
-    const totalTva = rowsForYear.reduce((s, r) => s + computeTvaAmount(r), 0);
-    return { totalAmount, totalTva };
-  }, [rowsForYear]);
+  // Totals removed from toolbar per request; keep summary via onQuarterSummaryChange only.
 
   useEffect(() => {
     if (!onQuarterSummaryChange) return;
@@ -114,6 +123,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       setAddOpen(false);
       return;
     }
+    const tvaRateNum = parseTvaRate(invTvaRateInput);
     const newRow: InvoiceRow = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       invoiceNumber: invNumber.trim(),
@@ -122,7 +132,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       quarter: monthToQuarterByName(invMonth),
       clientName: invClient.trim(),
       amount,
-      tvaRate: invTvaRate,
+      tvaRate: tvaRateNum,
     };
     setInvoices(prev => [newRow, ...prev]);
     setAddOpen(false);
@@ -130,9 +140,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     setInvClient('');
     setInvNumber('');
     setInvAmount('');
-    setInvTvaRate(1);
+    setInvTvaRateInput('1');
     setInvYear(year);
-  }, [invNumber, invClient, invAmount, invTvaRate, invMonth, invYear, year]);
+  }, [invNumber, invClient, invAmount, invTvaRateInput, invMonth, invYear, year, parseTvaRate]);
 
   const startEdit = useCallback((row: InvoiceRow) => {
     setEditDraft({ ...row });
@@ -187,25 +197,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   return (
     <div className="space-y-3">
-      <Group gap="sm" wrap="wrap">
-        <Select
-          label="Année"
-          size="xs"
-          value={year.toString()}
-          data={[year - 1, year, year + 1].map(y => ({ value: y.toString(), label: y.toString() }))}
-          onChange={v => setYear(parseInt(v || year.toString(), 10))}
-        />
-        <Button
-          size="xs"
-          onClick={() => {
-            setInvYear(year);
-            setAddOpen(true);
-          }}
-        >
-          Ajouter une facture
-        </Button>
-      </Group>
-
       <DataTable<InvoiceRow>
         columns={columns}
         data={rowsForYear}
@@ -226,15 +217,33 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </Group>
         )}
         renderTopToolbarCustomActions={() => (
-          <div className="text-xs text-muted-foreground flex gap-4">
-            <div>
+          <div className="w-full grid grid-cols-3 items-center gap-2">
+            <div className="justify-self-start">
+              <Button
+                size="xs"
+                onClick={() => {
+                  setInvYear(year);
+                  setAddOpen(true);
+                }}
+              >
+                Ajouter une facture
+              </Button>
+            </div>
+            <div className="justify-self-center text-xs text-muted-foreground">
               Factures: <strong>{rowsForYear.length}</strong>
             </div>
-            <div>
-              Prix Total: <strong>{totals.totalAmount.toLocaleString('fr-MA')} DH</strong>
-            </div>
-            <div>
-              TVA Totale: <strong>{totals.totalTva.toLocaleString('fr-MA')} DH</strong>
+            <div className="justify-self-end">
+              <Select
+                placeholder="Année"
+                size="xs"
+                value={year.toString()}
+                data={[year - 1, year, year + 1].map(y => ({
+                  value: y.toString(),
+                  label: y.toString(),
+                }))}
+                onChange={v => setYear(parseInt(v || year.toString(), 10))}
+                style={{ width: 110 }}
+              />
             </div>
           </div>
         )}
@@ -279,11 +288,16 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             value={invAmount}
             onChange={e => setInvAmount(e.currentTarget.value)}
           />
-          <Select
+          <TextInput
             label="TVA %"
-            data={TVA_RATES.map(r => ({ value: r.toString(), label: r.toString() }))}
-            value={invTvaRate.toString()}
-            onChange={v => setInvTvaRate(parseFloat(v || '0'))}
+            description="Tapez une valeur libre (ex: 0,5 ou 20)"
+            value={invTvaRateInput}
+            onChange={e => setInvTvaRateInput(e.currentTarget.value)}
+            onBlur={e => {
+              // Normalize formatting on blur (optional)
+              const num = parseTvaRate(e.currentTarget.value);
+              setInvTvaRateInput(num.toString());
+            }}
           />
         </div>
         <Group mt="md" justify="flex-end">
@@ -350,11 +364,19 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 setEditDraft({ ...editDraft, amount: parseFloat(e.currentTarget.value || '0') })
               }
             />
-            <Select
+            <TextInput
               label="TVA %"
-              data={TVA_RATES.map(r => ({ value: r.toString(), label: r.toString() }))}
-              value={editDraft.tvaRate.toString()}
-              onChange={v => setEditDraft({ ...editDraft, tvaRate: parseFloat(v || '0') })}
+              description="Tapez une valeur libre (ex: 0,5 ou 20)"
+              value={String(editDraft.tvaRate)}
+              onChange={e => {
+                const raw = e.currentTarget.value;
+                const num = parseTvaRate(raw);
+                setEditDraft({ ...editDraft, tvaRate: num });
+              }}
+              onBlur={e => {
+                const num = parseTvaRate(e.currentTarget.value);
+                setEditDraft(d => (d ? { ...d, tvaRate: num } : d));
+              }}
             />
           </div>
         )}
