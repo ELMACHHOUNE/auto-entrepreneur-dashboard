@@ -117,6 +117,48 @@ export default function DashboardLayout({
         )}
       </AnimatePresence>
 
+      {/* Right sidebar for mobile (overlay) */}
+      {rightSidebar && rightCollapsible && (
+        <AnimatePresence initial={false}>
+          {rightOpen && (
+            <>
+              <motion.aside
+                key="right-sidebar-mobile"
+                initial={{ x: 280, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 280, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                className="fixed right-0 top-16 z-40 h-[calc(100vh-4rem)] w-72 max-w-[85vw] border-l border-accent bg-background p-3 md:hidden"
+                aria-label="Right insights panel"
+                id="right-sidebar-mobile"
+              >
+                <div className="mb-3 flex items-center justify-end">
+                  <button
+                    onClick={() => setRightOpen(false)}
+                    className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs hover:bg-accent text-foreground"
+                    aria-label="Close insights panel"
+                    aria-controls="right-sidebar-mobile"
+                    aria-expanded={rightOpen}
+                  >
+                    <X size={14} />
+                    <span className="hidden sm:inline">Close</span>
+                  </button>
+                </div>
+                {rightSidebar}
+              </motion.aside>
+              <motion.div
+                key="right-backdrop-mobile"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-x-0 bottom-0 top-16 z-30 bg-black/20 md:hidden"
+                onClick={() => setRightOpen(false)}
+              />
+            </>
+          )}
+        </AnimatePresence>
+      )}
+
       {/* Optional right sidebar (md+) */}
       {rightSidebar && rightCollapsible && (
         <AnimatePresence initial={false}>
@@ -190,9 +232,9 @@ export default function DashboardLayout({
             : ''
         } px-4`}
       >
-        {/* Mobile-only inline trigger shown when sidebar is closed; scrolls with content */}
+        {/* Mobile-only inline triggers shown when left sidebar is closed; scrolls with content */}
         {!open && (
-          <div className="mb-3 md:hidden ">
+          <div className="mb-3 md:hidden flex items-center justify-between">
             <button
               onClick={() => setOpen(true)}
               className="inline-flex items-center gap-2 rounded-md border bg-background hover:bg-accent px-3 py-2"
@@ -202,6 +244,16 @@ export default function DashboardLayout({
               <Menu size={18} />
               <span className="text-sm">Menu</span>
             </button>
+            {rightSidebar && rightCollapsible && !rightOpen && (
+              <button
+                onClick={() => setRightOpen(true)}
+                className="inline-flex items-center gap-2 rounded-md border bg-background hover:bg-accent px-3 py-2 text-foreground"
+                aria-label="Open insights"
+                title="Open insights"
+              >
+                <span className="text-sm">Totals</span>
+              </button>
+            )}
           </div>
         )}
         {children}
