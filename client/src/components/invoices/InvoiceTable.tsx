@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Select, TextInput, Modal, Group, ActionIcon, Tooltip } from '@mantine/core';
 import { DataTable } from '@/components/table/DataTable';
 import type { MRT_ColumnDef } from 'mantine-react-table';
@@ -51,9 +51,17 @@ function computeTvaAmount(row: InvoiceRow) {
 
 interface InvoiceTableProps {
   year?: number;
+  onQuarterSummaryChange?: (summary: {
+    year: number;
+    totals: { T1: number; T2: number; T3: number; T4: number };
+    onePercent: { T1: number; T2: number; T3: number; T4: number };
+  }) => void;
 }
 
-export const InvoiceTable: React.FC<InvoiceTableProps> = ({ year: externalYear }) => {
+export const InvoiceTable: React.FC<InvoiceTableProps> = ({
+  year: externalYear,
+  onQuarterSummaryChange,
+}) => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(externalYear || currentYear);
 
@@ -79,6 +87,26 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({ year: externalYear }
     const totalTva = rowsForYear.reduce((s, r) => s + computeTvaAmount(r), 0);
     return { totalAmount, totalTva };
   }, [rowsForYear]);
+
+  useEffect(() => {
+    if (!onQuarterSummaryChange) return;
+    const buckets: { T1: number; T2: number; T3: number; T4: number } = {
+      T1: 0,
+      T2: 0,
+      T3: 0,
+      T4: 0,
+    };
+    rowsForYear.forEach(r => {
+      buckets[r.quarter] += r.amount;
+    });
+    const onePercent = {
+      T1: parseFloat((buckets.T1 * 0.01).toFixed(2)),
+      T2: parseFloat((buckets.T2 * 0.01).toFixed(2)),
+      T3: parseFloat((buckets.T3 * 0.01).toFixed(2)),
+      T4: parseFloat((buckets.T4 * 0.01).toFixed(2)),
+    } as const;
+    onQuarterSummaryChange({ year, totals: buckets, onePercent });
+  }, [rowsForYear, year, onQuarterSummaryChange]);
 
   const addInvoice = useCallback(() => {
     const amount = parseFloat(invAmount || '0');

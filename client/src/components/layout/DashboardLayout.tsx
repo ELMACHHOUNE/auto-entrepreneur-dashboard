@@ -3,7 +3,12 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Menu, X } from 'lucide-react';
 import AppSidebar from './AppSidebar';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  rightSidebar?: React.ReactNode; // optional right-side panel (e.g., quarterly KPIs)
+}
+
+export default function DashboardLayout({ children, rightSidebar }: DashboardLayoutProps) {
   // Persist open state so it doesn't change on navigation
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -92,11 +97,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </AnimatePresence>
 
-      {/* Main content shifts when sidebar is open on md+ */}
+      {/* Optional right sidebar (md+) */}
+      {rightSidebar && (
+        <aside
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-72 border-l bg-background p-3 md:block"
+          aria-label="Right insights panel"
+        >
+          {rightSidebar}
+        </aside>
+      )}
+
+      {/* Main content shifts when sidebars are open on md+ */}
       <main
         className={`min-h-[60vh] transition-all duration-300 md:pt-2 text-foreground ${
           open ? 'md:ml-64' : 'md:ml-16'
-        }`}
+        } ${rightSidebar ? 'md:mr-72' : ''}`}
       >
         {/* Mobile-only inline trigger shown when sidebar is closed; scrolls with content */}
         {!open && (
