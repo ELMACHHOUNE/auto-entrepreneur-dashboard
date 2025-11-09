@@ -35,7 +35,7 @@ export default function Dashboard() {
     />
   );
   const rightSidebarCollapsed = (
-    <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} rateDisplay={rateDisplay} />
+    <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} yearTotals={yearTotals} />
   );
 
   return (

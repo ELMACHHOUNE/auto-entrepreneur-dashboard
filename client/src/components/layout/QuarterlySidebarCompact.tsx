@@ -4,11 +4,13 @@ export interface QuarterlySidebarCompactProps {
   year: number;
   quarterTotals: { T1: number; T2: number; T3: number; T4: number };
   rateDisplay?: number; // optional (not shown in compact view)
+  yearTotals?: { amount: number; tva: number }; // for yearly total card
 }
 
 export default function QuarterlySidebarCompact({
   year,
   quarterTotals,
+  yearTotals,
 }: QuarterlySidebarCompactProps) {
   return (
     <div className="flex h-full flex-col gap-2" aria-label={`Quarterly summary ${year} (compact)`}>
@@ -27,6 +29,14 @@ export default function QuarterlySidebarCompact({
           </div>
         );
       })}
+      {yearTotals && (
+        <div className="rounded-md border border-accent/60 p-2 bg-card/70 flex items-center justify-between px-3 text-foreground mt-1">
+          <span className="text-sm font-medium">Year</span>
+          <span className="text-sm font-semibold text-success">
+            {yearTotals.amount.toLocaleString('en-US')} DH
+          </span>
+        </div>
+      )}
     </div>
   );
 }
