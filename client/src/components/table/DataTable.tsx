@@ -4,6 +4,8 @@ import {
   useMantineReactTable,
   type MRT_TableOptions,
   type MRT_Row,
+  type MRT_Cell,
+  type MRT_TableInstance,
 } from 'mantine-react-table';
 import type React from 'react';
 import { useMemo } from 'react';
@@ -29,6 +31,9 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   // Customize border color of the surrounding card/container
   // "border" uses the neutral border token; others use brand tokens
   borderTone?: 'border' | 'primary' | 'accent' | 'secondary' | 'success';
+  // Optional: visually separate groups of rows (e.g., quarters) with an accent separator line
+  groupByKey?: (rowOriginal: T) => string | number;
+  groupSeparatorTone?: 'border' | 'primary' | 'accent' | 'secondary' | 'success';
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -47,11 +52,15 @@ export function DataTable<T extends Record<string, unknown>>({
   renderRowActions,
   renderTopToolbarCustomActions,
   borderTone = 'border',
+  groupByKey,
+  groupSeparatorTone = 'accent',
 }: DataTableProps<T>) {
   // Memo columns to prevent re-renders
   const memoCols = useMemo(() => columns, [columns]);
 
   const borderVar = borderTone === 'border' ? 'var(--border)' : `var(--${borderTone})`;
+  const groupSepVar =
+    groupSeparatorTone === 'border' ? 'var(--border)' : `var(--${groupSeparatorTone})`;
 
   // Provide a safe default pagination object if none is supplied to avoid runtime errors in MRT
   const safePagination = pagination ?? {
@@ -109,8 +118,33 @@ export function DataTable<T extends Record<string, unknown>>({
         fontSize: '12px',
       },
     },
-    mantineTableBodyCellProps: {
-      style: { borderColor: 'var(--border)' },
+    mantineTableBodyCellProps: ({
+      cell,
+      table,
+    }: {
+      cell: MRT_Cell<T>;
+      table: MRT_TableInstance<T>;
+    }) => {
+      // Default cell border color
+      let style: React.CSSProperties = { borderColor: 'var(--border)' };
+      if (groupByKey && table) {
+        const idx: number = cell.row.index ?? 0;
+        if (idx > 0) {
+          const rows = table.getRowModel?.().rows ?? [];
+          const prev = rows[idx - 1];
+          const curr = rows[idx];
+          const prevKey = prev?.original ? groupByKey(prev.original as T) : undefined;
+          const currKey = curr?.original ? groupByKey(curr.original as T) : undefined;
+          if (prevKey !== currKey) {
+            // Add a thicker top border with the configured brand tone
+            style = {
+              ...style,
+              borderTop: `2px solid ${groupSepVar}`,
+            };
+          }
+        }
+      }
+      return { style };
     },
     mantineTableBodyRowProps: ({ row }) => ({
       style: {

@@ -201,6 +201,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         columns={columns}
         data={rowsForYear}
         borderTone="accent"
+        groupByKey={r => r.quarter}
+        groupSeparatorTone="accent"
         enableRowActions
         renderRowActions={({ row }) => (
           <Group gap={4}>
