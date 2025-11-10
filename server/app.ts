@@ -79,6 +79,14 @@ const staticOpts = {
 app.use('/uploads/images', express.static(uploadsDirDistSibling, staticOpts as any));
 app.use('/uploads/images', express.static(uploadsDirSource, staticOpts as any));
 
+// Also serve invoice JSON/export files per user for debugging or export (read-only) in non-production
+if (env.NODE_ENV !== 'production') {
+  const invoicesDirDistSibling = path.resolve(__dirname, '../uploads/invoices');
+  const invoicesDirSource = path.resolve(process.cwd(), 'server/uploads/invoices');
+  app.use('/uploads/invoices', express.static(invoicesDirDistSibling, staticOpts as any));
+  app.use('/uploads/invoices', express.static(invoicesDirSource, staticOpts as any));
+}
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });

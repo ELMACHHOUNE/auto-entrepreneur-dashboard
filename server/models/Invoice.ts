@@ -48,6 +48,9 @@ const InvoiceSchema = new Schema<IInvoice>(
   { timestamps: true }
 );
 
+// Compound uniqueness: prevent duplicate invoice numbers for a user within a given year
+InvoiceSchema.index({ userId: 1, year: 1, invoiceNumber: 1 }, { unique: true });
+
 // Derive quarter if missing (defensive)
 InvoiceSchema.pre('validate', function (next) {
   if (!this.quarter && this.month) {

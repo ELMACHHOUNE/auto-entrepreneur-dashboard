@@ -1,4 +1,7 @@
 import passport from 'passport';
+// Type-only import guarded for environments without @types
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
 import { env } from './env';
 import { User } from '../models/User';
@@ -17,7 +20,13 @@ passport.use(
       callbackURL: env.GOOGLE_CALLBACK_URL,
       passReqToCallback: true,
     },
-    async (req: Request, _accessToken: string, _refreshToken: string, profile: Profile, done) => {
+    async (
+      req: Request,
+      _accessToken: string,
+      _refreshToken: string,
+      profile: Profile,
+      done: (err: any, user?: any) => void
+    ) => {
       try {
         const email = profile.emails?.[0]?.value?.toLowerCase();
         if (!email) return done(new Error('No email from Google'));
