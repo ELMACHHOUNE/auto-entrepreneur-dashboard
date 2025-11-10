@@ -9,6 +9,7 @@ import { env } from './config/env';
 import passport from 'passport';
 import authRoutes from './routes/auth.routes';
 import meRoutes from './routes/me.routes';
+import invoiceRoutes from './routes/invoice.routes';
 import adminRoutes from './routes/admin.routes';
 import rateLimit from 'express-rate-limit';
 import './config/passport';
@@ -85,6 +86,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/me', meRoutes);
+app.use('/api/invoices', invoiceRoutes);
 app.use('/api/admin', adminRoutes);
 
 // 404 handler

@@ -8,6 +8,7 @@ import {
   modalStyles,
 } from '@/components/ui/mantineStyles';
 import { DataTable } from '@/components/table/DataTable';
+import { api } from '@/api/axios';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Pencil, Trash2 } from 'lucide-react';
 
@@ -41,7 +42,7 @@ function monthToQuarterByName(month: Month): 'T1' | 'T2' | 'T3' | 'T4' {
 
 export interface InvoiceRow {
   id: string;
-  invoiceNumber: string;
+  invoiceNumber: number;
   year: number;
   month: Month;
   quarter: 'T1' | 'T2' | 'T3' | 'T4';
@@ -75,6 +76,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   const [year, setYear] = useState<number>(externalYear || currentYear);
 
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
 
   // Add Invoice modal
   const [addOpen, setAddOpen] = useState(false);
@@ -131,49 +134,122 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     onQuarterSummaryChange({ year, totals: buckets, totalYearAmount, totalYearTva });
   }, [rowsForYear, year, onQuarterSummaryChange]);
 
-  const addInvoice = useCallback(() => {
+  const fetchInvoices = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const { data } = await api.get('/api/invoices', { params: { year } });
+      // map API invoices to local InvoiceRow
+      type ApiInvoice = {
+        _id: string;
+        invoiceNumber: number;
+        year: number;
+        month: Month;
+        quarter: 'T1' | 'T2' | 'T3' | 'T4';
+        clientName: string;
+        amount: number;
+        tvaRate: number;
+      };
+      const mapped: InvoiceRow[] =
+        (data.invoices as ApiInvoice[] | undefined)?.map(doc => ({
+          id: doc._id,
+          invoiceNumber: doc.invoiceNumber,
+          year: doc.year,
+          month: doc.month,
+          quarter: doc.quarter,
+          clientName: doc.clientName,
+          amount: doc.amount,
+          tvaRate: doc.tvaRate,
+        })) || [];
+      setInvoices(mapped);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [year]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  const addInvoice = useCallback(async () => {
     const amount = parseFloat(invAmount || '0');
-    if (!invNumber.trim() || !invClient.trim() || !amount) {
+    const parsedInvNumber = parseInt(invNumber, 10);
+    if (isNaN(parsedInvNumber) || !invClient.trim() || !amount) {
       setAddOpen(false);
       return;
     }
     const tvaRateNum = parseTvaRate(invTvaRateInput);
-    const newRow: InvoiceRow = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      invoiceNumber: invNumber.trim(),
-      year: invYear,
-      month: invMonth,
-      quarter: monthToQuarterByName(invMonth),
-      clientName: invClient.trim(),
-      amount,
-      tvaRate: tvaRateNum,
-    };
-    setInvoices(prev => [newRow, ...prev]);
-    setAddOpen(false);
-    // reset
-    setInvClient('');
-    setInvNumber('');
-    setInvAmount('');
-    setInvTvaRateInput('1');
-    setInvYear(year);
-  }, [invNumber, invClient, invAmount, invTvaRateInput, invMonth, invYear, year, parseTvaRate]);
+    try {
+      await api.post('/api/invoices', {
+        invoiceNumber: parsedInvNumber,
+        year: invYear,
+        month: invMonth,
+        clientName: invClient.trim(),
+        amount,
+        tvaRate: tvaRateNum,
+      });
+      await fetchInvoices();
+    } catch {
+      // optionally surface error UI; we keep silent for now
+    } finally {
+      setAddOpen(false);
+      setInvClient('');
+      setInvNumber('');
+      setInvAmount('');
+      setInvTvaRateInput('1');
+      setInvYear(year);
+    }
+  }, [
+    invNumber,
+    invClient,
+    invAmount,
+    invTvaRateInput,
+    invMonth,
+    invYear,
+    year,
+    parseTvaRate,
+    fetchInvoices,
+  ]);
 
   const startEdit = useCallback((row: InvoiceRow) => {
     setEditDraft({ ...row });
     setEditOpen(true);
   }, []);
 
-  const saveEdit = useCallback(() => {
+  const saveEdit = useCallback(async () => {
     if (!editDraft) return;
-    setInvoices(prev => prev.map(r => (r.id === editDraft.id ? { ...editDraft } : r)));
-    setEditOpen(false);
-    setEditDraft(null);
-  }, [editDraft]);
+    try {
+      await api.patch(`/api/invoices/${editDraft.id}`, {
+        invoiceNumber: editDraft.invoiceNumber,
+        year: editDraft.year,
+        month: editDraft.month,
+        clientName: editDraft.clientName,
+        amount: editDraft.amount,
+        tvaRate: editDraft.tvaRate,
+      });
+      await fetchInvoices();
+    } catch {
+      // silent for now
+    } finally {
+      setEditOpen(false);
+      setEditDraft(null);
+    }
+  }, [editDraft, fetchInvoices]);
 
-  const deleteRow = useCallback((row: InvoiceRow) => {
-    if (typeof window !== 'undefined' && !window.confirm('Delete this invoice?')) return;
-    setInvoices(prev => prev.filter(r => r.id !== row.id));
-  }, []);
+  const deleteRow = useCallback(
+    async (row: InvoiceRow) => {
+      if (typeof window !== 'undefined' && !window.confirm('Delete this invoice?')) return;
+      try {
+        await api.delete(`/api/invoices/${row.id}`);
+        await fetchInvoices();
+      } catch {
+        // silent
+      }
+    },
+    [fetchInvoices]
+  );
 
   // Focus first input when modals open
   useEffect(() => {
@@ -228,6 +304,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       <DataTable<InvoiceRow>
         columns={columns}
         data={rowsForYear}
+        loading={loading}
+        error={error}
         borderTone="accent"
         groupByKey={r => r.quarter}
         groupSeparatorTone="accent"
@@ -383,8 +461,13 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             <TextInput
               label="Invoice No."
               type="number"
-              value={editDraft.invoiceNumber as string}
-              onChange={e => setEditDraft({ ...editDraft, invoiceNumber: e.currentTarget.value })}
+              value={String(editDraft.invoiceNumber)}
+              onChange={e => {
+                const v = parseInt(e.currentTarget.value, 10);
+                setEditDraft(d =>
+                  d ? { ...d, invoiceNumber: isNaN(v) ? d.invoiceNumber : v } : d
+                );
+              }}
               ref={editFirstFieldRef}
               variant="filled"
               styles={inputFilledStyles}
