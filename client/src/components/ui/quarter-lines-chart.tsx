@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -51,19 +50,26 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
         n || 0
       ));
   return (
-    <div className="w-full h-full" style={{ minHeight: 180 }}>
+    <div className="w-full h-full" style={{ minHeight: 220 }}>
       <ResponsiveContainer width="100%" height={height} debounce={150}>
-        <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+        <LineChart data={data} margin={{ top: 6, right: 16, left: 16, bottom: 60 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis width={50} tickFormatter={(v: number) => format(Number(v))} />
+          <XAxis
+            dataKey="name"
+            interval={0}
+            tickMargin={12}
+            angle={-30}
+            textAnchor="end"
+            height={36}
+          />
+          <YAxis width={72} tickMargin={6} tickFormatter={(v: number) => format(Number(v))} />
           <Tooltip
             formatter={(value: unknown, name: string) => [
               format(typeof value === 'number' ? value : Number(value)),
               name,
             ]}
           />
-          {showLegend && <Legend />}
+          {/* Built-in Legend removed; we render a custom legend below */}
           <Line
             type="monotone"
             dataKey="T1"
@@ -102,6 +108,54 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
           />
         </LineChart>
       </ResponsiveContainer>
+      {showLegend && (
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <span
+              style={{
+                width: 12,
+                height: 2,
+                background: colors.T1 || defaultColors.T1,
+                display: 'inline-block',
+              }}
+            />{' '}
+            T1
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span
+              style={{
+                width: 12,
+                height: 2,
+                background: colors.T2 || defaultColors.T2,
+                display: 'inline-block',
+              }}
+            />{' '}
+            T2
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span
+              style={{
+                width: 12,
+                height: 2,
+                background: colors.T3 || defaultColors.T3,
+                display: 'inline-block',
+              }}
+            />{' '}
+            T3
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span
+              style={{
+                width: 12,
+                height: 2,
+                background: colors.T4 || defaultColors.T4,
+                display: 'inline-block',
+              }}
+            />{' '}
+            T4
+          </span>
+        </div>
+      )}
     </div>
   );
 };
