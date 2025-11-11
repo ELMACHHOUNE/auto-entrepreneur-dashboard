@@ -26,6 +26,7 @@ export interface QuarterLinesChartUIProps {
   showLegend?: boolean;
   colors?: Partial<Record<QuarterKey, string>>;
   valueFormatter?: (value: number) => string;
+  animate?: boolean; // disable animations by default for smoother layout resizes
 }
 
 const defaultColors: Record<QuarterKey, string> = {
@@ -41,6 +42,7 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   showLegend = true,
   colors = defaultColors,
   valueFormatter,
+  animate = false,
 }) => {
   const format =
     valueFormatter ||
@@ -50,7 +52,7 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
       ));
   return (
     <div className="w-full h-full" style={{ minHeight: 180 }}>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} debounce={150}>
         <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
@@ -68,6 +70,8 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
             stroke={colors.T1 || defaultColors.T1}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={animate}
+            animationDuration={animate ? 300 : 0}
           />
           <Line
             type="monotone"
@@ -75,6 +79,8 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
             stroke={colors.T2 || defaultColors.T2}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={animate}
+            animationDuration={animate ? 300 : 0}
           />
           <Line
             type="monotone"
@@ -82,6 +88,8 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
             stroke={colors.T3 || defaultColors.T3}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={animate}
+            animationDuration={animate ? 300 : 0}
           />
           <Line
             type="monotone"
@@ -89,6 +97,8 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
             stroke={colors.T4 || defaultColors.T4}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={animate}
+            animationDuration={animate ? 300 : 0}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -96,4 +106,4 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   );
 };
 
-export default QuarterLinesChartUI;
+export default React.memo(QuarterLinesChartUI);
