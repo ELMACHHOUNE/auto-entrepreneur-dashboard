@@ -13,7 +13,7 @@ export default function QuarterlySidebarCompact({
   yearTotals,
 }: QuarterlySidebarCompactProps) {
   return (
-    <div className="flex h-full flex-col gap-2" aria-label={`Quarterly summary ${year} (compact)`}>
+    <div className="flex h-full flex-col gap-4" aria-label={`Quarterly summary ${year} (compact)`}>
       <div className="text-xs font-medium text-foreground/80 mb-1">Q Totals {year}</div>
       {(['T1', 'T2', 'T3', 'T4'] as const).map(label => {
         const base = quarterTotals[label] || 0;
@@ -30,7 +30,7 @@ export default function QuarterlySidebarCompact({
         );
       })}
       {yearTotals && (
-        <div className="rounded-md border border-accent/60 p-2 bg-card/70 flex items-center justify-between px-3 text-foreground mt-1">
+        <div className="rounded-md border border-accent/60 p-2 bg-card/70 flex items-center justify-between px-3 text-foreground mt-6">
           <span className="text-sm font-medium">Year</span>
           <span className="text-sm font-semibold text-success">
             {yearTotals.amount.toLocaleString('en-US')} DH

@@ -192,7 +192,7 @@ export default function DashboardLayout({
       )}
       {rightSidebar && rightCollapsible && !rightOpen && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-36 border-l bg-background p-2 md:block"
+          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-40 border-l bg-background p-2 md:block"
           id="right-sidebar-collapsed"
         >
           <div className="mb-2 flex items-center justify-start">
