@@ -25,6 +25,7 @@ export interface QuarterLinesChartUIProps {
   height?: number;
   showLegend?: boolean;
   colors?: Partial<Record<QuarterKey, string>>;
+  valueFormatter?: (value: number) => string;
 }
 
 const defaultColors: Record<QuarterKey, string> = {
@@ -39,15 +40,27 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   height = 280,
   showLegend = true,
   colors = defaultColors,
+  valueFormatter,
 }) => {
+  const format =
+    valueFormatter ||
+    ((n: number) =>
+      new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+        n || 0
+      ));
   return (
     <div className="w-full h-full" style={{ minHeight: 180 }}>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
-          <YAxis width={50} />
-          <Tooltip />
+          <YAxis width={50} tickFormatter={(v: number) => format(Number(v))} />
+          <Tooltip
+            formatter={(value: unknown, name: string) => [
+              format(typeof value === 'number' ? value : Number(value)),
+              name,
+            ]}
+          />
           {showLegend && <Legend />}
           <Line
             type="monotone"
