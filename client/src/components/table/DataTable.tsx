@@ -36,6 +36,12 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   // Optional: visually separate groups of rows (e.g., quarters) with an accent separator line
   groupByKey?: (rowOriginal: T) => string | number;
   groupSeparatorTone?: 'border' | 'primary' | 'accent' | 'secondary' | 'success';
+  // Optional: enforce a specific order of groups (e.g., ['T1','T2','T3','T4'])
+  groupOrder?: Array<string | number>;
+  // Optional: sort comparator within each group (e.g., by invoice number ascending)
+  groupWithinComparator?: (a: T, b: T) => number;
+  // Optional: provide MRT initial sorting state (ids should match column accessors)
+  defaultSorting?: Array<{ id: string; desc: boolean }>;
 }
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -56,6 +62,9 @@ export function DataTable<T extends Record<string, unknown>>({
   borderTone = 'border',
   groupByKey,
   groupSeparatorTone = 'accent',
+  groupOrder,
+  groupWithinComparator,
+  defaultSorting,
 }: DataTableProps<T>) {
   // Memo columns to prevent re-renders
   const memoCols = useMemo(() => columns, [columns]);
@@ -87,15 +96,36 @@ export function DataTable<T extends Record<string, unknown>>({
     []
   );
 
+  // If grouping is requested, pre-sort the incoming data by the explicit group order,
+  // and then by the provided in-group comparator. This ensures visual separators
+  // appear in chronological quarter order while keeping rows sorted within each quarter.
+  const sortedData = useMemo(() => {
+    if (groupByKey && groupOrder && groupOrder.length > 0) {
+      const orderMap = new Map<string, number>(groupOrder.map((k, i) => [String(k), i]));
+      const arr = [...data];
+      arr.sort((a, b) => {
+        const ka = String(groupByKey(a));
+        const kb = String(groupByKey(b));
+        const ia = orderMap.get(ka) ?? Number.MAX_SAFE_INTEGER;
+        const ib = orderMap.get(kb) ?? Number.MAX_SAFE_INTEGER;
+        if (ia !== ib) return ia - ib;
+        if (groupWithinComparator) return groupWithinComparator(a, b);
+        return 0;
+      });
+      return arr;
+    }
+    return data;
+  }, [data, groupByKey, groupOrder, groupWithinComparator]);
+
   // Provide a safe default pagination object if none is supplied to avoid runtime errors in MRT
   const safePagination = pagination ?? {
     pageIndex: 0,
-    pageSize: data.length > 0 ? data.length : 10,
+    pageSize: sortedData.length > 0 ? sortedData.length : 10,
   };
 
   const table = useMantineReactTable<T>({
     columns: memoCols,
-    data,
+    data: sortedData,
     rowCount,
     enableRowActions,
     enableGlobalFilter: true,
@@ -114,7 +144,10 @@ export function DataTable<T extends Record<string, unknown>>({
       },
       onGlobalFilterChange: (v: string | undefined) => onGlobalFilterChange?.(v ?? ''),
     }),
-    initialState: { showGlobalFilter: true },
+    initialState: {
+      showGlobalFilter: true,
+      ...(defaultSorting ? { sorting: defaultSorting } : {}),
+    },
     onPaginationChange,
     renderRowActions,
     renderTopToolbarCustomActions,

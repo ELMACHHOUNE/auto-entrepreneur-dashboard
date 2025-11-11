@@ -308,6 +308,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         error={error}
         borderTone="accent"
         groupByKey={r => r.quarter}
+        groupOrder={['T1', 'T2', 'T3', 'T4']}
+        groupWithinComparator={(a, b) => a.invoiceNumber - b.invoiceNumber}
         groupSeparatorTone="accent"
         enableRowActions
         renderRowActions={({ row }) => (
