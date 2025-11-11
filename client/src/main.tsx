@@ -17,11 +17,13 @@ if (import.meta.env.DEV) {
   installAbsoluteUrlHistoryPatch();
 }
 
+const queryClient = new QueryClient();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <QueryClientProvider client={new QueryClient()}>
+        <QueryClientProvider client={queryClient}>
           <MantineProvider theme={theme} defaultColorScheme="auto">
             <BackgroundGrid>
               <App />

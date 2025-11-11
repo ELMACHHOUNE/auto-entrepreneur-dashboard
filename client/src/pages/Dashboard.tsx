@@ -3,6 +3,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Suspense, lazy, useState, useCallback } from 'react';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
+const QuarterLinesChart = lazy(() => import('@/components/charts/QuarterLinesChart'));
+const QuarterLinesTvaChart = lazy(() => import('@/components/charts/QuarterLinesTvaChart'));
 
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
@@ -47,8 +49,18 @@ export default function Dashboard() {
     >
       {/* Chart + Table layout scaffold */}
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border p-4">Chart A</div>
-        <div className="rounded-lg border p-4">Chart B</div>
+        <div className="rounded-lg border p-4">
+          <h4 className="mb-2 text-sm font-medium">Quarter totals by month ({year})</h4>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
+            <QuarterLinesChart year={year} />
+          </Suspense>
+        </div>
+        <div className="rounded-lg border p-4">
+          <h4 className="mb-2 text-sm font-medium">VAT totals by month ({year})</h4>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
+            <QuarterLinesTvaChart year={year} />
+          </Suspense>
+        </div>
         <div className="rounded-lg border p-4">Chart C</div>
         <div className="rounded-lg border p-4">Chart D</div>
       </section>
