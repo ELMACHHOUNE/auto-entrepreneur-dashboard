@@ -327,8 +327,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </Group>
         )}
         renderTopToolbarCustomActions={() => (
-          <div className="grid grid-cols-3 items-center gap-2">
-            <div className="justify-self-start">
+          <div className="relative flex w-full items-center gap-3 pr-2">
+            {/* Left cluster: Add + Year selector */}
+            <div className="flex items-center gap-2">
               <Button
                 size="xs"
                 styles={buttonAccentStyles}
@@ -339,11 +340,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               >
                 Add Invoice
               </Button>
-            </div>
-            <div className="justify-self-center text-xs text-muted-foreground">
-              Invoices: <strong>{rowsForYear.length}</strong>
-            </div>
-            <div className="justify-self-end ">
               <Select
                 placeholder="Year"
                 size="xs"
@@ -355,9 +351,26 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 onChange={v => setYear(parseInt(v || year.toString(), 10))}
                 variant="filled"
                 styles={selectFilledStyles}
-                style={{ width: 110 }}
+                style={{ width: 104 }}
               />
             </div>
+            {/* Centered invoice count pill */}
+            <div
+              className="pointer-events-none absolute left-1/2 -translate-x-1/2 select-none"
+              aria-live="polite"
+              aria-atomic
+            >
+              <span
+                className="inline-flex items-center justify-center rounded-md bg-accent/60 px-4 py-1.5 text-base font-semibold leading-none tracking-wide text-accent-foreground shadow-sm backdrop-blur-sm"
+                title="Number of invoices in the current year"
+              >
+                Invoices:&nbsp;
+                <span className="tabular-nums">{rowsForYear.length.toLocaleString('en-US')}</span>
+              </span>
+            </div>
+            {/* Right side: default MRT controls remain (global search, visibility, etc.) */}
+            {/* We just reserve space by flex-grow so they align right naturally */}
+            <div className="flex-1" />
           </div>
         )}
       />
