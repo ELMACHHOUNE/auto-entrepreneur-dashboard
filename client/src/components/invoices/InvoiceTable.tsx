@@ -11,41 +11,17 @@ import { DataTable } from '@/components/table/DataTable';
 import { api } from '@/api/axios';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Pencil, Trash2 } from 'lucide-react';
+import { MONTHS, monthToQuarterByName } from '@/lib/dateBuckets';
+import type { Month, QuarterKey } from '@/lib/dateBuckets';
 
 // TVA is now a free numeric input (supports comma), so predefined rates array removed.
-
-// Months (English labels)
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
-type Month = (typeof MONTHS)[number];
-
-function monthToQuarterByName(month: Month): 'T1' | 'T2' | 'T3' | 'T4' {
-  const idx = MONTHS.indexOf(month);
-  if (idx < 3) return 'T1';
-  if (idx < 6) return 'T2';
-  if (idx < 9) return 'T3';
-  return 'T4';
-}
 
 export interface InvoiceRow {
   id: string;
   invoiceNumber: number;
   year: number;
   month: Month;
-  quarter: 'T1' | 'T2' | 'T3' | 'T4';
+  quarter: QuarterKey;
   clientName: string;
   amount: number; // Prix Total for this invoice
   tvaRate: number; // 0.5 | 1 | 20
