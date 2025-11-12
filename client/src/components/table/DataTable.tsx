@@ -9,7 +9,7 @@ import {
   type MRT_TableInstance,
 } from 'mantine-react-table';
 import type React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // Generic reusable DataTable wrapper.
 // Centralizes MantineReactTable configuration and styling so pages only pass data & columns.
@@ -77,11 +77,23 @@ export function DataTable<T extends Record<string, unknown>>({
   const paginationStyles = useMemo(
     () => ({
       control: {
-        background: 'var(--card)',
-        color: 'var(--foreground)',
-        borderColor: 'var(--border)',
+        background: 'var(--accent)',
+        color: 'var(--accent-foreground)',
+        borderColor: 'var(--accent)',
+        transition: 'background-color 120ms ease',
+        '&:hover': {
+          background: 'color-mix(in oklch, var(--accent) 88%, black 12%)',
+        },
+        '&[data-active]': {
+          background: 'var(--accent)',
+          color: 'var(--accent-foreground)',
+        },
+        '&:disabled': {
+          background: 'color-mix(in oklch, var(--accent) 40%, var(--muted) 60%)',
+          color: 'var(--muted-foreground)',
+        },
       },
-      dots: { color: 'var(--muted-foreground)' },
+      dots: { color: 'var(--accent)' },
     }),
     []
   );
@@ -117,11 +129,10 @@ export function DataTable<T extends Record<string, unknown>>({
     return data;
   }, [data, groupByKey, groupOrder, groupWithinComparator]);
 
-  // Provide a safe default pagination object if none is supplied to avoid runtime errors in MRT
-  const safePagination = pagination ?? {
-    pageIndex: 0,
-    pageSize: sortedData.length > 0 ? sortedData.length : 10,
-  };
+  // Internal pagination state when not controlled by parent
+  const [internalPagination, setInternalPagination] = useState({ pageIndex: 0, pageSize: 20 });
+
+  const effectivePagination = pagination ?? internalPagination;
 
   const table = useMantineReactTable<T>({
     columns: memoCols,
@@ -133,14 +144,14 @@ export function DataTable<T extends Record<string, unknown>>({
     manualPagination: manualPagination,
     state: {
       isLoading: loading,
-      pagination: safePagination,
+      pagination: effectivePagination,
     },
     // If consumer provides controlled globalFilter handlers, use them; otherwise let MRT manage internally
     ...(globalFilter !== undefined && {
       state: {
         isLoading: loading,
         globalFilter,
-        pagination: safePagination,
+        pagination: effectivePagination,
       },
       onGlobalFilterChange: (v: string | undefined) => onGlobalFilterChange?.(v ?? ''),
     }),
@@ -148,7 +159,33 @@ export function DataTable<T extends Record<string, unknown>>({
       showGlobalFilter: true,
       ...(defaultSorting ? { sorting: defaultSorting } : {}),
     },
-    onPaginationChange,
+    onPaginationChange: (updater => {
+      type PagState = { pageIndex: number; pageSize: number };
+      const resolve = (u: PagState | ((prev: PagState) => PagState)): PagState =>
+        typeof u === 'function'
+          ? (u as (p: PagState) => PagState)(effectivePagination)
+          : (u as PagState);
+
+      if (manualPagination || pagination) {
+        // Forward to parent using resolved state
+        const resolved = resolve(updater as PagState | ((prev: PagState) => PagState));
+        // Parent signature expects MRT_TableOptions<T>['onPaginationChange'] shape; cast minimally
+        onPaginationChange?.(resolved as { pageIndex: number; pageSize: number });
+      } else {
+        const nextVal = resolve(updater as PagState | ((prev: PagState) => PagState));
+        setInternalPagination({
+          pageIndex: Number(nextVal.pageIndex) || 0,
+          pageSize: Number(nextVal.pageSize) || internalPagination.pageSize,
+        });
+      }
+    }) as (
+      updater:
+        | { pageIndex: number; pageSize: number }
+        | ((prev: { pageIndex: number; pageSize: number }) => {
+            pageIndex: number;
+            pageSize: number;
+          })
+    ) => void,
     renderRowActions,
     renderTopToolbarCustomActions,
     mantineToolbarAlertBannerProps: error
