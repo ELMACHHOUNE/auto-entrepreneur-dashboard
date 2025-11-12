@@ -249,6 +249,10 @@ export function DataTable<T extends Record<string, unknown>>({
       style: {
         background: 'var(--card)',
         borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        rowGap: '0.5rem',
       },
     },
     mantineBottomToolbarProps: {

@@ -327,9 +327,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </Group>
         )}
         renderTopToolbarCustomActions={() => (
-          <div className="relative flex w-full items-center gap-3 pr-2">
-            {/* Left cluster: Add + Year selector */}
-            <div className="flex items-center gap-2">
+          <div className="relative flex w-full flex-col gap-2 pr-2 sm:flex-row sm:items-center sm:gap-3">
+            {/* Row 1 / Left cluster (stacks on mobile) */}
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="xs"
                 styles={buttonAccentStyles}
@@ -337,6 +337,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   setInvYear(year);
                   setAddOpen(true);
                 }}
+                className="min-w-[110px]"
               >
                 Add Invoice
               </Button>
@@ -351,26 +352,25 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 onChange={v => setYear(parseInt(v || year.toString(), 10))}
                 variant="filled"
                 styles={selectFilledStyles}
-                style={{ width: 104 }}
+                className="w-[110px]"
               />
             </div>
-            {/* Centered invoice count pill */}
+            {/* Invoice count pill: inline on mobile, centered overlay on larger screens */}
             <div
-              className="pointer-events-none absolute left-1/2 -translate-x-1/2 select-none"
+              className="order-3 sm:order-0 select-none sm:pointer-events-none sm:absolute sm:left-1/2 sm:-translate-x-1/2"
               aria-live="polite"
               aria-atomic
             >
               <span
-                className="inline-flex items-center justify-center rounded-md bg-accent/60 px-4 py-1.5 text-base font-semibold leading-none tracking-wide text-accent-foreground shadow-sm backdrop-blur-sm"
+                className="inline-flex items-center justify-center rounded-md bg-accent/60 px-4 py-1.5 text-sm sm:text-base font-semibold leading-none tracking-wide text-accent-foreground shadow-sm backdrop-blur-sm"
                 title="Number of invoices in the current year"
               >
                 Invoices:&nbsp;
                 <span className="tabular-nums">{rowsForYear.length.toLocaleString('en-US')}</span>
               </span>
             </div>
-            {/* Right side: default MRT controls remain (global search, visibility, etc.) */}
-            {/* We just reserve space by flex-grow so they align right naturally */}
-            <div className="flex-1" />
+            {/* Spacer to push built-in MRT controls (search, column visibility) to the end on larger screens */}
+            <div className="flex-1 sm:ml-auto" />
           </div>
         )}
       />
