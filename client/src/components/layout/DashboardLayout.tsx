@@ -64,7 +64,7 @@ export default function DashboardLayout({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -240, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-            className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-56 border-r bg-background p-3"
+            className="fixed left-0 top-16 z-40 max-h-[calc(100vh-4rem)] w-56 overflow-y-auto border-r border-t border-b border-accent bg-background p-3"
             id="app-sidebar"
           >
             <div className="mb-3 flex items-center justify-end ">
@@ -86,7 +86,7 @@ export default function DashboardLayout({
       {/* Collapsed sidebar (md+ only) when closed */}
       {!open && (
         <aside
-          className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-16 border-r bg-background p-2 md:block"
+          className="fixed left-0 top-16 z-30 hidden max-h-[calc(100vh-4rem)] w-16 overflow-y-auto border-r border-t border-b border-accent bg-background p-2 md:block"
           id="app-sidebar-collapsed"
         >
           <div className="mb-2 flex items-center justify-center">
@@ -128,7 +128,7 @@ export default function DashboardLayout({
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 280, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                className="fixed right-0 top-16 z-40 h-[calc(100vh-4rem)] w-72 max-w-[85vw] border-l border-accent bg-background p-3 md:hidden"
+                className="fixed right-0 top-16 z-40 max-h-[calc(100vh-4rem)] w-72 max-w-[85vw] overflow-y-auto border-l border-t border-b border-accent bg-background p-3 md:hidden"
                 aria-label="Right insights panel"
                 id="right-sidebar-mobile"
               >
@@ -169,7 +169,7 @@ export default function DashboardLayout({
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 240, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-              className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l border-accent bg-background p-3 md:block"
+              className="fixed right-0 top-16 z-30 hidden w-64 border-l border-t border-b border-accent bg-background p-3 md:block overflow-y-auto max-h-[calc(100vh-4rem)]"
               aria-label="Right insights panel"
               id="right-sidebar"
             >
@@ -192,7 +192,7 @@ export default function DashboardLayout({
       )}
       {rightSidebar && rightCollapsible && !rightOpen && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-40 border-l bg-background p-2 md:block"
+          className="fixed right-0 top-16 z-30 hidden w-40 border-l border-t border-b border-accent bg-background p-2 md:block overflow-y-auto max-h-[calc(100vh-4rem)]"
           id="right-sidebar-collapsed"
         >
           <div className="mb-2 flex items-center justify-start">
@@ -211,7 +211,7 @@ export default function DashboardLayout({
       )}
       {rightSidebar && !rightCollapsible && (
         <aside
-          className="fixed right-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 border-l border-accent bg-background p-3 md:block"
+          className="fixed right-0 top-16 z-30 hidden w-64 border-l border-t border-b border-accent bg-background p-3 md:block overflow-y-auto max-h-[calc(100vh-4rem)]"
           aria-label="Right insights panel"
         >
           {rightSidebar}
