@@ -207,6 +207,7 @@ export function DataTable<T extends Record<string, unknown>>({
         border: `1px solid ${borderVar}`,
         borderRadius: 'var(--radius)',
       },
+      className: 'mrt-scroll-container',
     },
     mantineTableProps: {
       highlightOnHover: true,
