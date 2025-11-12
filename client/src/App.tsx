@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import Loader from '@/components/ui/Loader';
 const Landing = lazy(() => import('@/pages/Landing'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
@@ -20,7 +21,13 @@ export default function App() {
     <div className="min-h-screen">
       <Navbar />
       <main className="p-6">
-        <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading…</div>}>
+        <Suspense
+          fallback={
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <Loader size={72} label="Loading application" />
+            </div>
+          }
+        >
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

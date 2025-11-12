@@ -11,12 +11,6 @@ Built with **React (Vite + TypeScript + Tailwind)** for the frontend and **Node.
 auto-entrepreneur-dashboard/
 │
 ├── client/ # Frontend (React + Vite + TS + Tailwind + shadcn + Mantine React Table)
-│
-└── server/ # Backend (Express + TypeScript + MongoDB + OAuth + Multer + Nodemon)
-
----
-
-## 🚀 Features
 
 ### 👤 User (Freelancer)
 
@@ -24,12 +18,9 @@ auto-entrepreneur-dashboard/
 - Manage profile (name, ICE, service type, phone, avatar)
 - Manage clients and invoices (monthly/quarterly)
 - Upload invoice PDFs
-- Automatic calculation of 1% (services) or 0.5% (workshops)
-- Dashboard with statistics by:
   - Month
   - Trimester (T1–T4)
   - Year
-  - Client
 
 ### 🛠️ Admin
 
@@ -38,26 +29,10 @@ auto-entrepreneur-dashboard/
 
 ### 📊 Dashboard
 
-- Charts (by quarter, month, and client)
-- KPIs (Total revenue, % fees, invoices count, top client)
-
----
-
-## 🧱 Tech Stack
-
 ### Frontend
 
 - **Vite + React + TypeScript**
-- **Tailwind CSS**
-- **shadcn/ui + Aceternity UI**
-- **Mantine React Table**
-- **Lucide React Icons**
-- **React Query**
-- **Recharts** (charts and analytics)
 
-### Backend
-
-- **Node.js + Express (TypeScript)**
 - **MongoDB + Mongoose**
 - **Google OAuth 2.0 (Passport.js)**
 - **JWT Authentication**
@@ -68,8 +43,6 @@ auto-entrepreneur-dashboard/
 
 ---
 
-## ⚙️ Installation
-
 ### 1️⃣ Clone the repository
 
 ```bash
@@ -77,24 +50,48 @@ git clone https://github.com/ELMACHHOUNE/auto-entrepreneur-dashboard.git
 cd auto-entrepreneur-dashboard
 ```
 
----
+## Loader Components
 
-## 🧪 Dev-only helper: absolute URL history patch
+Two reusable loading UI pieces:
 
-Some mobile simulators and browser extensions hook the History API and call `new URL(url)` without a base. When a relative path like `/dashboard` is passed, that hook can throw `TypeError: Failed to construct 'URL': Invalid URL` and sometimes force a full page reload.
+- **`Loader`** – Tailwind-only concentric spinner (two counter-rotating rings with a pulsing center). Use it for page-level fallback (e.g. Suspense) or inline states.
+- **`LoadingOverlay`** – Full-surface blur overlay that centers a `Loader` and message over existing content (requires parent with `relative`). Currently optional; tables no longer use it by default to avoid duplicate loaders.
 
-To keep SPA navigation smooth in development and avoid those false errors, we install a tiny, idempotent patch during app boot in dev:
+### Example: Page Fallback
 
-- File: `client/src/lib/history-absolute-url-patch.ts`
-- Purpose: normalize `history.pushState` / `replaceState` URLs to absolute (prefix `window.location.origin`).
-- Install point: `client/src/main.tsx`
-- Scope: development only — guarded by `if (import.meta.env.DEV) { ... }`.
+```tsx
+import Loader from '@/components/ui/Loader';
 
-Disable or remove
+export function PageWrapper() {
+  const { isLoading, data } = useQuery(...);
+  if (isLoading && !data) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader size={72} label="Loading page" />
+      </div>
+    );
+  }
+  return <Content data={data} />;
+}
+```
 
-- To disable, comment out the `installAbsoluteUrlHistoryPatch()` call in `client/src/main.tsx`.
-- This utility is safe to keep in the codebase; it does not run in production builds.
+### Example: Overlay
 
-Why not needed in production?
+```tsx
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 
-- Real browsers handle relative URLs fine, and we don’t expect simulator hooks in production. Keeping it dev-only avoids any chance of side-effects and keeps bundles minimal.
+function Card({ loading, children }) {
+  return (
+    <div className="relative rounded-md border p-4">
+      {children}
+      {loading && <LoadingOverlay message="Updating…" />}
+    </div>
+  );
+}
+```
+
+### Props
+
+`<Loader size={number} label={string} inline />`
+
+`<LoadingOverlay message={string} size={number} />`
