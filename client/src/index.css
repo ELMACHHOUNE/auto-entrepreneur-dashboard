@@ -85,8 +85,8 @@
 }
 
 .dark {
-  /* Soften grid lines in dark mode (50% opacity) */
-  --grid-line-color: rgba(229, 231, 235, 0.5);
+  /* Further soften grid lines in dark mode (from 50% to 22% opacity) */
+  --grid-line-color: rgba(229, 231, 235, 0.22);
   /* Brand palette (dark) */
   --background: #050315; /* dark background */
   --foreground: #fbfbfe; /* light text */
