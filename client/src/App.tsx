@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Loader from '@/components/ui/Loader';
 const Landing = lazy(() => import('@/pages/Landing'));
@@ -14,6 +14,7 @@ import RequireRole from '@/components/RequireRole';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/layout/Navbar';
 import AdminLayout from '@/components/layout/AdminLayout';
+import ErrorPage from '@/components/ui/ErrorPage';
 
 export default function App() {
   useAuth();
@@ -62,7 +63,7 @@ export default function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="services" element={<AdminServices />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<ErrorPage code={404} message="Page not found" />} />
           </Routes>
         </Suspense>
       </main>
