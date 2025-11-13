@@ -13,18 +13,32 @@ export interface ClientsRadarChartProps {
   data: Array<{ name: string; count: number }>;
   height?: number;
   maxClients?: number; // limit number of spokes for readability
+  noDataLabel?: string; // message to show when there is no data
 }
 
 const ClientsRadarChart: React.FC<ClientsRadarChartProps> = ({
   data,
   height = 320,
   maxClients = 12,
+  noDataLabel,
 }) => {
   const trimmed = (data || [])
     .filter(d => !!d?.name)
     .sort((a, b) => b.count - a.count)
     .slice(0, maxClients)
     .map(d => ({ subject: d.name, count: d.count }));
+
+  if (!trimmed.length) {
+    return (
+      <div className="w-full" style={{ height }}>
+        <div className="flex h-full items-center justify-center">
+          <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
+            {noDataLabel || 'No data.'}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

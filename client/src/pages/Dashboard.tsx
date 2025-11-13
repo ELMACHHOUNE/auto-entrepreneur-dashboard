@@ -81,7 +81,7 @@ export default function Dashboard() {
         <div className="rounded-lg border p-4">
           <h4 className="mb-2 text-sm font-medium">Invoices per client ({year})</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <ClientsRadarChart data={clientCounts} />
+            <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
           </Suspense>
         </div>
         <div className="rounded-lg border p-4">Chart D</div>

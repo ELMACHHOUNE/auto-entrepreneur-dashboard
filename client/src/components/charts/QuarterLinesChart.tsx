@@ -31,7 +31,11 @@ export const QuarterLinesChart: React.FC<QuarterLinesChartProps> = ({ year }) =>
   return (
     <div className="w-full h-full" style={{ minHeight: 240 }}>
       {!hasAny && !isLoading ? (
-        <div className="text-xs text-muted-foreground">No data for {year}.</div>
+        <div className="flex h-full min-h-60 items-center justify-center">
+          <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
+            No data for {year}.
+          </span>
+        </div>
       ) : (
         <QuarterLinesChartUI data={chartData} />
       )}
