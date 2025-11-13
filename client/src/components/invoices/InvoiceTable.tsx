@@ -42,11 +42,15 @@ interface InvoiceTableProps {
     totalYearAmount: number;
     totalYearTva: number;
   }) => void;
+  onMonthlyTotalsChange?: (
+    rows: Array<{ month: Month; gross: number; vat: number; net: number }>
+  ) => void;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   year: externalYear,
   onQuarterSummaryChange,
+  onMonthlyTotalsChange,
 }) => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(externalYear || currentYear);
@@ -109,6 +113,34 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     totalYearTva = parseFloat(totalYearTva.toFixed(2));
     onQuarterSummaryChange({ year, totals: buckets, totalYearAmount, totalYearTva });
   }, [rowsForYear, year, onQuarterSummaryChange]);
+
+  // Compute monthly gross, VAT, net and notify parent when requested
+  useEffect(() => {
+    if (!onMonthlyTotalsChange) return;
+    const init = MONTHS.map(m => ({ month: m, gross: 0, vat: 0, net: 0 }));
+    const byMonth = new Map<string, { month: Month; gross: number; vat: number; net: number }>(
+      init.map(r => [r.month, { ...r }])
+    );
+    rowsForYear.forEach(r => {
+      const entry = byMonth.get(r.month) as {
+        month: Month;
+        gross: number;
+        vat: number;
+        net: number;
+      };
+      const vat = computeTvaAmount(r);
+      entry.gross += r.amount;
+      entry.vat += vat;
+      entry.net += r.amount - vat;
+    });
+    const result = MONTHS.map(m => byMonth.get(m)!).map(r => ({
+      month: r.month,
+      gross: parseFloat(r.gross.toFixed(2)),
+      vat: parseFloat(r.vat.toFixed(2)),
+      net: parseFloat(r.net.toFixed(2)),
+    }));
+    onMonthlyTotalsChange(result);
+  }, [rowsForYear, onMonthlyTotalsChange]);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

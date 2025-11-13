@@ -1,10 +1,12 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Suspense, lazy, useState, useCallback } from 'react';
+import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
 const QuarterLinesChart = lazy(() => import('@/components/charts/QuarterLinesChart'));
 const QuarterLinesTvaChart = lazy(() => import('@/components/charts/QuarterLinesTvaChart'));
+const LineBarAreaComposedChart = lazy(() => import('@/components/charts/LineBarAreaComposedChart'));
 
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
@@ -13,6 +15,9 @@ export default function Dashboard() {
   const [yearTotals, setYearTotals] = useState({ amount: 0, tva: 0 });
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [rateDisplay, setRateDisplay] = useState<number>(1); // dynamic percentage to apply to quarterly totals
+  const [monthlyTotals, setMonthlyTotals] = useState<
+    Array<{ month: Month; gross: number; vat: number; net: number }>
+  >([]);
 
   const handleQuarterSummary = useCallback(
     (summary: {
@@ -63,6 +68,37 @@ export default function Dashboard() {
         </div>
         <div className="rounded-lg border p-4">Chart C</div>
         <div className="rounded-lg border p-4">Chart D</div>
+        {/* Full-width composed chart row */}
+        <div className="rounded-lg border p-4 md:col-span-2">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <h4 className="text-sm font-medium">Composed chart (sample)</h4>
+            {/* Year totals summary from InvoiceTable callback */}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-md border px-3 py-1.5">
+                <div className="text-muted-foreground">Total price ({year})</div>
+                <div className="tabular-nums font-semibold">
+                  {yearTotals.amount.toLocaleString('en-US')} DH
+                </div>
+              </div>
+              <div className="rounded-md border px-3 py-1.5">
+                <div className="text-muted-foreground">Total TVA ({year})</div>
+                <div className="tabular-nums font-semibold">
+                  {yearTotals.tva.toLocaleString('en-US')} DH
+                </div>
+              </div>
+            </div>
+          </div>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
+            <LineBarAreaComposedChart
+              data={monthlyTotals.map(m => ({
+                name: m.month,
+                gross: m.gross,
+                vat: m.vat,
+                net: m.net,
+              }))}
+            />
+          </Suspense>
+        </div>
       </section>
 
       <section className="rounded-lg border p-4">
@@ -71,7 +107,10 @@ export default function Dashboard() {
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
         <Suspense fallback={<div className="text-xs text-muted-foreground">Loading table…</div>}>
-          <InvoiceTable onQuarterSummaryChange={handleQuarterSummary} />
+          <InvoiceTable
+            onQuarterSummaryChange={handleQuarterSummary}
+            onMonthlyTotalsChange={setMonthlyTotals}
+          />
         </Suspense>
       </section>
     </DashboardLayout>
