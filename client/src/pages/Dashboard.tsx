@@ -1,6 +1,6 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Suspense, lazy, useState, useCallback } from 'react';
+import { Suspense, lazy, useState, useCallback, useMemo } from 'react';
 import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
@@ -18,6 +18,16 @@ export default function Dashboard() {
   const [monthlyTotals, setMonthlyTotals] = useState<
     Array<{ month: Month; gross: number; vat: number; net: number }>
   >([]);
+  const chartData = useMemo(
+    () =>
+      monthlyTotals.map(m => ({
+        name: m.month,
+        gross: m.gross,
+        vat: m.vat,
+        net: m.net,
+      })),
+    [monthlyTotals]
+  );
 
   const handleQuarterSummary = useCallback(
     (summary: {
@@ -89,14 +99,7 @@ export default function Dashboard() {
             </div>
           </div>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <LineBarAreaComposedChart
-              data={monthlyTotals.map(m => ({
-                name: m.month,
-                gross: m.gross,
-                vat: m.vat,
-                net: m.net,
-              }))}
-            />
+            <LineBarAreaComposedChart data={chartData} />
           </Suspense>
         </div>
       </section>

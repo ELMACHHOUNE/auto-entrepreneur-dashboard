@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -37,8 +37,9 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
   data = defaultData,
   height = 320,
 }) => {
-  const formatNumber = (n: number) =>
-    new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(n || 0);
+  // Memoized number formatter & function to avoid re-creating on layout/resizes
+  const nf = useMemo(() => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }), []);
+  const formatNumber = useCallback((n: number) => nf.format(n || 0), [nf]);
 
   type TP = {
     active?: boolean;
@@ -62,21 +63,30 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
         <div className="mb-1 font-semibold">{month}</div>
         <div className="grid gap-1">
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#0776c0]" />
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ background: 'var(--primary)' }}
+            />
             <span>
-              Gross: <strong className="tabular-nums">{formatNumber(gross)}</strong>
+              Gross: <strong className="tabular-nums">{formatNumber(gross)} DH</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#fdc401]" />
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ background: 'var(--accent)' }}
+            />
             <span>
-              Net: <strong className="tabular-nums">{formatNumber(net)}</strong>
+              Net: <strong className="tabular-nums">{formatNumber(net)} DH</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#d11c0a]" />
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ background: 'var(--destructive)' }}
+            />
             <span>
-              VAT: <strong className="tabular-nums">{formatNumber(vat)}</strong>
+              VAT: <strong className="tabular-nums">{formatNumber(vat)} DH</strong>
             </span>
           </div>
         </div>
@@ -86,10 +96,14 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
 
   return (
     <div className="w-full">
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} debounce={150}>
         <ComposedChart data={data} margin={{ top: 20, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--border)" />
-          <XAxis dataKey="name" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
+          <XAxis
+            dataKey="name"
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+            tickMargin={8}
+          />
           <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} width={40} />
           <Tooltip
             cursor={{ stroke: 'var(--border)' }}
@@ -98,24 +112,31 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
           />
           <Legend wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }} />
           {/* Bar: Net total (gross - VAT) */}
-          <Bar name="Net" dataKey="net" fill="#519d09" barSize={20} />
+          <Bar
+            name="Net"
+            dataKey="net"
+            fill="var(--success)"
+            barSize={20}
+            isAnimationActive={false}
+          />
           {/* Optional line overlay for Net */}
           <Line
             name="Net"
             type="monotone"
             dataKey="net"
-            stroke="#fdc401"
+            stroke="var(--accent)"
             strokeWidth={2}
             dot={false}
             legendType="none" /* keep legend single for Net (bar) */
+            isAnimationActive={false}
           />
           {/* Points: Gross and VAT */}
-          <Scatter name="Gross" dataKey="gross" fill="#0776c0" />
-          <Scatter name="VAT" dataKey="vat" fill="#d11c0a" />
+          <Scatter name="Gross" dataKey="gross" fill="var(--primary)" isAnimationActive={false} />
+          <Scatter name="VAT" dataKey="vat" fill="var(--destructive)" isAnimationActive={false} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-export default LineBarAreaComposedChart;
+export default memo(LineBarAreaComposedChart);

@@ -133,11 +133,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       entry.vat += vat;
       entry.net += r.amount - vat;
     });
+    // Keep raw precision; handle rounding only at display time in charts/UI
     const result = MONTHS.map(m => byMonth.get(m)!).map(r => ({
       month: r.month,
-      gross: parseFloat(r.gross.toFixed(2)),
-      vat: parseFloat(r.vat.toFixed(2)),
-      net: parseFloat(r.net.toFixed(2)),
+      gross: r.gross,
+      vat: r.vat,
+      net: r.net,
     }));
     onMonthlyTotalsChange(result);
   }, [rowsForYear, onMonthlyTotalsChange]);
