@@ -45,12 +45,14 @@ interface InvoiceTableProps {
   onMonthlyTotalsChange?: (
     rows: Array<{ month: Month; gross: number; vat: number; net: number }>
   ) => void;
+  onClientCountsChange?: (rows: Array<{ name: string; count: number }>) => void;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   year: externalYear,
   onQuarterSummaryChange,
   onMonthlyTotalsChange,
+  onClientCountsChange,
 }) => {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(externalYear || currentYear);
@@ -142,6 +144,18 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     }));
     onMonthlyTotalsChange(result);
   }, [rowsForYear, onMonthlyTotalsChange]);
+
+  // Compute number of invoices per client (for radar chart) and notify parent
+  useEffect(() => {
+    if (!onClientCountsChange) return;
+    const map = new Map<string, number>();
+    rowsForYear.forEach(r => {
+      const key = (r.clientName || 'Unknown').trim();
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    const arr = Array.from(map.entries()).map(([name, count]) => ({ name, count }));
+    onClientCountsChange(arr);
+  }, [rowsForYear, onClientCountsChange]);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

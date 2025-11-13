@@ -7,6 +7,7 @@ import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact
 const QuarterLinesChart = lazy(() => import('@/components/charts/QuarterLinesChart'));
 const QuarterLinesTvaChart = lazy(() => import('@/components/charts/QuarterLinesTvaChart'));
 const LineBarAreaComposedChart = lazy(() => import('@/components/charts/LineBarAreaComposedChart'));
+const ClientsRadarChart = lazy(() => import('@/components/charts/ClientsRadarChart'));
 
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [monthlyTotals, setMonthlyTotals] = useState<
     Array<{ month: Month; gross: number; vat: number; net: number }>
   >([]);
+  const [clientCounts, setClientCounts] = useState<Array<{ name: string; count: number }>>([]);
   const chartData = useMemo(
     () =>
       monthlyTotals.map(m => ({
@@ -76,7 +78,12 @@ export default function Dashboard() {
             <QuarterLinesTvaChart year={year} />
           </Suspense>
         </div>
-        <div className="rounded-lg border p-4">Chart C</div>
+        <div className="rounded-lg border p-4">
+          <h4 className="mb-2 text-sm font-medium">Invoices per client ({year})</h4>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
+            <ClientsRadarChart data={clientCounts} />
+          </Suspense>
+        </div>
         <div className="rounded-lg border p-4">Chart D</div>
         {/* Full-width composed chart row */}
         <div className="rounded-lg border p-4 md:col-span-2">
@@ -113,6 +120,7 @@ export default function Dashboard() {
           <InvoiceTable
             onQuarterSummaryChange={handleQuarterSummary}
             onMonthlyTotalsChange={setMonthlyTotals}
+            onClientCountsChange={setClientCounts}
           />
         </Suspense>
       </section>
