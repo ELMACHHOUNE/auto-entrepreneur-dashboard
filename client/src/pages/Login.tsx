@@ -30,7 +30,16 @@ export default function Login() {
     setErr(null);
     try {
       await login(email, password);
-      nav(loc.state?.from?.pathname || '/dashboard', { replace: true });
+      // Sanitize potential redirect target stored in location state to prevent open redirects.
+      const candidate = loc.state?.from?.pathname;
+      const isSafeInternal =
+        typeof candidate === 'string' &&
+        candidate.startsWith('/') && // must be an absolute internal path
+        !candidate.startsWith('//') && // disallow protocol-relative external redirects
+        !/^\/\/?https?:/i.test(candidate) && // disallow crafted http(s) beginnings
+        /^\/[a-zA-Z0-9._/-]*$/.test(candidate); // simple allow-list of characters
+      const safeTarget = isSafeInternal ? candidate : '/dashboard';
+      nav(safeTarget, { replace: true });
     } catch (e: unknown) {
       const apiErr = e as ApiError;
       setErr(apiErr.response?.data?.error || 'Login failed');

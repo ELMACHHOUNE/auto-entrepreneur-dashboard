@@ -10,12 +10,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import './index.css';
 import BackgroundGrid from '@/components/layout/BackgroundGrid';
-import { installAbsoluteUrlHistoryPatch } from '@/lib/history-absolute-url-patch';
+import { initHistoryService } from '@/services/historyService';
 
-// Install once on app boot (dev-only to keep production pristine)
-if (import.meta.env.DEV) {
-  installAbsoluteUrlHistoryPatch();
-}
+// Initialize history service (idempotent)
+initHistoryService();
 
 const queryClient = new QueryClient();
 
