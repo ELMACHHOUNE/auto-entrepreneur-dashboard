@@ -47,7 +47,11 @@ export async function register(req: Request, res: Response) {
     });
 
     const token = signToken({ sub: user.id, role: user.role, email: user.email });
-    res.cookie(TOKEN_COOKIE, token, cookieOpts(env.IS_PROD, MAX_AGE_MS));
+    res.cookie(TOKEN_COOKIE, token, {
+      ...cookieOpts(env.IS_PROD, MAX_AGE_MS),
+      httpOnly: true,
+      secure: env.IS_PROD || process.env.COOKIE_SECURE === 'true',
+    });
     return res.status(201).json({ user });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to register' });
@@ -66,7 +70,11 @@ export async function login(req: Request, res: Response) {
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = signToken({ sub: user.id, role: user.role, email: user.email });
-    res.cookie(TOKEN_COOKIE, token, cookieOpts(env.IS_PROD, MAX_AGE_MS));
+    res.cookie(TOKEN_COOKIE, token, {
+      ...cookieOpts(env.IS_PROD, MAX_AGE_MS),
+      httpOnly: true,
+      secure: env.IS_PROD || process.env.COOKIE_SECURE === 'true',
+    });
     return res.json({ user: user.toJSON() });
   } catch {
     return res.status(500).json({ error: 'Failed to login' });

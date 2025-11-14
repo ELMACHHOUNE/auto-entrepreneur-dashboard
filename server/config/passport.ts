@@ -46,7 +46,11 @@ passport.use(
         // Set JWT as cookie on the response
         const token = signToken({ sub: user.id, role: user.role, email: user.email });
         // @ts-ignore
-        req.res?.cookie(TOKEN_COOKIE, token, cookieOpts(env.IS_PROD, MAX_AGE_MS));
+        req.res?.cookie(TOKEN_COOKIE, token, {
+          ...cookieOpts(env.IS_PROD, MAX_AGE_MS),
+          httpOnly: true,
+          secure: env.IS_PROD || process.env.COOKIE_SECURE === 'true',
+        });
 
         return done(null, user);
       } catch (e) {
