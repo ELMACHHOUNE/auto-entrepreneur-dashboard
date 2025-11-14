@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import { verifyJwt } from '../middleware/auth';
-import rateLimit from 'express-rate-limit';
 import {
   listInvoices,
   createInvoice,
   updateInvoice,
   deleteInvoice,
 } from '../controllers/invoice.controller';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 // Tighter limits for write operations to mitigate DoS surfaces on file system operations
 const writeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200, // generous but bounded
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
 });
