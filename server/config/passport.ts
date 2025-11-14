@@ -44,7 +44,7 @@ passport.use(
         }
 
         // Set JWT as cookie on the response
-        const token = signToken({ sub: user.id, role: user.role, email: user.email });
+        const token = await signToken({ sub: user.id, role: user.role, email: user.email });
         // @ts-ignore
         req.res?.cookie(TOKEN_COOKIE, token, {
           ...cookieOpts(env.IS_PROD, MAX_AGE_MS),

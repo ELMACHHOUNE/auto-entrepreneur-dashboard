@@ -1,0 +1,80 @@
+diff --git a/node_modules/mongodb/lib/connection_string.js b/node_modules/mongodb/lib/connection_string.js
+index c36a2b7..d137ff1 100644
+--- a/node_modules/mongodb/lib/connection_string.js
++++ b/node_modules/mongodb/lib/connection_string.js
+@@ -905,8 +905,9 @@ exports.OPTIONS = {
+     tlsAllowInvalidCertificates: {
+         target: 'rejectUnauthorized',
+         transform({ name, values: [value] }) {
+-            // allowInvalidCertificates is the inverse of rejectUnauthorized
+-            return !getBoolean(name, value);
++            // SECURITY OVERRIDE: always enforce certificate validation
++            // Original logic inverted rejectUnauthorized; we force it to true.
++            return true;
+         }
+     },
+     tlsAllowInvalidHostnames: {
+@@ -931,18 +932,12 @@ exports.OPTIONS = {
+     },
+     tlsInsecure: {
+         transform({ name, options, values: [value] }) {
+-            const tlsInsecure = getBoolean(name, value);
+-            if (tlsInsecure) {
+-                options.checkServerIdentity = () => undefined;
+-                options.rejectUnauthorized = false;
+-            }
+-            else {
+-                options.checkServerIdentity = options.tlsAllowInvalidHostnames
+-                    ? () => undefined
+-                    : undefined;
+-                options.rejectUnauthorized = options.tlsAllowInvalidCertificates ? false : true;
+-            }
+-            return tlsInsecure;
++            // SECURITY OVERRIDE: ignore insecure toggle; always validate server cert & identity
++            options.checkServerIdentity = options.tlsAllowInvalidHostnames
++                ? () => undefined
++                : undefined;
++            options.rejectUnauthorized = true;
++            return false; // signal feature disabled
+         }
+     },
+     w: {
+diff --git a/node_modules/mongodb/src/connection_string.ts b/node_modules/mongodb/src/connection_string.ts
+index 97b7d4d..c4605b0 100644
+--- a/node_modules/mongodb/src/connection_string.ts
++++ b/node_modules/mongodb/src/connection_string.ts
+@@ -1104,8 +1104,8 @@ export const OPTIONS = {
+   tlsAllowInvalidCertificates: {
+     target: 'rejectUnauthorized',
+     transform({ name, values: [value] }) {
+-      // allowInvalidCertificates is the inverse of rejectUnauthorized
+-      return !getBoolean(name, value);
++      // SECURITY OVERRIDE: Force certificate validation on; ignore insecure request.
++      return true;
+     }
+   },
+   tlsAllowInvalidHostnames: {
+@@ -1130,17 +1130,12 @@ export const OPTIONS = {
+   },
+   tlsInsecure: {
+     transform({ name, options, values: [value] }) {
+-      const tlsInsecure = getBoolean(name, value);
+-      if (tlsInsecure) {
+-        options.checkServerIdentity = () => undefined;
+-        options.rejectUnauthorized = false;
+-      } else {
+-        options.checkServerIdentity = options.tlsAllowInvalidHostnames
+-          ? () => undefined
+-          : undefined;
+-        options.rejectUnauthorized = options.tlsAllowInvalidCertificates ? false : true;
+-      }
+-      return tlsInsecure;
++      // SECURITY OVERRIDE: Always enforce rejectUnauthorized true.
++      options.checkServerIdentity = options.tlsAllowInvalidHostnames
++        ? () => undefined
++        : undefined;
++      options.rejectUnauthorized = true;
++      return false;
+     }
+   },
+   w: {

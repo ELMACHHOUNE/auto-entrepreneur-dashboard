@@ -2,14 +2,33 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 
+function parseIntParam(value: unknown, { min, max }: { min: number; max: number }) {
+  if (typeof value === 'undefined') return undefined;
+  const num = Number(value);
+  if (!Number.isInteger(num) || num < min || num > max) return null;
+  return num;
+}
+
 // GET /api/admin/users
 export async function listUsers(req: Request, res: Response) {
   try {
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
-    // Validate and coerce accidental 'undefined' or 'null' string query values to empty
-    const rawSearch = typeof req.query.search === 'string' ? req.query.search.trim() : '';
-    const search = ['undefined', 'null'].includes(rawSearch.toLowerCase()) ? '' : rawSearch;
+    const parsedPage = parseIntParam(req.query.page, { min: 1, max: 1000 });
+    if (parsedPage === null) return res.status(400).json({ error: 'Invalid page parameter' });
+    const parsedLimit = parseIntParam(req.query.limit, { min: 1, max: 100 });
+    if (parsedLimit === null) return res.status(400).json({ error: 'Invalid limit parameter' });
+
+    const page = parsedPage ?? 1;
+    const limit = parsedLimit ?? 10;
+
+    const rawSearchValue = req.query.search;
+    const rawSearch = Array.isArray(rawSearchValue)
+      ? rawSearchValue[0] ?? ''
+      : typeof rawSearchValue === 'string'
+      ? rawSearchValue
+      : '';
+    const normalizedSearch = typeof rawSearch === 'string' ? rawSearch : String(rawSearch ?? '');
+    const cleanedSearch = normalizedSearch.trim();
+    const search = ['undefined', 'null'].includes(cleanedSearch.toLowerCase()) ? '' : cleanedSearch;
     // Bound search length to avoid excessive regex work
     const boundedSearch = search.slice(0, 100);
 

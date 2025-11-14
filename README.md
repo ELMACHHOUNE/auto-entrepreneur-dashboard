@@ -6,6 +6,15 @@ Built with **React (Vite + TypeScript + Tailwind)** for the frontend and **Node.
 
 ---
 
+## 🔐 Backend security knobs
+
+- `MONGO_TLS_REQUIRED` (default `true` in production): forces the API to negotiate TLS with MongoDB and refuses to start otherwise. Optionally point to certificate material with `MONGO_TLS_CA_FILE` and `MONGO_TLS_CERT_KEY_FILE` (paths can be relative to the repo root).
+- `REQUEST_PATH_MAX_LENGTH` (default `2048`): bounds and normalizes inbound URLs before Express routes, mitigating router-level ReDoS vectors triggered by extremely long or malformed paths.
+
+See `server/.env.example` for the full list of options.
+
+---
+
 ## 🧩 Project Structure
 
 auto-entrepreneur-dashboard/

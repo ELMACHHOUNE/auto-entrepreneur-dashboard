@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction, CookieOptions } from 'express';
-import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { verifyToken, JwtPayload } from '../utils/jwt';
 
@@ -18,29 +17,25 @@ function extractToken(req: Request): string | null {
   return cookieToken || null;
 }
 
-export function requireAuth(req: Request, res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = extractToken(req);
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET);
-    (req as any).user = payload;
+    const payload = await verifyToken(token);
+    (req as AuthRequest).user = payload;
     return next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
 
-export function signToken(payload: object, options?: jwt.SignOptions) {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '7d', ...options });
-}
-
-export function verifyJwt(req: AuthRequest, res: Response, next: NextFunction) {
+export async function verifyJwt(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     const token = req.cookies?.[TOKEN_COOKIE];
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
     req.user = payload;
     next();
   } catch {
@@ -57,15 +52,11 @@ export function requireRole(role: 'admin' | 'user') {
 }
 
 // Cookie options helper
-export const cookieOpts = (isProd: boolean, maxAgeMs: number): CookieOptions => {
-  // Prefer explicit env override when deployment sits behind TLS-terminating proxy
-  const secure = process.env.COOKIE_SECURE === 'true' || isProd;
-  // Prefer LAX in production to mitigate CSRF; allow NONE only if explicitly opted in via env
-  const sameSite = process.env.COOKIE_SAMESITE === 'none' ? 'none' : 'lax';
+export const cookieOpts = (_isProd: boolean, maxAgeMs: number): CookieOptions => {
   return {
     httpOnly: true,
-    secure,
-    sameSite: sameSite as CookieOptions['sameSite'],
+    secure: env.COOKIE_SECURE,
+    sameSite: env.COOKIE_SAMESITE,
     maxAge: maxAgeMs,
     path: '/',
   };

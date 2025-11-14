@@ -5,6 +5,7 @@ import { signToken } from '../utils/jwt';
 import { env } from '../config/env';
 import { cookieOpts } from '../middleware/auth';
 import { AuthRequest } from '../middleware/auth';
+import { parseProfileUpdate } from '../schemas/profile';
 
 const TOKEN_COOKIE = 'token';
 // default 7 days
@@ -46,7 +47,7 @@ export async function register(req: Request, res: Response) {
       companyTypeCode,
     });
 
-    const token = signToken({ sub: user.id, role: user.role, email: user.email });
+    const token = await signToken({ sub: user.id, role: user.role, email: user.email });
     res.cookie(TOKEN_COOKIE, token, {
       ...cookieOpts(env.IS_PROD, MAX_AGE_MS),
       httpOnly: true,
@@ -69,7 +70,7 @@ export async function login(req: Request, res: Response) {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const token = signToken({ sub: user.id, role: user.role, email: user.email });
+    const token = await signToken({ sub: user.id, role: user.role, email: user.email });
     res.cookie(TOKEN_COOKIE, token, {
       ...cookieOpts(env.IS_PROD, MAX_AGE_MS),
       httpOnly: true,
@@ -109,55 +110,15 @@ export async function updateMe(req: AuthRequest, res: Response) {
     const id = req.user?.sub;
     if (!id) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Allow only specific fields to be updated
-    const {
-      fullName,
-      phone,
-      ICE,
-      service,
-      email,
-      profileKind,
-      serviceCategory,
-      serviceType,
-      serviceActivity,
-      companyTypeCode,
-    } = req.body || {};
-    const update: Record<string, unknown> = {};
-    if (typeof fullName !== 'undefined') update.fullName = fullName;
-    // Phone: allow empty, otherwise must be 9–15 digits
-    if (typeof phone !== 'undefined') {
-      const p = String(phone).trim();
-      if (p === '') {
-        update.phone = '';
-      } else if (!/^\d{9,15}$/.test(p)) {
-        return res.status(400).json({ error: 'Phone must be 9–15 digits' });
-      } else {
-        update.phone = p;
-      }
+    const validation = parseProfileUpdate(req.body);
+    if (!validation.ok) {
+      return res.status(400).json({ error: 'Validation error', details: validation.errors });
     }
-    // ICE: allow empty, otherwise must be exactly 15 digits
-    if (typeof ICE !== 'undefined') {
-      const ice = String(ICE).trim();
-      if (ice === '') {
-        update.ICE = '';
-      } else if (!/^\d{15}$/.test(ice)) {
-        return res.status(400).json({ error: 'ICE must be exactly 15 digits' });
-      } else {
-        update.ICE = ice;
-      }
-    }
-    if (typeof service !== 'undefined') update.service = service;
-    if (typeof profileKind !== 'undefined') update.profileKind = profileKind;
-    if (typeof serviceCategory !== 'undefined') update.serviceCategory = serviceCategory;
-    if (typeof serviceType !== 'undefined') update.serviceType = serviceType;
-    if (typeof serviceActivity !== 'undefined') update.serviceActivity = serviceActivity;
-    if (typeof companyTypeCode !== 'undefined') update.companyTypeCode = companyTypeCode;
-    if (typeof email !== 'undefined') {
-      // normalize and ensure uniqueness
-      const nextEmail = String(email).toLowerCase();
-      const existing = await User.findOne({ email: nextEmail, _id: { $ne: id } });
+    const update = validation.data;
+
+    if (update.email) {
+      const existing = await User.findOne({ email: update.email, _id: { $ne: id } });
       if (existing) return res.status(409).json({ error: 'Email already in use' });
-      update.email = nextEmail;
     }
 
     const user = await User.findByIdAndUpdate(id, update, { new: true });
@@ -208,23 +169,8 @@ export async function updateAvatar(req: AuthRequest, res: Response) {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const oldUrl = user.avatarUrl;
     user.avatarUrl = newUrl;
     await user.save();
-
-    // Attempt to delete previous file if it exists and filename differs
-    if (oldUrl && oldUrl !== newUrl) {
-      const filename = oldUrl.split('/').pop() as string;
-      const path1 = require('path').resolve(__dirname, '../uploads/images', filename);
-      const path2 = require('path').resolve(process.cwd(), 'server/uploads/images', filename);
-      const fs = require('fs');
-      try {
-        if (fs.existsSync(path1)) fs.unlinkSync(path1);
-      } catch {}
-      try {
-        if (fs.existsSync(path2)) fs.unlinkSync(path2);
-      } catch {}
-    }
 
     return res.json({ user });
   } catch {

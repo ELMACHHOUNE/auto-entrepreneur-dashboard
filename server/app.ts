@@ -4,23 +4,25 @@ import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
 import { env } from './config/env';
-import passport from 'passport';
 import authRoutes from './routes/auth.routes';
 import meRoutes from './routes/me.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import adminRoutes from './routes/admin.routes';
 import rateLimit from 'express-rate-limit';
-import './config/passport';
-import { csrfGuard } from './middleware/csrf';
+import { csrfGuard, exposeCsrfToken, csrfErrorHandler } from './middleware/csrf';
+import { simpleCookieParser } from './middleware/simpleCookieParser';
+import { requestPathGuard } from './middleware/requestPathGuard';
 
 const app = express();
+// Using custom HMAC-SHA256 CSRF implementation (avoids SHA1 usage flagged by Snyk)
 
 // When behind a reverse proxy (e.g., nginx/Heroku), trust the first proxy to ensure req.secure works
 if (env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+app.use(requestPathGuard);
 
 // Compression (gzip/brotli if supported)
 app.use(
@@ -29,8 +31,17 @@ app.use(
   })
 );
 
-// Middlewares
-// Configure Helmet to allow loading static images from another origin (e.g., Vite dev server)
+// Enforce HTTPS in production when behind proxy, redirect insecure requests early.
+app.use((req, res, next) => {
+  if (env.NODE_ENV === 'production' && !req.secure) {
+    if (req.originalUrl === '/health') return next();
+    const host = req.headers.host;
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
+  }
+  next();
+});
+
+// Security & CORS middleware
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -41,17 +52,19 @@ app.use(
   cors({
     origin: env.CORS_ORIGINS,
     credentials: true,
+    exposedHeaders: ['X-CSRF-Token'],
   })
 );
+
 if (env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser(env.COOKIE_SECRET));
-app.use(passport.initialize());
-// CSRF protection for cookie-authenticated, state-changing requests
-app.use(csrfGuard);
+app.use(simpleCookieParser());
+app.use(csrfGuard); // custom HMAC guard only
+app.use(exposeCsrfToken); // expose custom token
+app.use(csrfErrorHandler);
 // Rate limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -87,17 +100,14 @@ const staticOpts = {
 app.use('/uploads/images', express.static(uploadsDirDistSibling, staticOpts as any));
 app.use('/uploads/images', express.static(uploadsDirSource, staticOpts as any));
 
-// Also serve invoice JSON/export files per user for debugging or export (read-only) in non-production
-if (env.NODE_ENV !== 'production') {
-  const invoicesDirDistSibling = path.resolve(__dirname, '../uploads/invoices');
-  const invoicesDirSource = path.resolve(process.cwd(), 'server/uploads/invoices');
-  app.use('/uploads/invoices', express.static(invoicesDirDistSibling, staticOpts as any));
-  app.use('/uploads/invoices', express.static(invoicesDirSource, staticOpts as any));
-}
-
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Provide explicit CSRF token fetch endpoint for clients that prefer JSON
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ token: req.csrfToken?.() });
 });
 
 app.use('/api/auth', authLimiter, authRoutes);

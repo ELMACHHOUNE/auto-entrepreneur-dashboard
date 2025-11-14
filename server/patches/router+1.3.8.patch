@@ -1,0 +1,32 @@
+diff --git a/node_modules/router/index.js b/node_modules/router/index.js
+index 0000000..0000000 100644
+--- a/node_modules/router/index.js
++++ b/node_modules/router/index.js
+@@
+-function matchLayer (layer, path) {
+-  try {
+-    return layer.match(path)
+-  } catch (err) {
+-    return err
+-  }
+-}
++function matchLayer (layer, path) {
++  try {
++    if (typeof path !== 'string' || path.length > 2048) return false
++    if (!/^[A-Za-z0-9\-._~!$&'()*+,;=:@\/]*$/.test(path)) return false
++    let last = ''
++    let run = 0
++    for (const ch of path) {
++      if (ch === last) {
++        run++
++        if (run > 80) return false
++      } else {
++        last = ch
++        run = 1
++      }
++    }
++    return layer.match(path)
++  } catch (err) {
++    return err
++  }
++}
