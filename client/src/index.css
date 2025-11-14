@@ -204,3 +204,11 @@
 .mrt-scroll-container::-webkit-scrollbar-thumb:hover {
   background: color-mix(in oklch, var(--accent) 85%, black 15%);
 }
+
+/* Efficient hover styling for table rows without JS event handlers */
+.mrt-scroll-container tbody tr.mrt-row:hover {
+  background: color-mix(in oklch, var(--primary) 12%, var(--muted) 88%);
+}
+.mrt-scroll-container tbody tr.mrt-row:hover td {
+  background: inherit;
+}

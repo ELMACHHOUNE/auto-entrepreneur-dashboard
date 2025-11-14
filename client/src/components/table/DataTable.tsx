@@ -129,6 +129,20 @@ export function DataTable<T extends Record<string, unknown>>({
     return data;
   }, [data, groupByKey, groupOrder, groupWithinComparator]);
 
+  // Precompute indices where a new group starts to avoid per-cell table scans and layout thrash
+  const groupBreakRows = useMemo(() => {
+    const set = new Set<number>();
+    if (groupByKey) {
+      let prevKey: string | number | undefined = undefined;
+      sortedData.forEach((row, idx) => {
+        const key = groupByKey(row);
+        if (idx > 0 && key !== prevKey) set.add(idx);
+        prevKey = key;
+      });
+    }
+    return set;
+  }, [sortedData, groupByKey]);
+
   // Internal pagination state when not controlled by parent
   const [internalPagination, setInternalPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
@@ -223,64 +237,28 @@ export function DataTable<T extends Record<string, unknown>>({
         fontSize: '12px',
       },
     },
-    mantineTableBodyCellProps: ({
-      cell,
-      table,
-    }: {
-      cell: MRT_Cell<T>;
-      table: MRT_TableInstance<T>;
-    }) => {
+    mantineTableBodyCellProps: ({ cell }: { cell: MRT_Cell<T>; table: MRT_TableInstance<T> }) => {
       // Default cell border color
       let style: React.CSSProperties = { borderColor: 'var(--border)' };
-      if (groupByKey && table) {
+      if (groupByKey) {
         const idx: number = cell.row.index ?? 0;
-        if (idx > 0) {
-          const rows = table.getRowModel?.().rows ?? [];
-          const prev = rows[idx - 1];
-          const curr = rows[idx];
-          const prevKey = prev?.original ? groupByKey(prev.original as T) : undefined;
-          const currKey = curr?.original ? groupByKey(curr.original as T) : undefined;
-          if (prevKey !== currKey) {
-            // Add a thicker top border with the configured brand tone
-            style = {
-              ...style,
-              borderTop: `2px solid ${groupSepVar}`,
-            };
-          }
+        if (groupBreakRows.has(idx)) {
+          style = {
+            ...style,
+            borderTop: `2px solid ${groupSepVar}`,
+          };
         }
       }
       return { style };
     },
     mantineTableBodyRowProps: ({ row }) => ({
+      className: 'mrt-row',
       style: {
         background:
           row.index % 2 === 0
             ? 'color-mix(in oklch, var(--card) 82%, var(--muted) 18%)'
             : 'var(--card)',
         transition: 'background-color 120ms ease',
-      },
-      onMouseEnter: (e: React.MouseEvent<HTMLTableRowElement>) => {
-        const rowEl = e.currentTarget as HTMLTableRowElement;
-        const hoverColor = 'color-mix(in oklch, var(--primary) 12%, var(--muted) 88%)';
-        // Override MRT default hover (which uses --mrt-base-background-color)
-        rowEl.style.setProperty('--mrt-base-background-color', hoverColor);
-        rowEl.style.background = hoverColor;
-        // Ensure cells match the row bg so no gray bleed in light mode
-        rowEl.querySelectorAll('td').forEach(td => {
-          (td as HTMLTableCellElement).style.background = hoverColor;
-        });
-      },
-      onMouseLeave: (e: React.MouseEvent<HTMLTableRowElement>) => {
-        const rowEl = e.currentTarget as HTMLTableRowElement;
-        const baseColor =
-          row.index % 2 === 0
-            ? 'color-mix(in oklch, var(--card) 82%, var(--muted) 18%)'
-            : 'var(--card)';
-        rowEl.style.setProperty('--mrt-base-background-color', baseColor);
-        rowEl.style.background = baseColor;
-        rowEl.querySelectorAll('td').forEach(td => {
-          (td as HTMLTableCellElement).style.background = baseColor;
-        });
       },
     }),
     mantineTopToolbarProps: {

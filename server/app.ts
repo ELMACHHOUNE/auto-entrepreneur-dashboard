@@ -16,6 +16,8 @@ import { requestPathGuard } from './middleware/requestPathGuard';
 
 const app = express();
 // Using custom HMAC-SHA256 CSRF implementation (avoids SHA1 usage flagged by Snyk)
+// Reduce fingerprinting
+app.disable('x-powered-by');
 
 // When behind a reverse proxy (e.g., nginx/Heroku), trust the first proxy to ensure req.secure works
 if (env.NODE_ENV === 'production') {
@@ -60,7 +62,7 @@ if (env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(simpleCookieParser());
 app.use(csrfGuard); // custom HMAC guard only
 app.use(exposeCsrfToken); // expose custom token
