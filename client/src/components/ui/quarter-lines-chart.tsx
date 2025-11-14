@@ -8,6 +8,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+// Avoid strict dependency on Recharts' TooltipProps to keep typing simple and robust
+type ReTooltipItem = { value?: number; color?: string; dataKey?: QuarterKey | string };
+type CustomTooltipProps = { active?: boolean; payload?: ReTooltipItem[]; label?: string };
 
 export type QuarterKey = 'T1' | 'T2' | 'T3' | 'T4';
 
@@ -49,6 +52,36 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
       new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
         n || 0
       ));
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    const list = payload || [];
+    if (!active || list.length === 0) return null;
+    const items = list.filter(p => typeof p.value === 'number' && Number(p.value) !== 0);
+    if (items.length === 0) return null;
+    return (
+      <div
+        className="rounded-md border bg-card p-2 text-xs shadow-sm"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className="mb-1 text-[11px] text-muted-foreground">{label}</div>
+        <ul className="space-y-0.5">
+          {items.map(item => {
+            const dk = (item.dataKey as QuarterKey) || 'T1';
+            const swatch = item.color || defaultColors[dk] || 'var(--primary)';
+            return (
+              <li key={String(item.dataKey)} className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rounded-sm" style={{ background: swatch }} />
+                <span className="font-medium">{String(item.dataKey)}</span>
+                <span className="ml-1 tabular-nums" style={{ color: swatch }}>
+                  {format(Number(item.value))} DH
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  };
   return (
     <div className="w-full h-full" style={{ minHeight: 220 }}>
       <ResponsiveContainer width="100%" height={height} debounce={150}>
@@ -63,12 +96,7 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
             height={36}
           />
           <YAxis width={72} tickMargin={6} tickFormatter={(v: number) => format(Number(v))} />
-          <Tooltip
-            formatter={(value: unknown, name: string) => [
-              format(typeof value === 'number' ? value : Number(value)),
-              name,
-            ]}
-          />
+          <Tooltip content={<CustomTooltip />} />
           {/* Built-in Legend removed; we render a custom legend below */}
           <Line
             type="monotone"
