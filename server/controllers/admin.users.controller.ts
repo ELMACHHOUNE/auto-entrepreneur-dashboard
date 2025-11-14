@@ -7,13 +7,16 @@ export async function listUsers(req: Request, res: Response) {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
-    // Coerce accidental 'undefined' or 'null' string query values to empty
-    const rawSearch = String(req.query.search ?? '').trim();
+    // Validate and coerce accidental 'undefined' or 'null' string query values to empty
+    const rawSearch = typeof req.query.search === 'string' ? req.query.search.trim() : '';
     const search = ['undefined', 'null'].includes(rawSearch.toLowerCase()) ? '' : rawSearch;
+    // Bound search length to avoid excessive regex work
+    const boundedSearch = search.slice(0, 100);
 
-    const query: any = {};
-    if (search) {
-      const pattern = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const query: Record<string, unknown> = {};
+    if (boundedSearch) {
+      const escaped = boundedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(escaped, 'i');
       query.$or = [{ email: pattern }, { fullName: pattern }, { phone: pattern }];
     }
 

@@ -13,8 +13,14 @@ import invoiceRoutes from './routes/invoice.routes';
 import adminRoutes from './routes/admin.routes';
 import rateLimit from 'express-rate-limit';
 import './config/passport';
+import { csrfGuard } from './middleware/csrf';
 
 const app = express();
+
+// When behind a reverse proxy (e.g., nginx/Heroku), trust the first proxy to ensure req.secure works
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Compression (gzip/brotli if supported)
 app.use(
@@ -44,6 +50,8 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(env.COOKIE_SECRET));
 app.use(passport.initialize());
+// CSRF protection for cookie-authenticated, state-changing requests
+app.use(csrfGuard);
 // Rate limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

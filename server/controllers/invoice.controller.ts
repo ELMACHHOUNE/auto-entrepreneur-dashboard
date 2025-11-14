@@ -4,6 +4,16 @@ import { Invoice } from '../models/Invoice';
 import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
+// Ensure file operations stay within baseDir
+function pathWithin(baseDir: string, child: string): string {
+  const safeChild = String(child).replace(/[^a-zA-Z0-9._-]/g, '_');
+  const resolved = path.resolve(baseDir, safeChild);
+  const normalizedBase = path.resolve(baseDir);
+  if (!resolved.startsWith(normalizedBase + path.sep) && resolved !== normalizedBase) {
+    throw new Error('Invalid path');
+  }
+  return resolved;
+}
 
 // List invoices for current user (optionally filter by year)
 export async function listInvoices(req: AuthRequest, res: Response) {
@@ -55,7 +65,9 @@ export async function createInvoice(req: AuthRequest, res: Response) {
       const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '_');
       const baseDir = path.resolve(process.cwd(), 'server', 'uploads', 'invoices', safeEmail);
       fs.mkdirSync(baseDir, { recursive: true });
-      const filePath = path.join(baseDir, `${doc._id}.json`);
+      const fileName = `${doc._id}.json`;
+      // Ensure resulting path stays under baseDir
+      const filePath = pathWithin(baseDir, fileName);
       fs.writeFileSync(filePath, JSON.stringify(doc.toJSON(), null, 2), 'utf-8');
     } catch {}
     return res.status(201).json({ invoice: doc });
@@ -103,7 +115,8 @@ export async function updateInvoice(req: AuthRequest, res: Response) {
       const email = req.user?.email || 'unknown';
       const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '_');
       const baseDir = path.resolve(process.cwd(), 'server', 'uploads', 'invoices', safeEmail);
-      const filePath = path.join(baseDir, `${invoice._id}.json`);
+      const fileName = `${invoice._id}.json`;
+      const filePath = pathWithin(baseDir, fileName);
       if (fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, JSON.stringify(invoice.toJSON(), null, 2), 'utf-8');
       }
@@ -130,7 +143,8 @@ export async function deleteInvoice(req: AuthRequest, res: Response) {
       const email = req.user?.email || 'unknown';
       const safeEmail = email.replace(/[^a-zA-Z0-9._-]/g, '_');
       const baseDir = path.resolve(process.cwd(), 'server', 'uploads', 'invoices', safeEmail);
-      const filePath = path.join(baseDir, `${invoice._id}.json`);
+      const fileName = `${invoice._id}.json`;
+      const filePath = pathWithin(baseDir, fileName);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     } catch {}
     return res.json({ ok: true });

@@ -57,10 +57,16 @@ export function requireRole(role: 'admin' | 'user') {
 }
 
 // Cookie options helper
-export const cookieOpts = (isProd: boolean, maxAgeMs: number): CookieOptions => ({
-  httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? 'none' : 'lax',
-  maxAge: maxAgeMs,
-  path: '/',
-});
+export const cookieOpts = (isProd: boolean, maxAgeMs: number): CookieOptions => {
+  // Prefer explicit env override when deployment sits behind TLS-terminating proxy
+  const secure = process.env.COOKIE_SECURE === 'true' || isProd;
+  // Prefer LAX in production to mitigate CSRF; allow NONE only if explicitly opted in via env
+  const sameSite = process.env.COOKIE_SAMESITE === 'none' ? 'none' : 'lax';
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: sameSite as CookieOptions['sameSite'],
+    maxAge: maxAgeMs,
+    path: '/',
+  };
+};
