@@ -24,6 +24,12 @@ export default function QuarterlySidebar({
     []
   );
 
+  // Compute yearly VAT dynamically from selected rate
+  const yearlyVatAtRate = useMemo(() => {
+    const val = (yearTotals.amount * rateDisplay) / 100;
+    return Number.isFinite(val) ? parseFloat(val.toFixed(2)) : 0;
+  }, [yearTotals.amount, rateDisplay]);
+
   return (
     <div className="flex h-full flex-col gap-3" aria-label="Quarterly totals panel">
       <div className="flex items-center justify-between">
@@ -68,7 +74,7 @@ export default function QuarterlySidebar({
           {yearTotals.amount.toLocaleString('en-US')} DH
         </div>
         <div className="text-xs text-secondary">
-          Total VAT: {yearTotals.tva.toLocaleString('en-US')} DH
+          Total VAT ({rateDisplay}%): {yearlyVatAtRate.toLocaleString('en-US')} DH
         </div>
       </div>
     </div>
