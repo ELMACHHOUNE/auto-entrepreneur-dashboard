@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Select, TextInput, Modal, Group, ActionIcon, Tooltip } from '@mantine/core';
 import {
   selectFilledStyles,
@@ -54,6 +55,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   onMonthlyTotalsChange,
   onClientCountsChange,
 }) => {
+  const queryClient = useQueryClient();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(externalYear || currentYear);
 
@@ -214,6 +216,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         tvaRate: tvaRateNum,
       });
       await fetchInvoices();
+      await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
     } catch {
       // optionally surface error UI; we keep silent for now
     } finally {
@@ -234,6 +237,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     year,
     parseTvaRate,
     fetchInvoices,
+    queryClient,
   ]);
 
   const startEdit = useCallback((row: InvoiceRow) => {
@@ -253,13 +257,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         tvaRate: editDraft.tvaRate,
       });
       await fetchInvoices();
+      await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
     } catch {
       // silent for now
     } finally {
       setEditOpen(false);
       setEditDraft(null);
     }
-  }, [editDraft, fetchInvoices]);
+  }, [editDraft, fetchInvoices, queryClient]);
 
   const deleteRow = useCallback(
     async (row: InvoiceRow) => {
@@ -267,11 +272,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       try {
         await api.delete(`/api/invoices/${row.id}`);
         await fetchInvoices();
+        await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
       } catch {
         // silent
       }
     },
-    [fetchInvoices]
+    [fetchInvoices, queryClient]
   );
 
   // Focus first input when modals open
@@ -321,6 +327,16 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     []
   );
 
+  // Provide a wider, scrollable year range and render dropdowns in a portal to avoid clipping
+  const yearOptions = useMemo(() => {
+    const cy = new Date().getFullYear();
+    const start = cy - 15; // past 15 years
+    const end = cy + 5; // a few years ahead
+    const arr: { value: string; label: string }[] = [];
+    for (let y = start; y <= end; y++) arr.push({ value: String(y), label: String(y) });
+    return arr.reverse(); // show recent years first
+  }, []);
+
   return (
     <div className="space-y-3">
       {/** Reusable token-aligned styles for Selects to match table/search inputs (applied inline below) */}
@@ -368,14 +384,13 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 placeholder="Year"
                 size="xs"
                 value={year.toString()}
-                data={[year - 1, year, year + 1].map(y => ({
-                  value: y.toString(),
-                  label: y.toString(),
-                }))}
+                data={yearOptions}
                 onChange={v => setYear(parseInt(v || year.toString(), 10))}
                 variant="filled"
                 styles={selectFilledStyles}
                 className="w-[110px]"
+                comboboxProps={{ withinPortal: true }}
+                maxDropdownHeight={260}
               />
             </div>
             {/* Invoice count pill: inline on mobile, centered overlay on larger screens */}
@@ -436,14 +451,13 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           />
           <Select
             label="Year"
-            data={[year - 1, year, year + 1].map(y => ({
-              value: y.toString(),
-              label: y.toString(),
-            }))}
+            data={yearOptions}
             value={invYear.toString()}
             onChange={v => setInvYear(parseInt(v || year.toString(), 10))}
             variant="filled"
             styles={selectFilledStyles}
+            comboboxProps={{ withinPortal: true }}
+            maxDropdownHeight={260}
           />
           <TextInput
             label="Amount (DH)"
@@ -537,16 +551,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             />
             <Select
               label="Year"
-              data={[year - 1, year, year + 1].map(y => ({
-                value: y.toString(),
-                label: y.toString(),
-              }))}
+              data={yearOptions}
               value={editDraft.year.toString()}
               onChange={v =>
                 setEditDraft(d => (d ? { ...d, year: parseInt(v || d.year.toString(), 10) } : d))
               }
               variant="filled"
               styles={selectFilledStyles}
+              comboboxProps={{ withinPortal: true }}
+              maxDropdownHeight={260}
             />
             <TextInput
               label="Amount (DH)"

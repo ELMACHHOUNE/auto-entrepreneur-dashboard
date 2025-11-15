@@ -8,6 +8,7 @@ const QuarterLinesChart = lazy(() => import('@/components/charts/QuarterLinesCha
 const QuarterLinesTvaChart = lazy(() => import('@/components/charts/QuarterLinesTvaChart'));
 const LineBarAreaComposedChart = lazy(() => import('@/components/charts/LineBarAreaComposedChart'));
 const ClientsRadarChart = lazy(() => import('@/components/charts/ClientsRadarChart'));
+const YearTotalsBarChart = lazy(() => import('@/components/charts/YearTotalsBarChart'));
 
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
@@ -84,7 +85,12 @@ export default function Dashboard() {
             <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
           </Suspense>
         </div>
-        <div className="rounded-lg border p-4">Chart D</div>
+        <div className="rounded-lg border p-4">
+          <h4 className="mb-2 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
+            <YearTotalsBarChart />
+          </Suspense>
+        </div>
         {/* Full-width composed chart row */}
         <div className="rounded-lg border p-4 md:col-span-2">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
