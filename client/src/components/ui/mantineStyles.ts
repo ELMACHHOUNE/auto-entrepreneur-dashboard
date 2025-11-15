@@ -80,6 +80,21 @@ export const modalStyles = {
     },
     title: { fontWeight: 600, fontSize: '0.95rem' },
     body: { paddingTop: '0.5rem' },
+    close: {
+      color: 'var(--accent-foreground)',
+      background: 'var(--accent)',
+      borderRadius: 'var(--radius-sm)',
+      '&:hover': {
+        background: 'color-mix(in oklch, var(--accent) 88%, black 12%)',
+      },
+      '&:active': {
+        background: 'color-mix(in oklch, var(--accent) 75%, black 25%)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid var(--ring)',
+        outlineOffset: '2px',
+      },
+    },
   },
   accent: {
     content: {
@@ -94,5 +109,20 @@ export const modalStyles = {
     },
     title: { fontWeight: 600, fontSize: '0.95rem' },
     body: { paddingTop: '0.5rem' },
+    close: {
+      color: 'var(--accent-foreground)',
+      background: 'var(--accent)',
+      borderRadius: 'var(--radius-sm)',
+      '&:hover': {
+        background: 'color-mix(in oklch, var(--accent) 88%, black 12%)',
+      },
+      '&:active': {
+        background: 'color-mix(in oklch, var(--accent) 75%, black 25%)',
+      },
+      '&:focus-visible': {
+        outline: '2px solid var(--ring)',
+        outlineOffset: '2px',
+      },
+    },
   },
 } as const;
