@@ -155,3 +155,64 @@ export async function deleteUser(req: Request, res: Response) {
     return res.status(500).json({ error: 'Failed to delete user' });
   }
 }
+
+// GET /api/admin/users/stats/yearly
+export async function usersStatsYearly(_req: Request, res: Response) {
+  try {
+    const agg = await User.aggregate([
+      {
+        $group: {
+          _id: { $year: '$createdAt' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          year: '$_id',
+          count: 1,
+        },
+      },
+    ]);
+    return res.json({ items: agg });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to compute yearly user stats' });
+  }
+}
+
+// GET /api/admin/users/stats/by-category
+// Category here refers to profileKind (guide_auto_entrepreneur | company_guide | unknown)
+export async function usersStatsByCategory(_req: Request, res: Response) {
+  try {
+    const agg = await User.aggregate([
+      {
+        $group: {
+          _id: { $ifNull: ['$profileKind', 'unknown'] },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          count: 1,
+        },
+      },
+    ]);
+    return res.json({ items: agg });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to compute user category stats' });
+  }
+}
+
+// GET /api/admin/users/stats/count
+export async function usersCount(_req: Request, res: Response) {
+  try {
+    const total = await User.countDocuments({});
+    return res.json({ total });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to count users' });
+  }
+}
