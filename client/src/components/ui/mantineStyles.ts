@@ -6,7 +6,22 @@ export const selectFilledStyles = {
     borderColor: 'var(--input)',
   },
   dropdown: { background: 'var(--card)', borderColor: 'var(--border)' },
-  option: { color: 'var(--foreground)' },
+  option: {
+    color: 'var(--foreground)',
+    // Ensure clear hover/focus/selected states in both light and dark modes
+    '&[data-hovered]': {
+      background: 'color-mix(in oklch, var(--accent) 22%, var(--card) 78%)',
+      color: 'var(--foreground)',
+    },
+    '&[data-focused]': {
+      background: 'color-mix(in oklch, var(--accent) 22%, var(--card) 78%)',
+      color: 'var(--foreground)',
+    },
+    '&[data-selected]': {
+      background: 'color-mix(in oklch, var(--accent) 26%, var(--card) 74%)',
+      color: 'var(--foreground)',
+    },
+  },
   label: { color: 'var(--foreground)' },
 };
 

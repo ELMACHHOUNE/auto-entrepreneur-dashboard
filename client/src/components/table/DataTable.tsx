@@ -225,7 +225,7 @@ export function DataTable<T extends Record<string, unknown>>({
     },
     mantineTableProps: {
       highlightOnHover: true,
-      striped: true,
+      striped: false,
       style: { background: 'var(--card)' },
     },
     mantineTableHeadCellProps: {
@@ -251,13 +251,10 @@ export function DataTable<T extends Record<string, unknown>>({
       }
       return { style };
     },
-    mantineTableBodyRowProps: ({ row }) => ({
+    mantineTableBodyRowProps: () => ({
       className: 'mrt-row',
       style: {
-        background:
-          row.index % 2 === 0
-            ? 'color-mix(in oklch, var(--card) 82%, var(--muted) 18%)'
-            : 'var(--card)',
+        background: 'var(--card)',
         transition: 'background-color 120ms ease',
       },
     }),

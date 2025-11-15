@@ -206,9 +206,148 @@
 }
 
 /* Efficient hover styling for table rows without JS event handlers */
-.mrt-scroll-container tbody tr.mrt-row:hover {
-  background: color-mix(in oklch, var(--primary) 12%, var(--muted) 88%);
+/* Light mode: slightly accent-tinted hover for better contrast */
+:root .mrt-scroll-container table tbody tr.mrt-row:hover {
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
 }
-.mrt-scroll-container tbody tr.mrt-row:hover td {
+:root .mrt-scroll-container table tbody tr.mrt-row:hover td {
   background: inherit;
+}
+/* Dark mode: keep subtle primary-tinted hover on dark muted surface */
+.dark .mrt-scroll-container table tbody tr.mrt-row:hover {
+  background: color-mix(in oklch, var(--primary) 16%, var(--muted) 84%) !important;
+}
+.dark .mrt-scroll-container table tbody tr.mrt-row:hover td {
+  background: inherit;
+}
+
+/* Combobox (Autocomplete/Select) dropdown theming and interactive states */
+/* Ensure dropdown and options match token-based theme in both modes */
+:root .mantine-Combobox-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+}
+.dark .mantine-Select-dropdown,
+:root .mantine-Select-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+}
+.dark .mantine-Combobox-dropdown {
+  background: var(--card);
+  border-color: var(--border);
+}
+:root .mantine-Combobox-option {
+  color: var(--foreground);
+}
+.dark .mantine-Select-option,
+:root .mantine-Select-option {
+  color: var(--foreground);
+}
+.dark .mantine-Combobox-option {
+  color: var(--foreground);
+}
+/* Hover/focus/selected states for options – fixes light-mode hover looking gray */
+:root .mantine-Combobox-option[data-hovered],
+:root .mantine-Combobox-option[data-focused] {
+  /* Match DataTable row hover yellow accent */
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+/* Attribute-based fallback to catch Mantine option nodes regardless of class name */
+:root [data-combobox-option][data-hovered],
+:root [data-combobox-option][data-focused] {
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+:root .mantine-Combobox-option:hover {
+  /* When scrolling, :hover can apply without data-hovered changing */
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+:root [data-combobox-option]:hover {
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Select-option[data-hovered],
+.dark .mantine-Select-option[data-focused] {
+  background: color-mix(in oklch, var(--primary) 18%, var(--muted) 82%) !important;
+  color: var(--foreground);
+}
+:root .mantine-Select-option[data-hovered],
+:root .mantine-Select-option[data-focused] {
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+:root .mantine-Select-option:hover {
+  background: color-mix(in oklch, var(--accent) 22%, var(--card) 78%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Combobox-option[data-hovered],
+.dark .mantine-Combobox-option[data-focused] {
+  background: color-mix(in oklch, var(--primary) 18%, var(--muted) 82%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Combobox-option:hover {
+  background: color-mix(in oklch, var(--primary) 18%, var(--muted) 82%) !important;
+  color: var(--foreground);
+}
+:root .mantine-Combobox-option[data-selected] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+:root [data-combobox-option][data-selected] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Select-option[data-selected] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+:root .mantine-Select-option[data-selected] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Select-option:hover[data-selected],
+:root .mantine-Select-option:hover[data-selected],
+.dark .mantine-Combobox-option:hover[data-selected],
+:root .mantine-Combobox-option:hover[data-selected] {
+  /* Keep stronger selected tone when hovered */
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Combobox-option[data-selected] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+/* Some browsers flip to aria-selected during keyboard navigation */
+:root .mantine-Combobox-option[aria-selected='true'] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+:root [data-combobox-option][aria-selected='true'] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Select-option[aria-selected='true'],
+:root .mantine-Select-option[aria-selected='true'] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+.dark .mantine-Combobox-option[aria-selected='true'] {
+  background: color-mix(in oklch, var(--accent) 26%, var(--card) 74%) !important;
+  color: var(--foreground);
+}
+
+/* Improve readability of matched text inside options (Autocomplete/Select) */
+:root .mantine-Combobox-option mark[data-highlighted],
+:root .mantine-Select-option mark[data-highlighted] {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+}
+.dark .mantine-Combobox-option mark[data-highlighted],
+.dark .mantine-Select-option mark[data-highlighted] {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
 }

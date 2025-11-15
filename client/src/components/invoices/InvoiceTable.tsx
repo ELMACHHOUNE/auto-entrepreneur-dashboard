@@ -1,6 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Select, TextInput, Modal, Group, ActionIcon, Tooltip } from '@mantine/core';
+import {
+  Button,
+  Select,
+  TextInput,
+  Modal,
+  Group,
+  ActionIcon,
+  Tooltip,
+  Autocomplete,
+} from '@mantine/core';
 import {
   selectFilledStyles,
   inputFilledStyles,
@@ -95,6 +104,16 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   const editFirstFieldRef = useRef<HTMLInputElement | null>(null);
 
   const rowsForYear = useMemo(() => invoices.filter(i => i.year === year), [invoices, year]);
+
+  // Unique client names from loaded invoices (used for suggestions in the Client Name field)
+  const clientSuggestions = useMemo(() => {
+    const set = new Set<string>();
+    invoices.forEach(i => {
+      const n = (i.clientName || '').trim();
+      if (n) set.add(n);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [invoices]);
 
   // Totals removed from toolbar per request; keep summary via onQuarterSummaryChange only.
 
@@ -434,12 +453,21 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             variant="filled"
             styles={inputFilledStyles}
           />
-          <TextInput
+          <Autocomplete
             label="Client Name"
+            data={clientSuggestions}
             value={invClient}
-            onChange={e => setInvClient(e.currentTarget.value)}
+            onChange={setInvClient}
+            placeholder={
+              clientSuggestions.length
+                ? 'Start typing to pick an existing client…'
+                : 'Enter client name'
+            }
             variant="filled"
-            styles={inputFilledStyles}
+            styles={selectFilledStyles}
+            comboboxProps={{ withinPortal: true }}
+            maxDropdownHeight={220}
+            limit={15}
           />
           <Select
             label="Month"
@@ -524,12 +552,21 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               variant="filled"
               styles={inputFilledStyles}
             />
-            <TextInput
+            <Autocomplete
               label="Client Name"
+              data={clientSuggestions}
               value={editDraft.clientName as string}
-              onChange={e => setEditDraft({ ...editDraft, clientName: e.currentTarget.value })}
+              onChange={v => setEditDraft(d => (d ? { ...d, clientName: v } : d))}
+              placeholder={
+                clientSuggestions.length
+                  ? 'Start typing to pick an existing client…'
+                  : 'Enter client name'
+              }
               variant="filled"
-              styles={inputFilledStyles}
+              styles={selectFilledStyles}
+              comboboxProps={{ withinPortal: true }}
+              maxDropdownHeight={220}
+              limit={15}
             />
             <Select
               label="Month"

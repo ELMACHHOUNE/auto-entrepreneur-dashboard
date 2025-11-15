@@ -26,7 +26,8 @@ const theme = createTheme({
       vars: () => ({
         table: {
           '--table-striped-color': 'color-mix(in oklch, var(--muted) 65%, var(--card) 35%)',
-          '--table-hover-color': 'color-mix(in oklch, var(--primary) 10%, var(--muted) 90%)',
+          // Use accent-tinted hover for better visibility in light mode
+          '--table-hover-color': 'color-mix(in oklch, var(--accent) 22%, var(--card) 78%)',
           '--table-border-color': 'var(--border)',
           '--table-font-size': rem(13),
         },
