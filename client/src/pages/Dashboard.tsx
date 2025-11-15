@@ -67,13 +67,13 @@ export default function Dashboard() {
     >
       {/* Chart + Table layout scaffold */}
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 min-h-80">
           <h4 className="mb-2 text-sm font-medium">Quarter totals by month ({year})</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
             <QuarterLinesChart year={year} />
           </Suspense>
         </div>
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 min-h-80">
           <h4 className="mb-2 text-sm font-medium">VAT totals by month ({year})</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
             <QuarterLinesTvaChart year={year} />
@@ -85,7 +85,7 @@ export default function Dashboard() {
             <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
           </Suspense>
         </div>
-        <div className="rounded-lg border p-4">
+        <div className="rounded-lg border p-4 min-h-96">
           <h4 className="mb-2 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
             <YearTotalsBarChart />

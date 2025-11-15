@@ -70,16 +70,18 @@ const YearTotalsBarChart: React.FC = () => {
   const hasAny = data.length > 0;
 
   // Sizing – desktop values kept identical to original; mobile uses smaller sizes
-  const aspect = isMobile ? 1.1 : 1.8;
-  const containerMinHeight = isMobile ? 220 : 280;
+  // Sizing – fix explicit heights to prevent legend overflow on both mobile and desktop
+  const mobileChartHeight = 300;
+  const desktopChartHeight = 360;
+  const containerMinHeight = isMobile ? 260 : 320;
   const chartMargin = isMobile
-    ? { top: 6, right: 8, left: 4, bottom: 22 }
-    : { top: 8, right: 12, left: 8, bottom: 28 };
+    ? { top: 6, right: 8, left: 4, bottom: 20 }
+    : { top: 8, right: 12, left: 8, bottom: 0 };
   const barCategoryGap = isMobile ? '24%' : '40%';
   const barGap = isMobile ? 4 : 8;
   const xTickMargin = isMobile ? 6 : 10;
   const yAxisWidth = isMobile ? 56 : 72;
-  const legendHeight = isMobile ? 20 : 24;
+  const legendHeight = isMobile ? 28 : 28;
   const legendFontSize = isMobile ? 11 : 12;
   const barSize = isMobile ? 10 : 22;
 
@@ -92,31 +94,67 @@ const YearTotalsBarChart: React.FC = () => {
           </span>
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height="100%" aspect={aspect} debounce={150}>
-          <BarChart
-            data={data}
-            margin={chartMargin}
-            barCategoryGap={barCategoryGap}
-            barGap={barGap}
+        <>
+          <ResponsiveContainer
+            width="100%"
+            height={isMobile ? mobileChartHeight : desktopChartHeight}
+            debounce={150}
           >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" tickMargin={xTickMargin} interval="preserveStartEnd" />
-            <YAxis tickFormatter={v => numberFmt(Number(v))} width={yAxisWidth} />
-            <Tooltip
-              formatter={(value: unknown, n) => [numberFmt(Number(value)) + ' DH', n as string]}
-              labelFormatter={label => `Year ${label}`}
-              contentStyle={{ background: 'var(--card)', borderColor: 'var(--border)' }}
-              wrapperStyle={{ outline: 'none' }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              height={legendHeight}
-              wrapperStyle={{ fontSize: legendFontSize }}
-            />
-            <Bar dataKey="total" name="Total Price" fill="#0776c0" barSize={barSize} />
-            <Bar dataKey="vat" name="Total VAT" fill="#fdc401" barSize={barSize} />
-          </BarChart>
-        </ResponsiveContainer>
+            <BarChart
+              data={data}
+              margin={chartMargin}
+              barCategoryGap={barCategoryGap}
+              barGap={barGap}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" tickMargin={xTickMargin} interval="preserveStartEnd" />
+              <YAxis tickFormatter={v => numberFmt(Number(v))} width={yAxisWidth} />
+              <Tooltip
+                formatter={(value: unknown, n) => [numberFmt(Number(value)) + ' DH', n as string]}
+                labelFormatter={label => `Year ${label}`}
+                contentStyle={{ background: 'var(--card)', borderColor: 'var(--border)' }}
+                wrapperStyle={{ outline: 'none' }}
+              />
+              {!isMobile && (
+                <Legend
+                  verticalAlign="bottom"
+                  height={legendHeight}
+                  wrapperStyle={{ fontSize: legendFontSize }}
+                />
+              )}
+              <Bar dataKey="total" name="Total Price" fill="#0776c0" barSize={barSize} />
+              <Bar dataKey="vat" name="Total VAT" fill="#fdc401" barSize={barSize} />
+            </BarChart>
+          </ResponsiveContainer>
+          {hasAny && !isLoading && isMobile && (
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    background: '#0776c0',
+                    display: 'inline-block',
+                    borderRadius: 2,
+                  }}
+                />
+                Total Price
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    background: '#fdc401',
+                    display: 'inline-block',
+                    borderRadius: 2,
+                  }}
+                />
+                Total VAT
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

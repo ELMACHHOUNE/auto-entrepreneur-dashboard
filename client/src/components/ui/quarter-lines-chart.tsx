@@ -29,6 +29,14 @@ export interface QuarterLinesChartUIProps {
   colors?: Partial<Record<QuarterKey, string>>;
   valueFormatter?: (value: number) => string;
   animate?: boolean; // disable animations by default for smoother layout resizes
+  xTickFormatter?: (label: string) => string;
+  xTickAngle?: number;
+  xTickInterval?: number | 'preserveStartEnd';
+  xTickFontSize?: number;
+  bottomMargin?: number;
+  yAxisWidth?: number;
+  marginLeft?: number;
+  marginRight?: number;
 }
 
 const defaultColors: Record<QuarterKey, string> = {
@@ -45,6 +53,14 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   colors = defaultColors,
   valueFormatter,
   animate = false,
+  xTickFormatter,
+  xTickAngle,
+  xTickInterval,
+  xTickFontSize,
+  bottomMargin,
+  yAxisWidth,
+  marginLeft,
+  marginRight,
 }) => {
   const format =
     valueFormatter ||
@@ -85,17 +101,31 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   return (
     <div className="w-full h-full" style={{ minHeight: 220 }}>
       <ResponsiveContainer width="100%" height={height} debounce={150}>
-        <LineChart data={data} margin={{ top: 6, right: 16, left: 16, bottom: 60 }}>
+        <LineChart
+          data={data}
+          margin={{
+            top: 6,
+            right: typeof marginRight === 'number' ? marginRight : 16,
+            left: typeof marginLeft === 'number' ? marginLeft : 16,
+            bottom: typeof bottomMargin === 'number' ? bottomMargin : 60,
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="name"
-            interval={0}
+            interval={typeof xTickInterval !== 'undefined' ? (xTickInterval as number) : 0}
             tickMargin={12}
-            angle={-30}
-            textAnchor="end"
+            angle={typeof xTickAngle === 'number' ? xTickAngle : -30}
+            textAnchor={typeof xTickAngle === 'number' && xTickAngle === 0 ? 'middle' : 'end'}
             height={36}
+            tickFormatter={xTickFormatter}
+            tick={typeof xTickFontSize === 'number' ? { fontSize: xTickFontSize } : undefined}
           />
-          <YAxis width={72} tickMargin={6} tickFormatter={(v: number) => format(Number(v))} />
+          <YAxis
+            width={typeof yAxisWidth === 'number' ? yAxisWidth : 72}
+            tickMargin={6}
+            tickFormatter={(v: number) => format(Number(v))}
+          />
           <Tooltip content={<CustomTooltip />} />
           {/* Built-in Legend removed; we render a custom legend below */}
           <Line
