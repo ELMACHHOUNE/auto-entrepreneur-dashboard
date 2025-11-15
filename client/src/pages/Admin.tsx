@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import RequireRole from '@/components/RequireRole';
 import StatsCard from '@/components/admin/StatsCard';
+import AnimatedNumber from '@/components/ui/AnimatedNumber';
 import YearlySignupsChart from '@/components/admin/YearlySignupsChart';
 import UsersByCategoryChart from '@/components/admin/UsersByCategoryChart';
 import {
@@ -8,7 +9,7 @@ import {
   useAdminUsersTotal,
   useAdminUsersYearly,
 } from '@/hooks/useAdminUserStats';
-const nf = new Intl.NumberFormat('en-US');
+// number formatting handled by AnimatedNumber
 
 export default function Admin() {
   const { data: yearly = [], isLoading: loadingYear, error: errorYear } = useAdminUsersYearly();
@@ -30,7 +31,17 @@ export default function Admin() {
         {/* Total users card */}
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="sm:col-span-1">
-            <StatsCard title="Total users" value={loadingTotal ? '…' : nf.format(total)} />
+            <StatsCard
+              title="Total users"
+              size="5xl"
+              value={
+                loadingTotal ? (
+                  '…'
+                ) : (
+                  <AnimatedNumber value={total} duration={1200} className="leading-none" />
+                )
+              }
+            />
             {errorTotal && (
               <div className="mt-1 text-xs text-destructive">Failed to load total users.</div>
             )}
