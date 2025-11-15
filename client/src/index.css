@@ -183,6 +183,30 @@
   opacity: 0.6;
 }
 
+/* Global page vertical scrollbar (right side only) */
+html {
+  /* Reserve gutter only on inline-end (right in LTR) */
+  scrollbar-gutter: stable;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--card);
+}
+/* WebKit browsers (Chrome/Edge/Safari) */
+html::-webkit-scrollbar {
+  width: 12px;
+}
+html::-webkit-scrollbar-track {
+  background: var(--card);
+}
+html::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 8px;
+  border: 2px solid var(--card);
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--accent) 85%, black 15%);
+}
+
 /* Custom scrollbar styling for table containers */
 .mrt-scroll-container {
   scrollbar-width: thin;
