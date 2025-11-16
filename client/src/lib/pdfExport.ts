@@ -84,15 +84,11 @@ async function ensurePdfMake(): Promise<PdfMakeGlobal> {
   }
   // Fallback fetch+eval if still missing
   if (!w.pdfMake?.vfs) {
+    // Final fallback: attempt loading the first font URL via script tag (no eval of fetched code)
     try {
-      const fallbackFontUrl = vfsUrls[0];
-      const res = await fetch(fallbackFontUrl);
-      if (res.ok) {
-        const code = await res.text();
-        new Function(code)();
-      }
+      await loadScript(vfsUrls[0]);
     } catch {
-      // silent; warn below
+      // ignore; warning below will indicate missing fonts
     }
   }
   if (!w.pdfMake?.createPdf) throw new Error('pdfMake not available after loading scripts');
