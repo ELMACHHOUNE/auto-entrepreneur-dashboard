@@ -68,6 +68,14 @@ const YearTotalsBarChart: React.FC = () => {
     }));
   }, [invoices]);
 
+  // Add domain padding so tallest bar labels (position="top") are never clipped.
+  const paddedMax = useMemo(() => {
+    if (!data.length) return 0;
+    const rawMax = Math.max(...data.map(d => Math.max(d.total, d.vat)));
+    // 12% headroom (min 5% absolute) ensures space for large numbers + " DH" suffix
+    return rawMax * 1.12;
+  }, [data]);
+
   const hasAny = data.length > 0;
 
   // Sizing – desktop values kept identical to original; mobile uses smaller sizes
@@ -109,7 +117,11 @@ const YearTotalsBarChart: React.FC = () => {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" tickMargin={xTickMargin} interval="preserveStartEnd" />
-              <YAxis tickFormatter={v => numberFmt(Number(v))} width={yAxisWidth} />
+              <YAxis
+                tickFormatter={v => numberFmt(Number(v))}
+                width={yAxisWidth}
+                domain={[0, paddedMax]}
+              />
               <Tooltip
                 formatter={(value: unknown, n) => [numberFmt(Number(value)) + ' DH', n as string]}
                 labelFormatter={label => `Year ${label}`}
@@ -127,6 +139,7 @@ const YearTotalsBarChart: React.FC = () => {
                 <LabelList
                   dataKey="total"
                   position="top"
+                  offset={4}
                   formatter={(v: unknown) => `${numberFmt(Number(v))} DH`}
                   style={{ fill: 'var(--foreground)', fontSize: 16 }}
                 />
@@ -135,6 +148,7 @@ const YearTotalsBarChart: React.FC = () => {
                 <LabelList
                   dataKey="vat"
                   position="top"
+                  offset={2}
                   formatter={(v: unknown) => `${numberFmt(Number(v))} DH`}
                   style={{ fill: 'var(--foreground)', fontSize: 11 }}
                 />
