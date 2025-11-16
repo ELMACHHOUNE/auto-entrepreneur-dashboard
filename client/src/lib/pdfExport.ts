@@ -603,6 +603,28 @@ export async function exportChartsOnePageFromElement(
   if (images.length === 0) {
     content.push({ text: 'No charts found', alignment: 'center', color: '#777' });
   } else {
+    // Separator line (horizontal rule) used between chart groups (not after last)
+    const separator = (): import('pdfmake/interfaces').Content => ({
+      canvas: [
+        {
+          type: 'line',
+          x1: 0,
+          y1: 0,
+          x2: 547, // approximate printable width (A4 width 595 - margins 24*2)
+          y2: 0,
+          lineWidth: 0.7,
+          lineColor: '#e2e8f0',
+        },
+      ],
+      margin: [0, 2, 0, 8],
+    });
+
+    // Track remaining charts after each push to decide if a separator is needed
+    const hasMoreAfter = (nextIndex: number): boolean => {
+      for (let i = nextIndex; i < images.length; i++) if (images[i]) return true;
+      return false;
+    };
+
     if (images[0] && images[1]) {
       // two columns with backgrounds
       content.push({
@@ -613,12 +635,23 @@ export async function exportChartsOnePageFromElement(
         columnGap: 10,
         margin: [0, 0, 0, 6],
       });
+      if (hasMoreAfter(2)) content.push(separator());
     } else if (images[0]) {
       content.push(...chartWithBg(images[0], [500, 240], captions[0]));
+      if (hasMoreAfter(1)) content.push(separator());
     }
-    if (images[2]) content.push(...chartWithBg(images[2], [500, 180], captions[2]));
-    if (images[3]) content.push(...chartWithBg(images[3], [500, 180], captions[3]));
-    if (images[4]) content.push(...chartWithBg(images[4], [500, 180], captions[4]));
+    if (images[2]) {
+      content.push(...chartWithBg(images[2], [500, 180], captions[2]));
+      if (hasMoreAfter(3)) content.push(separator());
+    }
+    if (images[3]) {
+      content.push(...chartWithBg(images[3], [500, 180], captions[3]));
+      if (hasMoreAfter(4)) content.push(separator());
+    }
+    if (images[4]) {
+      content.push(...chartWithBg(images[4], [500, 180], captions[4]));
+      // last chart -> no separator
+    }
   }
 
   const doc: import('pdfmake/interfaces').TDocumentDefinitions = {
@@ -663,12 +696,26 @@ export async function exportDataTablePdfFromElement(
     return;
   }
   const headerCells = Array.from(table.querySelectorAll('thead th')) as HTMLTableCellElement[];
-  const headers = headerCells.map(th => (th.textContent || '').trim()).filter(Boolean);
+  const rawHeaders = headerCells.map(th => (th.textContent || '').trim());
+  // Detect indices of headers to exclude (e.g., Actions column)
+  const excludeNames = new Set(['actions', 'action']);
+  const includedIndices: number[] = [];
+  for (let i = 0; i < rawHeaders.length; i++) {
+    const name = rawHeaders[i];
+    if (!name) continue; // skip empty header cells entirely
+    if (!excludeNames.has(name.toLowerCase())) includedIndices.push(i);
+  }
+  const headers = includedIndices.map(i => rawHeaders[i]).filter(Boolean);
   const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
   const bodyRows: string[][] = [];
   for (const tr of rows) {
     const cells = Array.from(tr.querySelectorAll('td')) as HTMLTableCellElement[];
-    const vals = cells.map(td => (td.textContent || '').trim());
+    const vals: string[] = [];
+    for (let ci = 0; ci < cells.length; ci++) {
+      if (!includedIndices.includes(ci)) continue; // skip excluded columns
+      const val = (cells[ci].textContent || '').trim();
+      vals.push(val);
+    }
     if (vals.some(v => v.length)) bodyRows.push(vals);
   }
   const tableBody: Array<Array<string | { text: string; bold?: boolean }>> = [];
