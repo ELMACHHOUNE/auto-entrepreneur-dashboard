@@ -8,19 +8,9 @@ export const selectFilledStyles = {
   dropdown: { background: 'var(--card)', borderColor: 'var(--border)' },
   option: {
     color: 'var(--foreground)',
-    // Ensure clear hover/focus/selected states in both light and dark modes
-    '&[data-hovered]': {
-      background: 'color-mix(in oklch, var(--accent) 22%, var(--card) 78%)',
-      color: 'var(--foreground)',
-    },
-    '&[data-focused]': {
-      background: 'color-mix(in oklch, var(--accent) 22%, var(--card) 78%)',
-      color: 'var(--foreground)',
-    },
-    '&[data-selected]': {
-      background: 'color-mix(in oklch, var(--accent) 26%, var(--card) 74%)',
-      color: 'var(--foreground)',
-    },
+    // Note: Mantine v7 applies styles inline; nested selectors like &[data-hovered]
+    // are not supported in the styles prop (React will warn). Interactive states
+    // are handled via global CSS in index.css using data attributes.
   },
   label: { color: 'var(--foreground)' },
 };
@@ -84,16 +74,8 @@ export const modalStyles = {
       color: 'var(--accent-foreground)',
       background: 'var(--accent)',
       borderRadius: 'var(--radius-sm)',
-      '&:hover': {
-        background: 'color-mix(in oklch, var(--accent) 88%, black 12%)',
-      },
-      '&:active': {
-        background: 'color-mix(in oklch, var(--accent) 75%, black 25%)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid var(--ring)',
-        outlineOffset: '2px',
-      },
+      // Interactive states are defined via CSS (see index.css) to avoid nested
+      // selectors in inline styles.
     },
   },
   accent: {
@@ -113,16 +95,7 @@ export const modalStyles = {
       color: 'var(--accent-foreground)',
       background: 'var(--accent)',
       borderRadius: 'var(--radius-sm)',
-      '&:hover': {
-        background: 'color-mix(in oklch, var(--accent) 88%, black 12%)',
-      },
-      '&:active': {
-        background: 'color-mix(in oklch, var(--accent) 75%, black 25%)',
-      },
-      '&:focus-visible': {
-        outline: '2px solid var(--ring)',
-        outlineOffset: '2px',
-      },
+      // Interactive states are defined via CSS (see index.css).
     },
   },
 } as const;

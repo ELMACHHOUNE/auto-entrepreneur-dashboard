@@ -6,7 +6,7 @@ function loadScript(src: string): Promise<void> {
     const s = document.createElement('script');
     s.src = src;
     s.async = true;
-    s.crossOrigin = 'anonymous';
+    // Do not set crossOrigin explicitly to avoid CORS noise on some CDNs/404s
     let settled = false;
     const done = (ok: boolean, err?: string) => {
       if (settled) return;
@@ -62,10 +62,11 @@ async function ensurePdfMake(): Promise<PdfMakeGlobal> {
     'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.20/pdfmake.min.js',
   ];
   const vfsUrls = [
-    '/vendor/pdfmake/vfs_fonts.min.js',
-    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.min.js',
-    'https://unpkg.com/pdfmake@0.2.20/build/vfs_fonts.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.20/vfs_fonts.min.js',
+    '/vendor/pdfmake/vfs_fonts.js',
+    // Use non-minified file names that actually exist on CDNs
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js',
+    'https://unpkg.com/pdfmake@0.2.20/build/vfs_fonts.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.20/vfs_fonts.js',
   ];
   await loadFirstAvailable(
     pdfmakeUrls,
@@ -77,6 +78,12 @@ async function ensurePdfMake(): Promise<PdfMakeGlobal> {
   );
   if (!w.pdfMake?.createPdf) throw new Error('pdfMake not available after loading scripts');
   return w.pdfMake;
+}
+
+// Normalize spaces produced by Intl (NBSP U+00A0 or NNBSP U+202F) to regular spaces
+// to avoid missing glyphs in embedded PDF fonts.
+function normalizePdfSpaces(text: string): string {
+  return text.replace(/[\u00A0\u202F]/g, ' ');
 }
 
 function resolveColorToken(token: string, scopeEl: Element): string | undefined {
@@ -154,6 +161,29 @@ async function svgToPngDataUrl(
   clone.setAttribute('width', String(width));
   clone.setAttribute('height', String(height));
 
+  // Scrub full-size dark background rects inside the cloned SVG (common in dark theme charts)
+  try {
+    const rects = Array.from(clone.querySelectorAll('rect')) as SVGRectElement[];
+    for (const r of rects) {
+      const rw = parseFloat(r.getAttribute('width') || '0');
+      const rh = parseFloat(r.getAttribute('height') || '0');
+      const rx = parseFloat(r.getAttribute('x') || '0');
+      const ry = parseFloat(r.getAttribute('y') || '0');
+      if (rw >= width * 0.95 && rh >= height * 0.95 && rx <= 2 && ry <= 2) {
+        const fill = (r.getAttribute('fill') || '').trim();
+        // Heuristic: treat very dark fills as background we want to force white
+        const isHexDark =
+          /^#0{1,6}$/.test(fill) || /^#1[0-9a-f]{2,4}$/i.test(fill) || /^#0f0f0f$/i.test(fill);
+        const isNamedDark = /(black|#050315|#0a0a0a|rgb\(0, 0, 0\)|rgb\(5, 3, 21\))/i.test(fill);
+        if (!fill || isHexDark || isNamedDark) {
+          r.setAttribute('fill', '#ffffff');
+        }
+      }
+    }
+  } catch {
+    // non-fatal; continue
+  }
+
   const xml = new XMLSerializer().serializeToString(clone);
 
   // Render with canvg to respect computed styles without html2canvas
@@ -161,7 +191,32 @@ async function svgToPngDataUrl(
     ignoreMouse: true,
     ignoreAnimation: true,
   });
+  // Paint a solid background so transparent charts get a light base in PDF
+  try {
+    const bg = resolveColorToken('var(--card)', scopeEl || svgEl) || '#ffffff';
+    ctx.save();
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  } catch {
+    // ignore background paint failures; rendering will proceed
+  }
   await canvg.render();
+  // If background ended up dark (e.g. original SVG encoded a dark rect), composite onto a fresh white canvas
+  const bgPixel = ctx.getImageData(0, 0, 1, 1).data; // sample corner
+  const isDark = bgPixel[0] + bgPixel[1] + bgPixel[2] < 96 * 3; // crude luminance check
+  if (isDark) {
+    const whiteCanvas = document.createElement('canvas');
+    whiteCanvas.width = width;
+    whiteCanvas.height = height;
+    const wctx = whiteCanvas.getContext('2d');
+    if (wctx) {
+      wctx.fillStyle = '#ffffff';
+      wctx.fillRect(0, 0, width, height);
+      wctx.drawImage(canvas, 0, 0);
+      return whiteCanvas.toDataURL('image/png');
+    }
+  }
   return canvas.toDataURL('image/png');
 }
 
@@ -353,4 +408,300 @@ export async function exportAdminPdfFromElement(
     pdfMake.createPdf(docDefinition).download('admin-dashboard.pdf');
     resolve();
   });
+}
+
+// Compose up to 5 Recharts charts into a single A4 portrait page
+export async function exportChartsOnePageFromElement(
+  rootEl: HTMLElement,
+  meta?: {
+    title?: string;
+    logoDataUrl?: string;
+    year?: number;
+    clientsCount?: number;
+    totalAmount?: number;
+    totalTva?: number;
+    chartTitles?: string[];
+  }
+) {
+  const pdfMake = await ensurePdfMake();
+  const fmt = new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  // Build a temporary light-theme scope so charts export in light mode regardless of UI theme
+  const lightScope = document.createElement('div');
+  lightScope.style.position = 'absolute';
+  lightScope.style.left = '-99999px';
+  lightScope.style.top = '0';
+  // Core light palette (mirrors :root in index.css)
+  const lightVars: Record<string, string> = {
+    '--card': '#ffffff',
+    '--foreground': '#050315',
+    '--muted': '#f3f4f6',
+    '--muted-foreground': '#4b5563',
+    '--border': '#e5e7eb',
+    '--input': '#e5e7eb',
+    '--ring': '#0776c0',
+    '--primary': '#0776c0',
+    '--accent': '#fdc401',
+    '--success': '#519d09',
+    '--destructive': '#d11c0a',
+  };
+  for (const [k, v] of Object.entries(lightVars)) lightScope.style.setProperty(k, v);
+  document.body.appendChild(lightScope);
+  // Resolve card background from light scope
+  const cardBg = resolveColorToken('var(--card)', lightScope) || '#ffffff';
+  const all = Array.from(rootEl.querySelectorAll('svg.recharts-surface')) as SVGSVGElement[];
+  const charts: SVGSVGElement[] = [];
+  for (const s of all) {
+    try {
+      const b = s.getBBox();
+      if (b.width >= 100 && b.height >= 80) charts.push(s);
+    } catch {
+      charts.push(s);
+    }
+    if (charts.length >= 5) break;
+  }
+
+  const images: string[] = [];
+  const captions: string[] = [];
+  // Helper to infer a best-effort chart title from nearby DOM
+  const inferTitle = (svg: SVGSVGElement, index: number): string => {
+    const direct = svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || '';
+    if (direct) return direct.trim();
+    const withAttr =
+      svg.closest('[data-chart-title]')?.getAttribute('data-chart-title') ||
+      svg.closest('[aria-label]')?.getAttribute('aria-label');
+    if (withAttr) return (withAttr || '').trim();
+    // Ascend ancestors to find a heading next to the chart card (works with Mantine/Recharts wrappers)
+    let ancestor: HTMLElement | null = svg.parentElement as HTMLElement | null;
+    for (let depth = 0; depth < 8 && ancestor; depth++) {
+      const heading = ancestor.querySelector('h1,h2,h3,h4,[data-title]') as HTMLElement | null;
+      if (heading?.textContent) return heading.textContent.trim();
+      // check previous siblings for headings
+      let sib: Element | null = ancestor.previousElementSibling;
+      for (let i = 0; i < 3 && sib; i++) {
+        const hs = (sib as HTMLElement).querySelector?.(
+          'h1,h2,h3,h4,[data-title]'
+        ) as HTMLElement | null;
+        if (hs?.textContent) return hs.textContent.trim();
+        if ((sib as HTMLElement).matches?.('h1,h2,h3,h4,[data-title]')) {
+          return ((sib as HTMLElement).textContent || '').trim();
+        }
+        sib = sib.previousElementSibling;
+      }
+      ancestor = ancestor.parentElement as HTMLElement | null;
+    }
+    return `Chart ${index + 1}`;
+  };
+
+  for (let i = 0; i < charts.length; i++) {
+    const svg = charts[i];
+    try {
+      const url = await svgToPngDataUrl(svg, 2.2, lightScope);
+      images.push(url);
+      const explicit = meta?.chartTitles?.[i];
+      captions.push((explicit && explicit.trim()) || inferTitle(svg, i));
+    } catch (e) {
+      console.warn('Chart convert failed', e);
+    }
+  }
+  // Cleanup the temporary scope
+  lightScope.remove();
+
+  const content: import('pdfmake/interfaces').Content[] = [];
+  if (meta?.logoDataUrl) {
+    content.push({ image: meta.logoDataUrl, width: 48, alignment: 'center', margin: [0, 0, 0, 6] });
+  }
+  if (meta?.title) {
+    content.push({ text: meta.title, style: 'title', alignment: 'center', margin: [0, 0, 0, 8] });
+  }
+
+  // Optional KPI block under the title (stack with bold labels)
+  const kpiItems: import('pdfmake/interfaces').Content[] = [];
+  if (typeof meta?.clientsCount === 'number') {
+    kpiItems.push({
+      text: [
+        { text: 'Numbers of clients is: ', bold: true },
+        { text: meta.clientsCount.toLocaleString() },
+      ],
+      fontSize: 10,
+      color: '#333',
+      alignment: 'center',
+    });
+  }
+  if (typeof meta?.totalAmount === 'number') {
+    kpiItems.push({
+      text: [
+        { text: 'Total price is: ', bold: true },
+        { text: `${normalizePdfSpaces(fmt.format(meta.totalAmount))} DH` },
+      ],
+      fontSize: 10,
+      color: '#333',
+      alignment: 'center',
+    });
+  }
+  if (typeof meta?.totalTva === 'number') {
+    kpiItems.push({
+      text: [
+        { text: 'Total TVA is: ', bold: true },
+        { text: `${normalizePdfSpaces(fmt.format(meta.totalTva))} DH` },
+      ],
+      fontSize: 10,
+      color: '#333',
+      alignment: 'center',
+    });
+  }
+  if (kpiItems.length) {
+    content.push({
+      stack: kpiItems,
+      margin: [0, 2, 0, 12],
+    } as import('pdfmake/interfaces').Content);
+  }
+
+  // Helper to render a chart with a dark/light background and optional caption
+  const chartWithBg = (
+    img: string,
+    fit: [number, number],
+    caption?: string
+  ): import('pdfmake/interfaces').Content[] => {
+    const block: import('pdfmake/interfaces').Content[] = [
+      {
+        table: {
+          widths: ['*'],
+          body: [[{ image: img, fit, alignment: 'center', margin: [0, 6, 0, 6] }]],
+        },
+        layout: {
+          hLineWidth: () => 0,
+          vLineWidth: () => 0,
+          fillColor: () => cardBg,
+          paddingLeft: () => 8,
+          paddingRight: () => 8,
+          paddingTop: () => 8,
+          paddingBottom: () => 8,
+        },
+        margin: [0, 0, 0, 4],
+      },
+    ];
+    if (caption) {
+      block.push({
+        text: caption,
+        alignment: 'center',
+        fontSize: 10,
+        color: '#444',
+        margin: [0, 2, 0, 10],
+      });
+    }
+    return block;
+  };
+
+  // Layout as requested:
+  // 1) First row: chart 1 and 2 side by side with captions
+  // 2) Then chart 3 with caption
+  // 3) Then chart 4 with caption
+  // 4) Then chart 5 with caption
+  if (images.length === 0) {
+    content.push({ text: 'No charts found', alignment: 'center', color: '#777' });
+  } else {
+    if (images[0] && images[1]) {
+      // two columns with backgrounds
+      content.push({
+        columns: [
+          { stack: chartWithBg(images[0], [240, 160], captions[0]), width: '*' },
+          { stack: chartWithBg(images[1], [240, 160], captions[1]), width: '*' },
+        ],
+        columnGap: 10,
+        margin: [0, 0, 0, 6],
+      });
+    } else if (images[0]) {
+      content.push(...chartWithBg(images[0], [500, 240], captions[0]));
+    }
+    if (images[2]) content.push(...chartWithBg(images[2], [500, 180], captions[2]));
+    if (images[3]) content.push(...chartWithBg(images[3], [500, 180], captions[3]));
+    if (images[4]) content.push(...chartWithBg(images[4], [500, 180], captions[4]));
+  }
+
+  const doc: import('pdfmake/interfaces').TDocumentDefinitions = {
+    pageSize: 'A4',
+    pageMargins: [24, 24, 24, 28],
+    // Force a white page background irrespective of PDF viewer theme
+    background: (_page: number, pageSize: { width: number; height: number }) => ({
+      canvas: [
+        {
+          type: 'rect',
+          x: 0,
+          y: 0,
+          w: pageSize.width,
+          h: pageSize.height,
+          r: 0,
+          color: '#ffffff',
+        },
+      ],
+    }),
+    content,
+    styles: { title: { fontSize: 16, bold: true } },
+    footer: () => ({
+      text: 'by GoToDev',
+      alignment: 'center',
+      fontSize: 9,
+      color: '#777',
+      margin: [0, 6, 0, 6],
+    }),
+  };
+  pdfMake.createPdf(doc).download('dashboard-charts.pdf');
+}
+
+// Export a Mantine React Table (rendered <table>) to pdfmake table
+export async function exportDataTablePdfFromElement(
+  containerEl: HTMLElement,
+  meta?: { title?: string }
+) {
+  const pdfMake = await ensurePdfMake();
+  const table = containerEl.querySelector('table');
+  if (!table) {
+    console.warn('No table element found for export');
+    return;
+  }
+  const headerCells = Array.from(table.querySelectorAll('thead th')) as HTMLTableCellElement[];
+  const headers = headerCells.map(th => (th.textContent || '').trim()).filter(Boolean);
+  const rows = Array.from(table.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
+  const bodyRows: string[][] = [];
+  for (const tr of rows) {
+    const cells = Array.from(tr.querySelectorAll('td')) as HTMLTableCellElement[];
+    const vals = cells.map(td => (td.textContent || '').trim());
+    if (vals.some(v => v.length)) bodyRows.push(vals);
+  }
+  const tableBody: Array<Array<string | { text: string; bold?: boolean }>> = [];
+  if (headers.length) tableBody.push(headers.map(h => ({ text: h, bold: true })));
+  for (const r of bodyRows) tableBody.push(r);
+
+  const orientation: 'portrait' | 'landscape' = headers.length > 6 ? 'landscape' : 'portrait';
+  const content: import('pdfmake/interfaces').Content[] = [];
+  if (meta?.title) content.push({ text: meta.title, style: 'title', margin: [0, 0, 0, 8] });
+  content.push({
+    table: {
+      headerRows: headers.length ? 1 : 0,
+      widths: headers.length ? headers.map(() => '*') : undefined,
+      body: tableBody,
+    },
+    layout: 'lightHorizontalLines',
+    fontSize: 9,
+  });
+
+  const doc: import('pdfmake/interfaces').TDocumentDefinitions = {
+    pageSize: 'A4',
+    pageOrientation: orientation,
+    pageMargins: [18, 24, 18, 28],
+    styles: { title: { fontSize: 14, bold: true } },
+    defaultStyle: { fontSize: 9 },
+    content,
+    footer: () => ({
+      text: 'by GoToDev',
+      alignment: 'center',
+      fontSize: 9,
+      color: '#777',
+      margin: [0, 6, 0, 6],
+    }),
+  };
+  pdfMake.createPdf(doc).download('dashboard-table.pdf');
 }

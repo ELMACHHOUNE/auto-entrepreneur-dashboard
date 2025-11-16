@@ -10,6 +10,7 @@ import {
   Scatter,
   Bar,
   Line,
+  LabelList,
 } from 'recharts';
 
 // Sample monthly data (fallback)
@@ -118,7 +119,14 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
             fill="var(--success)"
             barSize={20}
             isAnimationActive={false}
-          />
+          >
+            <LabelList
+              dataKey="net"
+              position="top"
+              formatter={(v: unknown) => `${formatNumber(Number(v))} DH`}
+              style={{ fill: 'var(--foreground)', fontSize: 11 }}
+            />
+          </Bar>
           {/* Optional line overlay for Net */}
           <Line
             name="Net"

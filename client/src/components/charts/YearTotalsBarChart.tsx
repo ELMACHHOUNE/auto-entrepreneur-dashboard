@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from 'recharts';
 
 type ApiInvoice = {
@@ -81,8 +82,8 @@ const YearTotalsBarChart: React.FC = () => {
   const barGap = isMobile ? 4 : 8;
   const xTickMargin = isMobile ? 6 : 10;
   const yAxisWidth = isMobile ? 56 : 72;
-  const legendHeight = isMobile ? 28 : 28;
-  const legendFontSize = isMobile ? 11 : 12;
+  const legendHeight = isMobile ? 28 : 18;
+  const legendFontSize = isMobile ? 11 : 16;
   const barSize = isMobile ? 10 : 22;
 
   return (
@@ -122,8 +123,22 @@ const YearTotalsBarChart: React.FC = () => {
                   wrapperStyle={{ fontSize: legendFontSize }}
                 />
               )}
-              <Bar dataKey="total" name="Total Price" fill="#0776c0" barSize={barSize} />
-              <Bar dataKey="vat" name="Total VAT" fill="#fdc401" barSize={barSize} />
+              <Bar dataKey="total" name="Total Price" fill="#0776c0" barSize={barSize}>
+                <LabelList
+                  dataKey="total"
+                  position="top"
+                  formatter={(v: unknown) => `${numberFmt(Number(v))} DH`}
+                  style={{ fill: 'var(--foreground)', fontSize: 16 }}
+                />
+              </Bar>
+              <Bar dataKey="vat" name="Total VAT" fill="#fdc401" barSize={barSize}>
+                <LabelList
+                  dataKey="vat"
+                  position="top"
+                  formatter={(v: unknown) => `${numberFmt(Number(v))} DH`}
+                  style={{ fill: 'var(--foreground)', fontSize: 11 }}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
           {hasAny && !isLoading && isMobile && (

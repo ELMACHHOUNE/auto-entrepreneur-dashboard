@@ -1,6 +1,6 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Suspense, lazy, useState, useCallback, useMemo } from 'react';
+import { Suspense, lazy, useState, useCallback, useMemo, useRef } from 'react';
 import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
@@ -13,6 +13,8 @@ const YearTotalsBarChart = lazy(() => import('@/components/charts/YearTotalsBarC
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
 export default function Dashboard() {
+  const chartsRef = useRef<HTMLDivElement | null>(null);
+  const tableRef = useRef<HTMLDivElement | null>(null);
   const [quarterTotals, setQuarterTotals] = useState({ T1: 0, T2: 0, T3: 0, T4: 0 });
   const [yearTotals, setYearTotals] = useState({ amount: 0, tva: 0 });
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -59,14 +61,59 @@ export default function Dashboard() {
     <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} yearTotals={yearTotals} />
   );
 
+  const onExportCharts = useCallback(async () => {
+    const node = chartsRef.current;
+    if (!node) return;
+    const totalAmount = monthlyTotals.reduce((sum, m) => sum + (m.gross || 0), 0);
+    const totalTva = monthlyTotals.reduce((sum, m) => sum + (m.vat || 0), 0);
+    const { exportChartsOnePageFromElement } = await import('@/lib/pdfExport');
+    await exportChartsOnePageFromElement(node, {
+      title: `Dashboard charts (${year})`,
+      year,
+      clientsCount: clientCounts.length,
+      totalAmount,
+      totalTva,
+      // Explicit captions to guarantee naming order in PDF
+      chartTitles: [
+        `Quarter totals by month (${year})`,
+        `VAT totals by month (${year})`,
+        `Invoices per client (${year})`,
+        `Yearly totals (Price vs VAT)`,
+        `Composed chart (sample)`,
+      ],
+    });
+  }, [year, clientCounts.length, monthlyTotals]);
+
+  const onExportTable = useCallback(async () => {
+    const node = tableRef.current;
+    if (!node) return;
+    const { exportDataTablePdfFromElement } = await import('@/lib/pdfExport');
+    await exportDataTablePdfFromElement(node, { title: `Invoices table (${year})` });
+  }, [year]);
+
   return (
     <DashboardLayout
       rightSidebar={rightSidebar}
       rightSidebarCollapsed={rightSidebarCollapsed}
       rightCollapsible
     >
+      {/* Actions for charts (left-aligned) */}
+      <div className="mb-3 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onExportCharts}
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+          style={{
+            background: 'var(--accent)',
+            color: 'var(--accent-foreground)',
+            borderColor: 'var(--accent)',
+          }}
+        >
+          Export charts as PDF
+        </button>
+      </div>
       {/* Chart + Table layout scaffold */}
-      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <section ref={chartsRef} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border p-4 min-h-80">
           <h4 className="mb-2 text-sm font-medium">Quarter totals by month ({year})</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
@@ -86,7 +133,7 @@ export default function Dashboard() {
           </Suspense>
         </div>
         <div className="rounded-lg border p-4 min-h-96">
-          <h4 className="mb-2 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
+          <h4 className="mb-6 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
           <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
             <YearTotalsBarChart />
           </Suspense>
@@ -122,13 +169,29 @@ export default function Dashboard() {
           <Table size={18} />
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
-        <Suspense fallback={<div className="text-xs text-muted-foreground">Loading table…</div>}>
-          <InvoiceTable
-            onQuarterSummaryChange={handleQuarterSummary}
-            onMonthlyTotalsChange={setMonthlyTotals}
-            onClientCountsChange={setClientCounts}
-          />
-        </Suspense>
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={onExportTable}
+            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+            style={{
+              background: 'var(--accent)',
+              color: 'var(--accent-foreground)',
+              borderColor: 'var(--accent)',
+            }}
+          >
+            Export table PDF
+          </button>
+        </div>
+        <div ref={tableRef}>
+          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading table…</div>}>
+            <InvoiceTable
+              onQuarterSummaryChange={handleQuarterSummary}
+              onMonthlyTotalsChange={setMonthlyTotals}
+              onClientCountsChange={setClientCounts}
+            />
+          </Suspense>
+        </div>
       </section>
     </DashboardLayout>
   );
