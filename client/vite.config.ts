@@ -23,10 +23,13 @@ export default defineConfig({
           if (id.includes('/motion')) return 'motion';
           if (id.includes('lucide-react')) return 'icons';
           if (id.includes('/tslib')) return 'tslib';
+          if (id.includes('/pdfmake/')) return 'pdfmake';
+          if (id.includes('vfs_fonts')) return 'vfs-fonts';
+          if (id.includes('/canvg/')) return 'canvg';
         },
       },
     },
-    // Optional: reduce warning noise; you can tune or remove later
+    // Allow larger lazy chunks for pdfmake/vfs_fonts without warnings
     chunkSizeWarningLimit: 800,
   },
 });
