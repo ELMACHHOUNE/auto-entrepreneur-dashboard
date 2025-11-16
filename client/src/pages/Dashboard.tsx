@@ -1,6 +1,7 @@
 import { Table } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Suspense, lazy, useState, useCallback, useMemo, useRef } from 'react';
+import { Suspense, lazy, useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import LazyVisible from '@/components/ui/LazyVisible';
 import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
@@ -15,6 +16,8 @@ const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 export default function Dashboard() {
   const chartsRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
+  // Registry of force-mount callbacks for charts (to guarantee presence before export)
+  const chartForcersRef = useRef<(() => void)[]>([]);
   const [quarterTotals, setQuarterTotals] = useState({ T1: 0, T2: 0, T3: 0, T4: 0 });
   const [yearTotals, setYearTotals] = useState({ amount: 0, tva: 0 });
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -61,9 +64,37 @@ export default function Dashboard() {
     <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} yearTotals={yearTotals} />
   );
 
+  // Idle prefetch of chart chunks to make viewport-lazy charts snappy when scrolled into view
+  useEffect(() => {
+    const idle = (cb: () => void) => {
+      const win = window as unknown as {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+      };
+      if (typeof win.requestIdleCallback === 'function')
+        win.requestIdleCallback(cb, { timeout: 1500 });
+      else setTimeout(cb, 500);
+    };
+    idle(() => {
+      // Fire-and-forget prefetches
+      import('@/components/charts/QuarterLinesChart');
+      import('@/components/charts/QuarterLinesTvaChart');
+      import('@/components/charts/ClientsRadarChart');
+      import('@/components/charts/YearTotalsBarChart');
+      import('@/components/charts/LineBarAreaComposedChart');
+    });
+  }, []);
+
+  // Small helper to wait a couple frames to let charts render after forced mount
+  const waitNextFrames = useCallback(async (frames: number = 2) => {
+    for (let i = 0; i < frames; i++) await new Promise(requestAnimationFrame);
+  }, []);
+
   const onExportCharts = useCallback(async () => {
     const node = chartsRef.current;
     if (!node) return;
+    // Ensure all charts are mounted even if not in view
+    chartForcersRef.current.forEach(f => f());
+    await waitNextFrames(2);
     const totalAmount = monthlyTotals.reduce((sum, m) => sum + (m.gross || 0), 0);
     const totalTva = monthlyTotals.reduce((sum, m) => sum + (m.vat || 0), 0);
     const { exportChartsOnePageFromElement } = await import('@/lib/pdfExport');
@@ -82,7 +113,7 @@ export default function Dashboard() {
         `Composed chart (sample)`,
       ],
     });
-  }, [year, clientCounts.length, monthlyTotals]);
+  }, [year, clientCounts.length, monthlyTotals, waitNextFrames]);
 
   const onExportTable = useCallback(async () => {
     const node = tableRef.current;
@@ -116,27 +147,75 @@ export default function Dashboard() {
       <section ref={chartsRef} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border p-4 min-h-80">
           <h4 className="mb-2 text-sm font-medium">Quarter totals by month ({year})</h4>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <QuarterLinesChart year={year} />
-          </Suspense>
+          <LazyVisible
+            minHeight="12rem"
+            fallback={
+              <div className="text-xs text-muted-foreground" role="status">
+                Loading chart…
+              </div>
+            }
+            onRegister={force => chartForcersRef.current.push(force)}
+          >
+            <Suspense
+              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+            >
+              <QuarterLinesChart year={year} />
+            </Suspense>
+          </LazyVisible>
         </div>
         <div className="rounded-lg border p-4 min-h-80">
           <h4 className="mb-2 text-sm font-medium">VAT totals by month ({year})</h4>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <QuarterLinesTvaChart year={year} />
-          </Suspense>
+          <LazyVisible
+            minHeight="12rem"
+            fallback={
+              <div className="text-xs text-muted-foreground" role="status">
+                Loading chart…
+              </div>
+            }
+            onRegister={force => chartForcersRef.current.push(force)}
+          >
+            <Suspense
+              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+            >
+              <QuarterLinesTvaChart year={year} />
+            </Suspense>
+          </LazyVisible>
         </div>
         <div className="rounded-lg border p-4">
           <h4 className="mb-2 text-sm font-medium">Invoices per client ({year})</h4>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
-          </Suspense>
+          <LazyVisible
+            minHeight="10rem"
+            fallback={
+              <div className="text-xs text-muted-foreground" role="status">
+                Loading chart…
+              </div>
+            }
+            onRegister={force => chartForcersRef.current.push(force)}
+          >
+            <Suspense
+              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+            >
+              <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
+            </Suspense>
+          </LazyVisible>
         </div>
         <div className="rounded-lg border p-4 min-h-96">
           <h4 className="mb-6 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <YearTotalsBarChart />
-          </Suspense>
+          <LazyVisible
+            minHeight="14rem"
+            fallback={
+              <div className="text-xs text-muted-foreground" role="status">
+                Loading chart…
+              </div>
+            }
+            onRegister={force => chartForcersRef.current.push(force)}
+          >
+            <Suspense
+              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+            >
+              <YearTotalsBarChart />
+            </Suspense>
+          </LazyVisible>
         </div>
         {/* Full-width composed chart row */}
         <div className="rounded-lg border p-4 md:col-span-2">
@@ -158,9 +237,21 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}>
-            <LineBarAreaComposedChart data={chartData} />
-          </Suspense>
+          <LazyVisible
+            minHeight="12rem"
+            fallback={
+              <div className="text-xs text-muted-foreground" role="status">
+                Loading chart…
+              </div>
+            }
+            onRegister={force => chartForcersRef.current.push(force)}
+          >
+            <Suspense
+              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+            >
+              <LineBarAreaComposedChart data={chartData} />
+            </Suspense>
+          </LazyVisible>
         </div>
       </section>
 
