@@ -54,29 +54,51 @@ async function ensurePdfMake(): Promise<PdfMakeGlobal> {
   if (w.pdfMake?.createPdf) return w.pdfMake;
   // Load core and default fonts (Roboto) from CDN with multi-source fallback
   const pdfmakeUrls = [
-    // Prefer local copy if present (add to public/vendor/pdfmake to enable offline-first)
-    '/vendor/pdfmake/pdfmake.min.js',
-    // Reliable CDNs
     'https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/pdfmake.min.js',
     'https://unpkg.com/pdfmake@0.2.20/build/pdfmake.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.20/pdfmake.min.js',
   ];
   const vfsUrls = [
-    '/vendor/pdfmake/vfs_fonts.js',
-    // Use non-minified file names that actually exist on CDNs
     'https://cdn.jsdelivr.net/npm/pdfmake@0.2.20/build/vfs_fonts.js',
     'https://unpkg.com/pdfmake@0.2.20/build/vfs_fonts.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.20/vfs_fonts.js',
   ];
-  await loadFirstAvailable(
-    pdfmakeUrls,
-    () => !!(window as unknown as { pdfMake?: PdfMakeGlobal }).pdfMake
-  );
-  await loadFirstAvailable(
-    vfsUrls,
-    () => !!(window as unknown as { pdfMake?: PdfMakeGlobal }).pdfMake?.vfs
-  );
+  try {
+    await loadFirstAvailable(
+      pdfmakeUrls,
+      () => !!(window as unknown as { pdfMake?: PdfMakeGlobal }).pdfMake
+    );
+  } catch (coreErr) {
+    throw new Error('Failed to load pdfmake core scripts: ' + (coreErr as Error).message);
+  }
+  // Load fonts sequentially without verification to reduce console noise.
+  if (!w.pdfMake?.vfs) {
+    for (const url of vfsUrls) {
+      try {
+        await loadScript(url);
+        if (w.pdfMake?.vfs) break;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  // Fallback fetch+eval if still missing
+  if (!w.pdfMake?.vfs) {
+    try {
+      const fallbackFontUrl = vfsUrls[0];
+      const res = await fetch(fallbackFontUrl);
+      if (res.ok) {
+        const code = await res.text();
+        new Function(code)();
+      }
+    } catch {
+      // silent; warn below
+    }
+  }
   if (!w.pdfMake?.createPdf) throw new Error('pdfMake not available after loading scripts');
+  if (!w.pdfMake?.vfs) {
+    console.warn('pdfMake fonts (vfs) missing; proceeding may result in missing glyphs.');
+  }
   return w.pdfMake;
 }
 
