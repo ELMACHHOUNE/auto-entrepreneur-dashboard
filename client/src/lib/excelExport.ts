@@ -206,7 +206,7 @@ async function svgToPngDataUrlExcel(svgEl: SVGSVGElement, scale = 2, scopeEl?: E
   return canvas.toDataURL('image/png');
 }
 
-// Export up to 5 charts from a container into an Excel workbook (one sheet per chart with image)
+// Export up to 5 charts from a container into a single Excel worksheet
 export async function exportChartsExcelFromElement(
   rootEl: HTMLElement,
   meta?: { title?: string; year?: number; chartTitles?: string[]; fileName?: string }
@@ -287,7 +287,7 @@ export async function exportChartsExcelFromElement(
     return;
   }
 
-  // Build Excel workbook with one sheet per chart
+  // Build Excel workbook with a single sheet laying out all charts vertically
   const excelJsMod = await import('exceljs');
   const excelNs = excelJsMod as unknown as ExcelWorkbookNamespace;
   const ExcelNS = excelNs.Workbook ? excelNs : excelNs.default || excelNs;
@@ -296,41 +296,100 @@ export async function exportChartsExcelFromElement(
     return;
   }
   const wb = new ExcelNS.Workbook();
+  const ws = wb.addWorksheet('Dashboard charts');
+  // Set consistent column widths
+  const totalCols = 11;
+  for (let c = 1; c <= totalCols; c++) ws.getColumn(c).width = 12;
+
+  let rowCursor = 1; // 1-based for getRow(); image anchors use 0-based
+
+  // Optional overall title at the top
+  const overallTitle = meta?.title || `Dashboard charts${meta?.year ? ' (' + meta.year + ')' : ''}`;
+  if (overallTitle) {
+    ws.addRow([overallTitle]);
+    const r = ws.getRow(rowCursor);
+    r.font = { bold: true, size: 14, color: { argb: 'FF050315' } } as unknown as Record<
+      string,
+      unknown
+    >;
+    r.alignment = { horizontal: 'center', vertical: 'middle' } as unknown as Record<
+      string,
+      unknown
+    >;
+    r.height = 24;
+    // Merge A1:K1 for nice centered title
+    (ws as unknown as { mergeCells?: (...args: unknown[]) => void }).mergeCells?.(
+      rowCursor,
+      1,
+      rowCursor,
+      totalCols
+    );
+    rowCursor++;
+    // spacer
+    ws.addRow(['']);
+    ws.getRow(rowCursor).height = 8;
+    rowCursor++;
+  }
 
   images.forEach((dataUrl, idx) => {
-    const title = captions[idx] || `Chart ${idx + 1}`;
-    const ws = wb.addWorksheet(title.substring(0, 31));
-    // Add a header row with title
-    ws.addRow([title]);
-    const header = ws.getRow(1);
-    header.font = { bold: true, size: 12 } as unknown as Record<string, unknown>;
-    header.alignment = { horizontal: 'center' } as unknown as Record<string, unknown>;
-    header.height = 20;
-    // Add image filling area A2:K30 (approx)
-    // ExcelJS in browser supports dataUrl via { base64, extension }
+    const sectionTitle = captions[idx] || `Chart ${idx + 1}`;
+    // Section title row
+    ws.addRow([sectionTitle]);
+    const titleRow = ws.getRow(rowCursor);
+    titleRow.font = { bold: true, size: 12, color: { argb: 'FF050315' } } as unknown as Record<
+      string,
+      unknown
+    >;
+    titleRow.alignment = { horizontal: 'left', vertical: 'middle' } as unknown as Record<
+      string,
+      unknown
+    >;
+    titleRow.height = 20;
+    // Light gray fill and bottom border
+    titleRow.eachCell((cell: { fill?: unknown; border?: unknown }) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+      cell.border = { bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } } };
+    });
+    // Merge title across columns A..K
+    (ws as unknown as { mergeCells?: (...args: unknown[]) => void }).mergeCells?.(
+      rowCursor,
+      1,
+      rowCursor,
+      totalCols
+    );
+    rowCursor++;
+
+    // Small spacer between title and image
+    ws.addRow(['']);
+    ws.getRow(rowCursor).height = 6;
+    rowCursor++;
+
+    // Add image filling area A{rowCursor}:K{rowCursor+26} (approx)
     const imageId = (
       wb as unknown as { addImage: (opts: { base64: string; extension: string }) => number }
-    ).addImage({
-      base64: dataUrl,
-      extension: 'png',
-    });
+    ).addImage({ base64: dataUrl, extension: 'png' });
     const wsAny = ws as unknown as {
       addImage: (
         imageId: number,
         range: string | { tl: { col: number; row: number }; br: { col: number; row: number } }
       ) => void;
     };
+    const tlRowZero = rowCursor - 1; // convert to 0-based
     wsAny.addImage(imageId, {
-      tl: { col: 0, row: 1 },
-      br: { col: 10, row: 28 },
+      tl: { col: 0, row: tlRowZero },
+      br: { col: 10, row: tlRowZero + 26 },
     });
-    // Set some widths/heights for better visual
-    for (let c = 1; c <= 11; c++) {
-      ws.getColumn(c).width = 12;
-    }
-    for (let r = 2; r <= 28; r++) {
+
+    // Set some row heights for the image block
+    for (let r = rowCursor; r <= rowCursor + 26; r++) {
       ws.getRow(r).height = 18;
     }
+    rowCursor += 27;
+
+    // Spacer after each section
+    ws.addRow(['']);
+    ws.getRow(rowCursor).height = 10;
+    rowCursor++;
   });
 
   const fileName = meta?.fileName || `dashboard-charts${meta?.year ? '-' + meta.year : ''}.xlsx`;
