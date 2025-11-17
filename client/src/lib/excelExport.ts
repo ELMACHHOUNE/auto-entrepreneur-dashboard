@@ -16,6 +16,39 @@ function downloadBlob(data: ArrayBuffer | string | Blob, fileName: string, type?
   URL.revokeObjectURL(url);
 }
 
+// Minimal ExcelJS typings used by both invoices and charts exports
+interface MinimalWorksheet {
+  addRow: (values: unknown[]) => {
+    height: number;
+    eachCell: (cb: (cell: MinimalCell) => void) => void;
+  };
+  getRow: (row: number) => {
+    font?: unknown;
+    alignment?: unknown;
+    height: number;
+    eachCell: (cb: (cell: MinimalCell) => void) => void;
+  } & MinimalCell;
+  getColumn: (col: number) => {
+    numFmt?: string;
+    width?: number;
+    eachCell: (cb: (cell: MinimalCell) => void) => void;
+  };
+  views: Array<Record<string, unknown>>;
+  autoFilter: unknown;
+}
+interface MinimalCell {
+  value?: unknown;
+  fill?: unknown;
+  border?: unknown;
+}
+interface MinimalWorkbook {
+  addWorksheet: (name: string) => MinimalWorksheet;
+  xlsx: { writeBuffer: () => Promise<ArrayBuffer> };
+}
+type ExcelWorkbookNamespace = { Workbook?: new () => MinimalWorkbook } & {
+  default?: { Workbook?: new () => MinimalWorkbook };
+};
+
 function tryParseNumber(input: string): number | null {
   const s = input.trim();
   if (!s) return null;
@@ -98,6 +131,213 @@ export async function exportAllInvoicesExcel(opts?: { fileName?: string; year?: 
   return exportAllInvoicesExcelStyled(opts);
 }
 
+// --- SVG rasterization helpers (lightweight copies tailored for Excel export) ---
+function resolveColorTokenExcel(token: string, scopeEl: Element): string | undefined {
+  const direct = token.trim();
+  if (/^(#|rgb\(|rgba\(|hsl\(|hsla\()/i.test(direct)) return direct;
+  const varMatch = direct.match(/var\((--[\w-]+)\)/);
+  if (varMatch) {
+    const probe = document.createElement('span');
+    probe.style.color = `var(${varMatch[1]})`;
+    scopeEl.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    if (resolved && resolved !== 'rgba(0, 0, 0, 0)' && resolved !== 'inherit') return resolved;
+  }
+  return undefined;
+}
+
+function inlineSvgCssVarsExcel(svgEl: SVGSVGElement, scopeEl: Element): SVGSVGElement {
+  const clone = svgEl.cloneNode(true) as SVGSVGElement;
+  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_ELEMENT);
+  const attrsToCheck = ['fill', 'stroke', 'stop-color', 'color'];
+  while (walker.nextNode()) {
+    const el = walker.currentNode as Element;
+    const styleAttr = el.getAttribute('style');
+    if (styleAttr && styleAttr.includes('var(')) {
+      const varRegex = /var\((--[\w-]+)\)/g;
+      const newStyle = styleAttr.replace(varRegex, (_, name) => {
+        return resolveColorTokenExcel(`var(${name})`, scopeEl) || _;
+      });
+      el.setAttribute('style', newStyle);
+    }
+    for (const attr of attrsToCheck) {
+      const val = el.getAttribute(attr);
+      if (val && val.includes('var(')) {
+        const resolved = resolveColorTokenExcel(val, scopeEl);
+        if (resolved) el.setAttribute(attr, resolved);
+      }
+    }
+  }
+  return clone;
+}
+
+async function svgToPngDataUrlExcel(svgEl: SVGSVGElement, scale = 2, scopeEl?: Element) {
+  const { Canvg } = await import('canvg');
+  const rect = svgEl.getBoundingClientRect();
+  const width = Math.max(
+    1,
+    Math.floor((rect.width || parseFloat(svgEl.getAttribute('width') || '0') || 600) * scale)
+  );
+  const height = Math.max(
+    1,
+    Math.floor((rect.height || parseFloat(svgEl.getAttribute('height') || '0') || 400) * scale)
+  );
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context not available');
+  const clone = inlineSvgCssVarsExcel(svgEl, scopeEl || svgEl);
+  clone.setAttribute('width', String(width));
+  clone.setAttribute('height', String(height));
+  const xml = new XMLSerializer().serializeToString(clone);
+  const canvg = await Canvg.fromString(ctx, xml, { ignoreMouse: true, ignoreAnimation: true });
+  try {
+    const bg = resolveColorTokenExcel('var(--card)', scopeEl || svgEl) || '#ffffff';
+    ctx.save();
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  } catch {
+    /* no background fill override available */
+  }
+  await canvg.render();
+  return canvas.toDataURL('image/png');
+}
+
+// Export up to 5 charts from a container into an Excel workbook (one sheet per chart with image)
+export async function exportChartsExcelFromElement(
+  rootEl: HTMLElement,
+  meta?: { title?: string; year?: number; chartTitles?: string[]; fileName?: string }
+) {
+  // Create a temporary light-theme scope so charts resolve CSS vars to light colors
+  const lightScope = document.createElement('div');
+  lightScope.style.position = 'absolute';
+  lightScope.style.left = '-99999px';
+  lightScope.style.top = '0';
+  const lightVars: Record<string, string> = {
+    '--card': '#ffffff',
+    '--foreground': '#050315',
+    '--muted': '#f3f4f6',
+    '--muted-foreground': '#4b5563',
+    '--border': '#e5e7eb',
+    '--input': '#e5e7eb',
+    '--ring': '#0776c0',
+    '--primary': '#0776c0',
+    '--accent': '#fdc401',
+    '--success': '#519d09',
+    '--destructive': '#d11c0a',
+  };
+  for (const [k, v] of Object.entries(lightVars)) lightScope.style.setProperty(k, v);
+  document.body.appendChild(lightScope);
+
+  const all = Array.from(rootEl.querySelectorAll('svg.recharts-surface')) as SVGSVGElement[];
+  const charts: SVGSVGElement[] = [];
+  for (const s of all) {
+    try {
+      const b = s.getBBox();
+      if (b.width >= 100 && b.height >= 80) charts.push(s);
+    } catch {
+      charts.push(s);
+    }
+    if (charts.length >= 5) break;
+  }
+
+  const images: string[] = [];
+  const captions: string[] = [];
+  const inferTitle = (svg: SVGSVGElement, index: number): string => {
+    const direct = svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || '';
+    if (direct) return direct.trim();
+    let ancestor: HTMLElement | null = svg.parentElement as HTMLElement | null;
+    for (let depth = 0; depth < 8 && ancestor; depth++) {
+      const heading = ancestor.querySelector('h1,h2,h3,h4,[data-title]') as HTMLElement | null;
+      if (heading?.textContent) return heading.textContent.trim();
+      let sib: Element | null = ancestor.previousElementSibling;
+      for (let i = 0; i < 3 && sib; i++) {
+        const hs = (sib as HTMLElement).querySelector?.(
+          'h1,h2,h3,h4,[data-title]'
+        ) as HTMLElement | null;
+        if (hs?.textContent) return hs.textContent.trim();
+        if ((sib as HTMLElement).matches?.('h1,h2,h3,h4,[data-title]')) {
+          return ((sib as HTMLElement).textContent || '').trim();
+        }
+        sib = sib.previousElementSibling;
+      }
+      ancestor = ancestor.parentElement as HTMLElement | null;
+    }
+    return `Chart ${index + 1}`;
+  };
+
+  for (let i = 0; i < charts.length; i++) {
+    const svg = charts[i];
+    try {
+      const url = await svgToPngDataUrlExcel(svg, 2.2, lightScope);
+      images.push(url);
+      const explicit = meta?.chartTitles?.[i];
+      captions.push((explicit && explicit.trim()) || inferTitle(svg, i));
+    } catch (e) {
+      console.warn('Chart convert failed', e);
+    }
+  }
+  lightScope.remove();
+
+  if (!images.length) {
+    console.warn('No charts found to export');
+    return;
+  }
+
+  // Build Excel workbook with one sheet per chart
+  const excelJsMod = await import('exceljs');
+  const excelNs = excelJsMod as unknown as ExcelWorkbookNamespace;
+  const ExcelNS = excelNs.Workbook ? excelNs : excelNs.default || excelNs;
+  if (!ExcelNS.Workbook) {
+    console.error('ExcelJS module did not expose Workbook');
+    return;
+  }
+  const wb = new ExcelNS.Workbook();
+
+  images.forEach((dataUrl, idx) => {
+    const title = captions[idx] || `Chart ${idx + 1}`;
+    const ws = wb.addWorksheet(title.substring(0, 31));
+    // Add a header row with title
+    ws.addRow([title]);
+    const header = ws.getRow(1);
+    header.font = { bold: true, size: 12 } as unknown as Record<string, unknown>;
+    header.alignment = { horizontal: 'center' } as unknown as Record<string, unknown>;
+    header.height = 20;
+    // Add image filling area A2:K30 (approx)
+    // ExcelJS in browser supports dataUrl via { base64, extension }
+    const imageId = (
+      wb as unknown as { addImage: (opts: { base64: string; extension: string }) => number }
+    ).addImage({
+      base64: dataUrl,
+      extension: 'png',
+    });
+    const wsAny = ws as unknown as {
+      addImage: (
+        imageId: number,
+        range: string | { tl: { col: number; row: number }; br: { col: number; row: number } }
+      ) => void;
+    };
+    wsAny.addImage(imageId, {
+      tl: { col: 0, row: 1 },
+      br: { col: 10, row: 28 },
+    });
+    // Set some widths/heights for better visual
+    for (let c = 1; c <= 11; c++) {
+      ws.getColumn(c).width = 12;
+    }
+    for (let r = 2; r <= 28; r++) {
+      ws.getRow(r).height = 18;
+    }
+  });
+
+  const fileName = meta?.fileName || `dashboard-charts${meta?.year ? '-' + meta.year : ''}.xlsx`;
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf as ArrayBuffer, fileName);
+}
+
 // Styled export using ExcelJS (supports reliable cell styling in community edition)
 export async function exportAllInvoicesExcelStyled(opts?: { fileName?: string; year?: number }) {
   // Dynamic client-side styled export using ExcelJS.
@@ -107,38 +347,6 @@ export async function exportAllInvoicesExcelStyled(opts?: { fileName?: string; y
   // 3. Ascending sort, explicit widths, number formats & frozen header.
   // 4. No global side-effects; all logic scoped.
   const [excelJsMod, axiosMod] = await Promise.all([import('exceljs'), import('@/api/axios')]);
-  // Minimal ExcelJS namespace typing (only Workbook constructor needed for our usage).
-  interface MinimalWorksheet {
-    addRow: (values: unknown[]) => {
-      height: number;
-      eachCell: (cb: (cell: MinimalCell) => void) => void;
-    };
-    getRow: (row: number) => {
-      font?: unknown;
-      alignment?: unknown;
-      height: number;
-      eachCell: (cb: (cell: MinimalCell) => void) => void;
-    };
-    getColumn: (col: number) => {
-      numFmt?: string;
-      width?: number;
-      eachCell: (cb: (cell: MinimalCell) => void) => void;
-    };
-    views: Array<Record<string, unknown>>;
-    autoFilter: unknown;
-  }
-  interface MinimalCell {
-    value?: unknown;
-    fill?: unknown;
-    border?: unknown;
-  }
-  interface MinimalWorkbook {
-    addWorksheet: (name: string) => MinimalWorksheet;
-    xlsx: { writeBuffer: () => Promise<ArrayBuffer> };
-  }
-  type ExcelWorkbookNamespace = { Workbook?: new () => MinimalWorkbook } & {
-    default?: { Workbook?: new () => MinimalWorkbook };
-  };
   const excelNs = excelJsMod as unknown as ExcelWorkbookNamespace;
   const ExcelNS = excelNs.Workbook ? excelNs : excelNs.default || excelNs;
   if (!ExcelNS.Workbook) {

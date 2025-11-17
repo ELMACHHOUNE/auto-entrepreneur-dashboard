@@ -115,6 +115,27 @@ export default function Dashboard() {
     });
   }, [year, clientCounts.length, monthlyTotals, waitNextFrames]);
 
+  const onExportChartsExcel = useCallback(async () => {
+    const node = chartsRef.current;
+    if (!node) return;
+    // Ensure all charts are mounted even if not in view
+    chartForcersRef.current.forEach(f => f());
+    await waitNextFrames(2);
+    const mod = await import('@/lib/excelExport');
+    await mod.exportChartsExcelFromElement(node, {
+      title: `Dashboard charts (${year})`,
+      year,
+      chartTitles: [
+        `Quarter totals by month (${year})`,
+        `VAT totals by month (${year})`,
+        `Invoices per client (${year})`,
+        `Yearly totals (Price vs VAT)`,
+        `Composed chart (sample)`,
+      ],
+      fileName: `dashboard-charts-${year}.xlsx`,
+    });
+  }, [year, waitNextFrames]);
+
   const onExportTable = useCallback(async () => {
     const node = tableRef.current;
     if (!node) return;
@@ -154,6 +175,21 @@ export default function Dashboard() {
           }}
         >
           Export charts as PDF
+        </button>
+        <button
+          type="button"
+          onClick={onExportChartsExcel}
+          onMouseEnter={() => {
+            import('@/lib/excelExport').then(m => m.prefetchStyledExcelExport?.());
+          }}
+          className="ml-auto inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+          style={{
+            background: 'var(--card)',
+            color: 'var(--foreground)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          Export charts as Excel
         </button>
       </div>
       {/* Chart + Table layout scaffold */}
