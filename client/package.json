@@ -29,7 +29,6 @@
     "react-dropzone": "^14.3.8",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.4.1",
-    "xlsx": "^0.18.5",
     "exceljs": "^4.4.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17"

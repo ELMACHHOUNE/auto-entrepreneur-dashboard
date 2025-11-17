@@ -31,6 +31,6 @@ export default defineConfig({
       },
     },
     // Allow larger lazy chunks for pdfmake/vfs_fonts without warnings
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 950,
   },
 });

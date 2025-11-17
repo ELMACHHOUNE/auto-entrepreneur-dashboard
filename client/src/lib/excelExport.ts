@@ -1,9 +1,11 @@
-// Lightweight Excel export using SheetJS (xlsx). Loaded dynamically to keep bundle small.
-
-function downloadBlob(data: ArrayBuffer, fileName: string) {
-  const blob = new Blob([data], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
+// Download helper with configurable MIME type
+function downloadBlob(data: ArrayBuffer | string | Blob, fileName: string, type?: string) {
+  const blob =
+    data instanceof Blob
+      ? data
+      : new Blob([data], {
+          type: type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -75,182 +77,25 @@ export async function exportDataTableExcelFromElement(
     }
     if (vals.some(v => String(v).length)) data.push(vals);
   }
-
-  const XLSX = await import('xlsx');
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(data);
-
-  // Auto-filter for the header row
-  if (data.length) {
-    const ref = ws['!ref'] as string | undefined;
-    if (ref) {
-      const range = XLSX.utils.decode_range(ref);
-      (ws as Record<string, unknown>)['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
-    }
-  }
-  // Column widths based on max cell length (coarse)
-  if (data.length) {
-    const colCount = Math.max(...data.map(r => r.length));
-    const widths = new Array(colCount).fill(10).map((_, i) => {
-      const maxLen = Math.max(...data.map(r => (r[i] !== undefined ? String(r[i]).length : 0)));
-      // approx width: characters + some padding
-      return { wch: Math.min(Math.max(maxLen + 2, 8), 40) };
-    });
-    (ws as Record<string, unknown>)['!cols'] = widths as unknown;
-  }
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Data');
-  const fileName = opts?.fileName || 'dashboard-table.xlsx';
-  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-  downloadBlob(buf, fileName);
+  // Vulnerability mitigation: avoid xlsx library. Export as CSV (Excel-compatible).
+  // Build CSV with proper escaping and UTF-8 BOM for Excel compatibility.
+  const esc = (v: string | number) => {
+    const s = String(v ?? '');
+    const needsQuotes = /[",\n\r]/.test(s);
+    const escaped = s.replace(/"/g, '""');
+    return needsQuotes ? `"${escaped}"` : escaped;
+  };
+  const lines = data.map(row => row.map(esc).join(','));
+  const csv = '\uFEFF' + lines.join('\r\n');
+  const fileName = (opts?.fileName || 'dashboard-table') + '.csv';
+  downloadBlob(csv, fileName, 'text/csv;charset=utf-8');
 }
 
 // Fetch ALL invoices for the current user (optionally filtered by year) and build a styled workbook.
 // This bypasses table pagination and includes every matching record from the API.
 export async function exportAllInvoicesExcel(opts?: { fileName?: string; year?: number }) {
-  // Dynamic import; SheetJS sometimes exposes its namespace directly rather than under default
-  const [xlsxMod, axiosMod] = await Promise.all([import('xlsx'), import('@/api/axios')]);
-  // SheetJS CE exposes namespace either directly or under default; discriminate without using 'any'
-  // Minimal typings for the subset we use of SheetJS utils
-  interface Worksheet {
-    [key: string]: unknown;
-    '!ref'?: string;
-  }
-  interface Workbook {
-    Sheets: Record<string, Worksheet>;
-    SheetNames: string[];
-  }
-  interface XlsxUtils {
-    book_new: () => Workbook;
-    aoa_to_sheet: (data: (string | number)[][]) => Worksheet;
-    encode_cell: (addr: { r: number; c: number }) => string;
-    decode_range: (ref: string) => unknown;
-    encode_range: (r: unknown) => string;
-    book_append_sheet: (wb: Workbook, ws: Worksheet, name: string) => void;
-  }
-  type XlsxNamespace = {
-    utils?: XlsxUtils;
-    write?: (wb: Workbook, opts: { type: string; bookType: string }) => ArrayBuffer;
-  } & Record<string, unknown>;
-  const nsCandidate: XlsxNamespace = xlsxMod as XlsxNamespace;
-  const defaultCandidate: XlsxNamespace = (xlsxMod as Record<string, unknown>)
-    .default as XlsxNamespace;
-  const XLSX: XlsxNamespace =
-    defaultCandidate && defaultCandidate.utils ? defaultCandidate : nsCandidate;
-  if (!XLSX.utils) {
-    console.error('xlsx module did not expose utils as expected:', xlsxMod);
-    throw new Error('Failed to load xlsx utils');
-  }
-  interface ApiModule {
-    api: {
-      get: (
-        url: string,
-        cfg?: { params?: Record<string, string | number> }
-      ) => Promise<{ data: unknown }>;
-    };
-  }
-  const { api } = axiosMod as ApiModule;
-  const params: Record<string, string | number> = {};
-  if (opts?.year) params.year = opts.year;
-  const res = await api.get('/api/invoices', { params });
-  type RawInvoice = {
-    invoiceNumber: number;
-    year: number;
-    month: string;
-    quarter: string;
-    clientName: string;
-    amount: number;
-    tvaRate: number;
-    createdAt?: string;
-  };
-  const invoices: RawInvoice[] = Array.isArray((res.data as { invoices?: unknown })?.invoices)
-    ? ((res.data as { invoices?: unknown })?.invoices as RawInvoice[])
-    : [];
-  // Sort ascending by invoiceNumber for structured order
-  invoices.sort((a, b) => a.invoiceNumber - b.invoiceNumber);
-
-  // Prepare rows: header + data
-  // Header without Created At per new requirement
-  const header = [
-    'Invoice #',
-    'Year',
-    'Month',
-    'Quarter',
-    'Client',
-    'Amount (DH)',
-    'TVA Rate (%)',
-    'TVA (DH)',
-    'Net (DH)',
-  ];
-  const data: (string | number)[][] = [header];
-  for (const inv of invoices) {
-    const vat = (inv.amount * (inv.tvaRate || 0)) / 100;
-    const net = inv.amount - vat;
-    data.push([
-      inv.invoiceNumber,
-      inv.year,
-      inv.month,
-      inv.quarter,
-      inv.clientName,
-      inv.amount,
-      inv.tvaRate,
-      vat,
-      net,
-    ]);
-  }
-
-  const wb = XLSX.utils!.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(data);
-
-  // Header styling (bold, accent background, dark text)
-  for (let c = 0; c < header.length; c++) {
-    const cellAddr = XLSX.utils!.encode_cell({ r: 0, c });
-    const cell = ws[cellAddr] as Record<string, unknown> | undefined;
-    if (cell) {
-      (cell as Record<string, unknown>)['s'] = {
-        font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } },
-        fill: { patternType: 'solid', fgColor: { rgb: '519D09' } }, // green background
-        alignment: { horizontal: 'center', vertical: 'center' },
-        border: {
-          top: { style: 'thin', color: { rgb: '3F7A07' } },
-          bottom: { style: 'thin', color: { rgb: '3F7A07' } },
-        },
-      } as unknown as { [k: string]: unknown }; // styled header
-    }
-  }
-
-  // Number formatting for amount/vat/net columns
-  for (let r = 1; r < data.length; r++) {
-    const amtCell = ws[XLSX.utils!.encode_cell({ r, c: 5 })];
-    const rateCell = ws[XLSX.utils!.encode_cell({ r, c: 6 })];
-    const vatCell = ws[XLSX.utils!.encode_cell({ r, c: 7 })];
-    const netCell = ws[XLSX.utils!.encode_cell({ r, c: 8 })];
-    if (amtCell) (amtCell as Record<string, unknown>)['z'] = '#,##0.00';
-    if (rateCell) (rateCell as Record<string, unknown>)['z'] = '0.00';
-    if (vatCell) (vatCell as Record<string, unknown>)['z'] = '#,##0.00';
-    if (netCell) (netCell as Record<string, unknown>)['z'] = '#,##0.00';
-  }
-
-  // Freeze header row & add autofilter
-  const ref = ws['!ref'] as string | undefined;
-  if (ref) {
-    const range = XLSX.utils!.decode_range(ref);
-    (ws as Record<string, unknown>)['!autofilter'] = { ref: XLSX.utils!.encode_range(range) };
-    (ws as Record<string, unknown>)['!freeze'] = { ySplit: 1 };
-  }
-
-  // Column widths based on longest cell content
-  const colCount = header.length;
-  const widths = new Array(colCount).fill(10).map((_, i) => {
-    const maxLen = Math.max(...data.map(r => (r[i] !== undefined ? String(r[i]).length : 0)));
-    return { wch: Math.min(Math.max(maxLen + 2, 10), 42) };
-  });
-  (ws as Record<string, unknown>)['!cols'] = widths as unknown;
-
-  XLSX.utils!.book_append_sheet(wb, ws, 'Invoices');
-  const fileName = opts?.fileName || `invoices-all${opts?.year ? '-' + opts.year : ''}.xlsx`;
-  const buf = XLSX.write!(wb, { type: 'array', bookType: 'xlsx' });
-  downloadBlob(buf, fileName);
+  // Delegate to styled export (ExcelJS) to avoid vulnerable xlsx dependency.
+  return exportAllInvoicesExcelStyled(opts);
 }
 
 // Styled export using ExcelJS (supports reliable cell styling in community edition)
