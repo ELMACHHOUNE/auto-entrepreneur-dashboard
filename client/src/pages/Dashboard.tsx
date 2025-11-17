@@ -122,6 +122,19 @@ export default function Dashboard() {
     await exportDataTablePdfFromElement(node, { title: `Invoices table (${year})` });
   }, [year]);
 
+  const onExportTableExcel = useCallback(async () => {
+    const mod = await import('@/lib/excelExport');
+    if (mod.exportAllInvoicesExcelStyled) {
+      try {
+        await mod.exportAllInvoicesExcelStyled({ fileName: `invoices-all-${year}.xlsx`, year });
+        return;
+      } catch (e) {
+        console.warn('Styled Excel export failed, falling back:', e);
+      }
+    }
+    await mod.exportAllInvoicesExcel({ fileName: `invoices-all-${year}.xlsx`, year });
+  }, [year]);
+
   return (
     <DashboardLayout
       rightSidebar={rightSidebar}
@@ -260,7 +273,7 @@ export default function Dashboard() {
           <Table size={18} />
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
-        <div className="mb-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={onExportTable}
@@ -272,6 +285,18 @@ export default function Dashboard() {
             }}
           >
             Export table PDF
+          </button>
+          <button
+            type="button"
+            onClick={onExportTableExcel}
+            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+            style={{
+              background: 'var(--card)',
+              color: 'var(--foreground)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            Export table Excel (all)
           </button>
         </div>
         <div ref={tableRef}>

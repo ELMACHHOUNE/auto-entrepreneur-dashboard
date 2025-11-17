@@ -26,6 +26,7 @@ export default defineConfig({
           if (id.includes('/pdfmake/')) return 'pdfmake';
           if (id.includes('vfs_fonts')) return 'vfs-fonts';
           if (id.includes('/canvg/')) return 'canvg';
+          if (id.includes('/exceljs/')) return 'exceljs';
         },
       },
     },
