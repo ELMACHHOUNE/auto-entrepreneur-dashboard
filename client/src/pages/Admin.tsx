@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
+import { FileText } from 'lucide-react';
 import RequireRole from '@/components/RequireRole';
 import StatsCard from '@/components/admin/StatsCard';
 import AnimatedNumber from '@/components/ui/AnimatedNumber';
@@ -54,7 +55,8 @@ export default function Admin() {
               borderColor: 'var(--accent)',
             }}
           >
-            Export PDF
+            <FileText size={16} />
+            <span>Export PDF</span>
           </button>
         </div>
 
