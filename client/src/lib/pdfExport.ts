@@ -736,6 +736,36 @@ export async function exportDataTablePdfFromElement(
     }
     if (vals.some(v => v.length)) bodyRows.push(vals);
   }
+  // Sort by Invoice No./Number (ascending) if such a column exists
+  const findInvoiceNoIndex = (): number => {
+    // Find the absolute column index in all headers
+    const targetAbs = rawHeaders.findIndex(h => {
+      const t = (h || '').trim().toLowerCase();
+      return (
+        t === 'invoice no.' ||
+        t === 'invoice no' ||
+        t === 'invoice #' ||
+        t === 'invoice number' ||
+        t === 'no.' ||
+        t === 'no' ||
+        /invoice\s*no/.test(t) ||
+        /invoice\s*#/.test(t)
+      );
+    });
+    if (targetAbs < 0) return -1;
+    // Map to includedIndices position
+    return includedIndices.indexOf(targetAbs);
+  };
+  const invCol = findInvoiceNoIndex();
+  if (invCol >= 0) {
+    bodyRows.sort((a, b) => {
+      const parseNo = (s: string) => {
+        const n = parseInt(s.replace(/[^0-9-]/g, ''), 10);
+        return isNaN(n) ? Number.POSITIVE_INFINITY : n;
+      };
+      return parseNo(a[invCol] || '') - parseNo(b[invCol] || '');
+    });
+  }
   const tableBody: Array<Array<string | { text: string; bold?: boolean }>> = [];
   if (headers.length) tableBody.push(headers.map(h => ({ text: h, bold: true })));
   for (const r of bodyRows) tableBody.push(r);
@@ -769,4 +799,93 @@ export async function exportDataTablePdfFromElement(
     }),
   };
   pdfMake.createPdf(doc).download('dashboard-table.pdf');
+}
+
+// Export ALL invoices directly from the API (bypasses on-screen pagination/filters)
+export async function exportAllInvoicesPdf(opts?: {
+  title?: string;
+  year?: number;
+  fileName?: string;
+}) {
+  const pdfMake = await ensurePdfMake();
+  const [{ api }] = await Promise.all([import('@/api/axios')]);
+  const params: Record<string, string | number> = {};
+  if (opts?.year) params.year = opts.year;
+  const res = await api.get('/api/invoices', { params });
+  type RawInvoice = {
+    invoiceNumber: number;
+    year: number;
+    month: string;
+    quarter?: string;
+    clientName: string;
+    amount: number;
+    tvaRate: number;
+  };
+  const raw = (res.data?.invoices as RawInvoice[]) || [];
+  const rows = [...raw].sort((a, b) => a.invoiceNumber - b.invoiceNumber);
+
+  const headers = [
+    'Invoice #',
+    'Year',
+    'Month',
+    'Quarter',
+    'Client',
+    'Amount (DH)',
+    'TVA Rate (%)',
+    'TVA (DH)',
+    'Net (DH)',
+  ];
+  const body: Array<Array<string | { text: string; bold?: boolean }>> = [];
+  body.push(headers.map(h => ({ text: h, bold: true })));
+  for (const inv of rows) {
+    const vat = (inv.amount * (inv.tvaRate || 0)) / 100;
+    const net = inv.amount - vat;
+    body.push([
+      String(inv.invoiceNumber),
+      String(inv.year),
+      inv.month || '',
+      inv.quarter || '',
+      normalizePdfSpaces(inv.clientName || ''),
+      `${inv.amount.toLocaleString('en-US')}`,
+      `${(inv.tvaRate || 0).toLocaleString('en-US')}`,
+      `${vat.toLocaleString('en-US')}`,
+      `${net.toLocaleString('en-US')}`,
+    ]);
+  }
+
+  const orientation: 'portrait' | 'landscape' = 'landscape';
+  const content: import('pdfmake/interfaces').Content[] = [];
+  const title = opts?.title || `Invoices table${opts?.year ? ' (' + opts.year + ')' : ''}`;
+  content.push({
+    text: title,
+    style: 'title',
+    margin: [0, 0, 0, 8],
+  } as unknown as import('pdfmake/interfaces').Content);
+  content.push({
+    table: {
+      headerRows: 1,
+      widths: headers.map(() => '*'),
+      body,
+    },
+    layout: 'lightHorizontalLines',
+    fontSize: 9,
+  } as unknown as import('pdfmake/interfaces').Content);
+
+  const doc: import('pdfmake/interfaces').TDocumentDefinitions = {
+    pageSize: 'A4',
+    pageOrientation: orientation,
+    pageMargins: [18, 24, 18, 28],
+    styles: { title: { fontSize: 14, bold: true } },
+    defaultStyle: { fontSize: 9 },
+    content,
+    footer: () => ({
+      text: 'by GoToDev',
+      alignment: 'center',
+      fontSize: 9,
+      color: '#777',
+      margin: [0, 6, 0, 6],
+    }),
+  };
+  const fileName = opts?.fileName || `invoices-all${opts?.year ? '-' + opts.year : ''}.pdf`;
+  pdfMake.createPdf(doc).download(fileName);
 }

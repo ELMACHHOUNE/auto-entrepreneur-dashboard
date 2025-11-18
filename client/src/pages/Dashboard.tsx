@@ -1,4 +1,4 @@
-import { Table } from 'lucide-react';
+import { Table, FileText, FileSpreadsheet } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Suspense, lazy, useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import LazyVisible from '@/components/ui/LazyVisible';
@@ -137,10 +137,12 @@ export default function Dashboard() {
   }, [year, waitNextFrames]);
 
   const onExportTable = useCallback(async () => {
-    const node = tableRef.current;
-    if (!node) return;
-    const { exportDataTablePdfFromElement } = await import('@/lib/pdfExport');
-    await exportDataTablePdfFromElement(node, { title: `Invoices table (${year})` });
+    const { exportAllInvoicesPdf } = await import('@/lib/pdfExport');
+    await exportAllInvoicesPdf({
+      title: `Invoices table (${year})`,
+      year,
+      fileName: `invoices-all-${year}.pdf`,
+    });
   }, [year]);
 
   const onExportTableExcel = useCallback(async () => {
@@ -162,19 +164,20 @@ export default function Dashboard() {
       rightSidebarCollapsed={rightSidebarCollapsed}
       rightCollapsible
     >
-      {/* Actions for charts (left-aligned) */}
-      <div className="mb-3 flex items-center gap-2">
+      {/* Actions for charts */}
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={onExportCharts}
-          className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+          className="inline-flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium sm:w-auto"
           style={{
             background: 'var(--accent)',
             color: 'var(--accent-foreground)',
             borderColor: 'var(--accent)',
           }}
         >
-          Export charts as PDF
+          <FileText size={16} />
+          <span>Export charts as PDF</span>
         </button>
         <button
           type="button"
@@ -182,14 +185,15 @@ export default function Dashboard() {
           onMouseEnter={() => {
             import('@/lib/excelExport').then(m => m.prefetchStyledExcelExport?.());
           }}
-          className="ml-auto inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+          className="inline-flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium sm:ml-auto sm:w-auto"
           style={{
             background: 'var(--card)',
             color: 'var(--foreground)',
             borderColor: 'var(--border)',
           }}
         >
-          Export charts as Excel
+          <FileSpreadsheet size={16} />
+          <span>Export charts as Excel</span>
         </button>
       </div>
       {/* Chart + Table layout scaffold */}
@@ -309,30 +313,32 @@ export default function Dashboard() {
           <Table size={18} />
           <h3 className="text-lg font-medium">Data table</h3>
         </div>
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={onExportTable}
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+            className="inline-flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium sm:w-auto"
             style={{
               background: 'var(--accent)',
               color: 'var(--accent-foreground)',
               borderColor: 'var(--accent)',
             }}
           >
-            Export table PDF
+            <FileText size={16} />
+            <span>Export table PDF</span>
           </button>
           <button
             type="button"
             onClick={onExportTableExcel}
-            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium"
+            className="inline-flex w-full items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium sm:w-auto"
             style={{
               background: 'var(--card)',
               color: 'var(--foreground)',
               borderColor: 'var(--border)',
             }}
           >
-            Export table Excel (all)
+            <FileSpreadsheet size={16} />
+            <span>Export table Excel (all)</span>
           </button>
         </div>
         <div ref={tableRef}>
