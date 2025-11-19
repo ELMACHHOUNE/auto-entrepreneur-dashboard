@@ -1,4 +1,4 @@
-import { LayoutDashboard, User as UserIcon, LogOut } from 'lucide-react';
+import { LayoutDashboard, User as UserIcon, LogOut, Files as FilesIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Sidebar from '@/components/ui/sidebar';
 import type { SidebarLink } from '@/components/ui/sidebar';
@@ -14,6 +14,7 @@ export default function AppSidebar({
 
   const links: SidebarLink[] = [
     { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { to: '/invoices', label: 'Invoices Files', icon: <FilesIcon size={18} /> },
     { to: '/profile', label: 'Profile', icon: <UserIcon size={18} /> },
     {
       to: '/login',

@@ -7,6 +7,7 @@ const Register = lazy(() => import('@/pages/Register'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Admin = lazy(() => import('@/pages/Admin'));
+const Invoices = lazy(() => import('@/pages/Invoices'));
 const AdminUsers = lazy(() => import('@/pages/admin/Users.tsx'));
 const AdminServices = lazy(() => import('@/pages/admin/Services.tsx'));
 import RequireAuth from '@/components/RequireAuth';
@@ -38,6 +39,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <Dashboard />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                <RequireAuth>
+                  <Invoices />
                 </RequireAuth>
               }
             />
