@@ -80,7 +80,8 @@ function SidebarComponent({
                 collapsed
                   ? 'flex items-center justify-center rounded p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground'
                   : 'flex items-center gap-2 rounded px-3 py-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground',
-                isActive && 'bg-accent font-medium'
+                isActive &&
+                  'bg-accent font-medium text-accent-foreground dark:text-accent-foreground'
               )
             }
             aria-label={link.label}
