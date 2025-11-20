@@ -81,6 +81,7 @@ export default function Invoices() {
   const [storedFiles, setStoredFiles] = useState<StoredFileMeta[]>(() => loadStored());
   const [importing, setImporting] = useState(false);
   const [activeFile, setActiveFile] = useState<StoredFileMeta | null>(null);
+  const [showFull, setShowFull] = useState(false); // toggle full-height view for active file
   const { user } = useAuth();
   const plan: 'freemium' | 'premium' = user?.plan === 'premium' ? 'premium' : 'freemium';
   const PLAN_LIMIT_BYTES = plan === 'premium' ? 500 * 1024 * 1024 : 50 * 1024 * 1024;
@@ -159,6 +160,11 @@ export default function Invoices() {
   useEffect(() => {
     // TODO: fetch remote file list when backend is ready
   }, []);
+
+  // Reset full view toggle when changing or closing file
+  useEffect(() => {
+    setShowFull(false);
+  }, [activeFile]);
 
   return (
     <RequireAuth>
@@ -338,7 +344,8 @@ export default function Invoices() {
           {/* Active file inline viewer */}
           {activeFile && (
             <div className="mb-6 rounded-lg border bg-card p-4 shadow-sm lg:col-span-3">
-              <div className="mb-3 flex items-center justify-between">
+              {/* Viewer header: title + actions; responsive stacking on mobile */}
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="text-base font-semibold">Viewing: {activeFile.name}</h3>
                   <p className="text-xs text-muted-foreground">
@@ -346,14 +353,31 @@ export default function Invoices() {
                     {(activeFile.size / 1024).toFixed(1)} KB
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFile(null)}
-                    className="rounded-md border px-3 py-1 text-xs font-medium"
-                  >
-                    Close
-                  </button>
+                <div
+                  className="flex w-full sm:w-auto flex-wrap sm:flex-nowrap gap-2 justify-end sm:justify-end"
+                  role="group"
+                  aria-label="File actions"
+                >
+                  {activeFile.type === 'application/pdf' && sanitizeDataUrl(activeFile.dataUrl) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowFull(v => !v)}
+                      className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                      aria-label={showFull ? 'Collapse full file view' : 'Expand to full file view'}
+                    >
+                      {showFull ? 'Collapse view' : 'Show full file'}
+                    </button>
+                  )}
+                  {activeFile.textContent && (
+                    <button
+                      type="button"
+                      onClick={() => setShowFull(v => !v)}
+                      className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                      aria-label={showFull ? 'Collapse full text view' : 'Expand to full text view'}
+                    >
+                      {showFull ? 'Collapse view' : 'Show full file'}
+                    </button>
+                  )}
                   {activeFile.dataUrl &&
                     (() => {
                       const safeUrl = sanitizeDataUrl(activeFile.dataUrl);
@@ -362,12 +386,19 @@ export default function Invoices() {
                         <a
                           href={safeUrl}
                           download={activeFile.name}
-                          className="rounded-md border px-3 py-1 text-xs font-medium"
+                          className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
                         >
                           Download
                         </a>
                       );
                     })()}
+                  <button
+                    type="button"
+                    onClick={() => setActiveFile(null)}
+                    className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
               <div className="rounded-md border bg-card/50 p-3">
@@ -375,10 +406,18 @@ export default function Invoices() {
                   <iframe
                     src={sanitizeDataUrl(activeFile.dataUrl)!}
                     title={activeFile.name}
-                    className="h-[480px] w-full rounded-md"
+                    className={
+                      (showFull ? 'h-[80vh]' : 'h-[480px]') +
+                      ' w-full rounded-md transition-height duration-300'
+                    }
                   />
                 ) : activeFile.textContent ? (
-                  <pre className="max-h-[480px] overflow-auto text-xs leading-relaxed whitespace-pre-wrap">
+                  <pre
+                    className={
+                      (showFull ? 'max-h-[80vh]' : 'max-h-[480px]') +
+                      ' overflow-auto text-xs leading-relaxed whitespace-pre-wrap transition-all'
+                    }
+                  >
                     {activeFile.textContent}
                   </pre>
                 ) : (
