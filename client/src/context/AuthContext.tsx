@@ -7,6 +7,7 @@ export interface User {
   _id: string;
   email: string;
   role: UserRole;
+  plan?: 'freemium' | 'premium';
   fullName?: string;
   phone?: string;
   ICE?: string;
@@ -52,6 +53,7 @@ interface AuthContextType {
     serviceType?: string;
     serviceActivity?: string;
     companyTypeCode?: string;
+    // plan intentionally excluded: only admin can change
   }) => Promise<void>;
   changePassword: (data: { currentPassword?: string; newPassword: string }) => Promise<void>;
   updateAvatar: (file: File) => Promise<void>;

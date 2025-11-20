@@ -25,6 +25,7 @@ export async function register(req: Request, res: Response) {
       serviceType,
       serviceActivity,
       companyTypeCode,
+      plan,
     } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -36,6 +37,7 @@ export async function register(req: Request, res: Response) {
       email,
       password: hash,
       role: 'user',
+      plan: plan === 'premium' ? 'premium' : 'freemium',
       fullName,
       phone,
       ICE,

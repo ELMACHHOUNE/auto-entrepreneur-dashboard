@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 import { Button, Group, Modal, Select, Stack, TextInput, ActionIcon, Tooltip } from '@mantine/core';
@@ -19,6 +20,7 @@ type IUser = {
   _id: string;
   email: string;
   role: UserRole;
+  plan?: 'freemium' | 'premium';
   fullName?: string;
   phone?: string;
   ICE?: string;
@@ -42,6 +44,7 @@ type UsersResponse = {
 
 export default function Users() {
   const qc = useQueryClient();
+  const { user: authUser, refresh: refreshAuth } = useAuth();
   // Table state
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [globalFilter, setGlobalFilter] = useState('');
@@ -102,6 +105,15 @@ export default function Users() {
     () => [
       { accessorKey: 'email', header: 'Email' },
       { accessorKey: 'role', header: 'Role' },
+      {
+        accessorKey: 'plan',
+        header: 'Plan',
+        Cell: ({ cell }) => (
+          <span className="tabular-nums font-medium">
+            {cell.getValue<string>() === 'premium' ? 'Premium' : 'Freemium'}
+          </span>
+        ),
+      },
       { accessorKey: 'fullName', header: 'Full name' },
       { accessorKey: 'phone', header: 'Phone' },
       { accessorKey: 'ICE', header: 'ICE' },
@@ -131,6 +143,7 @@ export default function Users() {
   const [form, setForm] = useState<{
     email: string;
     role: UserRole;
+    plan: 'freemium' | 'premium';
     fullName?: string;
     phone?: string;
     ICE?: string;
@@ -142,13 +155,14 @@ export default function Users() {
     serviceType?: string;
     serviceActivity?: string;
     companyTypeCode?: string;
-  }>({ email: '', role: 'user', profileKind: '' });
+  }>({ email: '', role: 'user', plan: 'freemium', profileKind: '' });
 
   const openCreate = () => {
     setEditing(null);
     setForm({
       email: '',
       role: 'user',
+      plan: 'freemium',
       password: '',
       profileKind: '',
       serviceCategory: '',
@@ -163,6 +177,7 @@ export default function Users() {
     setForm({
       email: u.email,
       role: u.role,
+      plan: u.plan === 'premium' ? 'premium' : 'freemium',
       fullName: u.fullName || '',
       phone: u.phone || '',
       ICE: u.ICE || '',
@@ -194,7 +209,16 @@ export default function Users() {
         | undefined,
     } as Partial<IUser> & { password?: string };
     if (editing) {
+      const prevPlan = editing.plan;
       await updateMutation.mutateAsync({ id: editing._id, payload });
+      // If editing current logged-in user and plan changed, refresh auth context
+      if (
+        editing._id === authUser?._id &&
+        typeof form.plan !== 'undefined' &&
+        prevPlan !== form.plan
+      ) {
+        await refreshAuth();
+      }
     } else {
       if (!form.password || form.password.length < 6) return; // basic client check
       await createMutation.mutateAsync(payload as Partial<IUser> & { password: string });
@@ -304,6 +328,19 @@ export default function Users() {
             data={[
               { label: 'User', value: 'user' },
               { label: 'Admin', value: 'admin' },
+            ]}
+            variant="filled"
+            styles={selectFilledStyles}
+          />
+          <Select
+            label="Plan"
+            value={form.plan}
+            onChange={(v: string | null) =>
+              setForm(f => ({ ...f, plan: v === 'premium' ? 'premium' : 'freemium' }))
+            }
+            data={[
+              { label: 'Freemium (50MB)', value: 'freemium' },
+              { label: 'Premium (500MB)', value: 'premium' },
             ]}
             variant="filled"
             styles={selectFilledStyles}

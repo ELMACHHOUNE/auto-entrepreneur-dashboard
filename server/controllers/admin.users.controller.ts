@@ -60,6 +60,7 @@ export async function createUser(req: Request, res: Response) {
       email,
       password,
       role,
+      plan,
       fullName,
       phone,
       ICE,
@@ -80,6 +81,7 @@ export async function createUser(req: Request, res: Response) {
       email,
       password: hash,
       role: role || 'user',
+      plan: plan === 'premium' ? 'premium' : 'freemium',
       fullName,
       phone,
       ICE,
@@ -103,6 +105,7 @@ export async function updateUser(req: Request, res: Response) {
     const {
       email,
       role,
+      plan,
       fullName,
       phone,
       ICE,
@@ -123,6 +126,9 @@ export async function updateUser(req: Request, res: Response) {
       update.email = nextEmail;
     }
     if (typeof role !== 'undefined') update.role = role;
+    if (typeof plan !== 'undefined') {
+      update.plan = plan === 'premium' ? 'premium' : 'freemium';
+    }
     if (typeof fullName !== 'undefined') update.fullName = fullName;
     if (typeof phone !== 'undefined') update.phone = phone;
     if (typeof ICE !== 'undefined') update.ICE = ICE;

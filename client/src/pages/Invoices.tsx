@@ -7,6 +7,7 @@ import {
   FileUploaderItem,
 } from '@/components/ui/file-upload';
 import RequireAuth from '@/components/RequireAuth';
+import { useAuth } from '@/context/AuthContext';
 
 interface StoredFileMeta {
   id: string;
@@ -14,9 +15,9 @@ interface StoredFileMeta {
   size: number;
   type: string;
   lastModified: number;
-  previewDataUrl?: string; // reserved (not used now, only pdf/word allowed)
-  dataUrl?: string; // full data URL for download / inline view
-  textContent?: string; // optional textual content for plain text / csv / json
+  previewDataUrl?: string; // kept for potential future use
+  dataUrl?: string;
+  textContent?: string;
 }
 
 // Local storage key for persistence (client-side only for now)
@@ -46,9 +47,18 @@ export default function Invoices() {
   const [storedFiles, setStoredFiles] = useState<StoredFileMeta[]>(() => loadStored());
   const [importing, setImporting] = useState(false);
   const [activeFile, setActiveFile] = useState<StoredFileMeta | null>(null);
-
-  // Derived total size
-  const totalSize = useMemo(() => storedFiles.reduce((s, f) => s + f.size, 0), [storedFiles]);
+  const { user } = useAuth();
+  const plan: 'freemium' | 'premium' = user?.plan === 'premium' ? 'premium' : 'freemium';
+  const PLAN_LIMIT_BYTES = plan === 'premium' ? 500 * 1024 * 1024 : 50 * 1024 * 1024;
+  const usageBytes = useMemo(() => storedFiles.reduce((sum, f) => sum + f.size, 0), [storedFiles]);
+  const usagePercent = Math.min(100, (usageBytes / PLAN_LIMIT_BYTES) * 100);
+  const remainingBytes = PLAN_LIMIT_BYTES - usageBytes;
+  const formatBytes = (bytes: number) => {
+    if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return bytes + ' B';
+  };
 
   const removeStored = useCallback((id: string) => {
     setStoredFiles(prev => {
@@ -60,25 +70,27 @@ export default function Invoices() {
 
   const onImport = useCallback(async () => {
     if (!selectedFiles?.length) return;
+    const incomingBytes = selectedFiles.reduce((s, f) => s + f.size, 0);
+    if (usageBytes + incomingBytes > PLAN_LIMIT_BYTES) {
+      alert(
+        `Storage limit exceeded. Attempting ${formatBytes(
+          usageBytes + incomingBytes
+        )} of ${formatBytes(PLAN_LIMIT_BYTES)}. Remove files or upgrade your plan.`
+      );
+      return;
+    }
     setImporting(true);
     try {
       const metas: StoredFileMeta[] = [];
       for (const f of selectedFiles) {
-        // Always read data URL for download
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = () => reject(reader.error);
           reader.readAsDataURL(f);
         });
-        const previewDataUrl: string | undefined = f.type.startsWith('image/')
-          ? dataUrl
-          : undefined;
         let textContent: string | undefined;
-        if (
-          /^(text\/|application\/json|application\/csv)/.test(f.type) ||
-          /\.(csv|txt|json)$/i.test(f.name)
-        ) {
+        if (/\.(csv|txt|json)$/i.test(f.name)) {
           textContent = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
@@ -92,7 +104,6 @@ export default function Invoices() {
           size: f.size,
           type: f.type || 'application/octet-stream',
           lastModified: f.lastModified,
-          previewDataUrl,
           dataUrl,
           textContent,
         });
@@ -108,7 +119,7 @@ export default function Invoices() {
     } finally {
       setImporting(false);
     }
-  }, [selectedFiles]);
+  }, [selectedFiles, PLAN_LIMIT_BYTES, usageBytes]);
 
   // Placeholder for future server sync (e.g., Neon). Runs once.
   useEffect(() => {
@@ -118,21 +129,46 @@ export default function Invoices() {
   return (
     <RequireAuth>
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl font-semibold">Invoices Files</h2>
             <p className="text-sm text-muted-foreground">
               Upload and manage raw invoice/import files.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+          <div className="flex w-full max-w-sm flex-col gap-2 text-xs sm:text-sm">
             <div className="rounded-md border px-3 py-2">
-              <div className="text-muted-foreground">Stored files</div>
-              <div className="tabular-nums font-semibold">{storedFiles.length}</div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Plan</span>
+                <span className="font-semibold">
+                  {plan === 'premium' ? 'Premium (500MB)' : 'Freemium (50MB)'}
+                </span>
+              </div>
             </div>
             <div className="rounded-md border px-3 py-2">
-              <div className="text-muted-foreground">Total size</div>
-              <div className="tabular-nums font-semibold">{(totalSize / 1024).toFixed(1)} KB</div>
+              <div className="mb-1 flex justify-between">
+                <span className="text-muted-foreground">Storage used</span>
+                <span className="tabular-nums font-semibold">
+                  {formatBytes(usageBytes)} / {formatBytes(PLAN_LIMIT_BYTES)}
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded bg-muted">
+                <div
+                  className="h-full bg-accent transition-all"
+                  style={{ width: usagePercent + '%' }}
+                />
+              </div>
+              {remainingBytes < PLAN_LIMIT_BYTES * 0.1 && (
+                <div className="mt-1 text-[11px] text-warning">
+                  Only {formatBytes(remainingBytes)} remaining. Consider upgrading.
+                </div>
+              )}
+            </div>
+            <div className="rounded-md border px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Files stored</span>
+                <span className="tabular-nums font-semibold">{storedFiles.length}</span>
+              </div>
             </div>
           </div>
         </div>
