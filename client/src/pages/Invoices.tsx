@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FileText, UploadCloud, Trash2 } from 'lucide-react';
+import { FileText, UploadCloud, Trash2, Crown, HardDrive, Gauge } from 'lucide-react';
 import {
   FileUploader,
   FileInput,
@@ -129,45 +129,92 @@ export default function Invoices() {
   return (
     <RequireAuth>
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold">Invoices Files</h2>
-            <p className="text-sm text-muted-foreground">
-              Upload and manage raw invoice/import files.
-            </p>
+        <div className="mb-6 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">Invoices Files</h2>
+              <p className="text-sm text-muted-foreground">
+                Upload and manage your invoice documents (PDF / Word). Storage limited by
+                subscription plan.
+              </p>
+            </div>
+            {plan === 'freemium' && (
+              <div className="flex items-center gap-2 rounded-md border px-3 py-2 bg-linear-to-r from-accent/10 to-transparent">
+                <Crown size={16} className="text-accent" />
+                <p className="text-xs leading-tight">
+                  Upgrade to <span className="font-semibold">Premium</span> for 10× more storage.
+                </p>
+              </div>
+            )}
           </div>
-          <div className="flex w-full max-w-sm flex-col gap-2 text-xs sm:text-sm">
-            <div className="rounded-md border px-3 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Plan</span>
-                <span className="font-semibold">
-                  {plan === 'premium' ? 'Premium (500MB)' : 'Freemium (50MB)'}
-                </span>
-              </div>
-            </div>
-            <div className="rounded-md border px-3 py-2">
-              <div className="mb-1 flex justify-between">
-                <span className="text-muted-foreground">Storage used</span>
-                <span className="tabular-nums font-semibold">
-                  {formatBytes(usageBytes)} / {formatBytes(PLAN_LIMIT_BYTES)}
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded bg-muted">
-                <div
-                  className="h-full bg-accent transition-all"
-                  style={{ width: usagePercent + '%' }}
-                />
-              </div>
-              {remainingBytes < PLAN_LIMIT_BYTES * 0.1 && (
-                <div className="mt-1 text-[11px] text-warning">
-                  Only {formatBytes(remainingBytes)} remaining. Consider upgrading.
+          <div className="rounded-lg border bg-card/50 backdrop-blur-sm p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Crown
+                    size={18}
+                    className={plan === 'premium' ? 'text-yellow-500' : 'text-muted-foreground'}
+                  />
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Plan
+                  </span>
                 </div>
-              )}
-            </div>
-            <div className="rounded-md border px-3 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Files stored</span>
-                <span className="tabular-nums font-semibold">{storedFiles.length}</span>
+                <div className="text-sm font-semibold">
+                  {plan === 'premium' ? 'Premium' : 'Freemium'}
+                  <span className="ml-1 text-xs font-normal text-muted-foreground">
+                    ({formatBytes(PLAN_LIMIT_BYTES)})
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <HardDrive size={18} className="text-muted-foreground" />
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Storage used
+                  </span>
+                </div>
+                <div className="text-sm font-semibold tabular-nums flex items-center gap-2">
+                  {formatBytes(usageBytes)}
+                  <span className="text-muted-foreground font-normal">
+                    / {formatBytes(PLAN_LIMIT_BYTES)}
+                  </span>
+                </div>
+                <div
+                  className="relative mt-1 h-2 w-full overflow-hidden rounded bg-muted"
+                  role="progressbar"
+                  aria-valuenow={Math.round(usagePercent)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Storage usage"
+                >
+                  <div
+                    className={`h-full transition-all ${
+                      usagePercent > 85
+                        ? 'bg-red-500'
+                        : usagePercent > 60
+                        ? 'bg-yellow-500'
+                        : 'bg-accent'
+                    }`}
+                    style={{ width: usagePercent + '%' }}
+                  />
+                </div>
+                {remainingBytes < PLAN_LIMIT_BYTES * 0.1 && (
+                  <div className="text-[11px] text-warning">
+                    Only {formatBytes(remainingBytes)} remaining.
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Gauge size={18} className="text-muted-foreground" />
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Files stored
+                  </span>
+                </div>
+                <div className="text-sm font-semibold tabular-nums">{storedFiles.length}</div>
+                <p className="text-[11px] text-muted-foreground">
+                  {usagePercent.toFixed(1)}% of capacity used.
+                </p>
               </div>
             </div>
           </div>
