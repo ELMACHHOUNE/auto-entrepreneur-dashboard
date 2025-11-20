@@ -14,7 +14,9 @@ interface StoredFileMeta {
   size: number;
   type: string;
   lastModified: number;
-  previewDataUrl?: string; // optional for images
+  previewDataUrl?: string; // thumbnail/preview (images only currently)
+  dataUrl?: string; // full data URL for download / inline view
+  textContent?: string; // optional textual content for plain text / csv / json
 }
 
 // Local storage key for persistence (client-side only for now)
@@ -43,6 +45,7 @@ export default function Invoices() {
   const [selectedFiles, setSelectedFiles] = useState<File[] | null>(null);
   const [storedFiles, setStoredFiles] = useState<StoredFileMeta[]>(() => loadStored());
   const [importing, setImporting] = useState(false);
+  const [activeFile, setActiveFile] = useState<StoredFileMeta | null>(null);
 
   // Derived total size
   const totalSize = useMemo(() => storedFiles.reduce((s, f) => s + f.size, 0), [storedFiles]);
@@ -59,16 +62,28 @@ export default function Invoices() {
     if (!selectedFiles?.length) return;
     setImporting(true);
     try {
-      // For now: simulate upload & persistence (future: POST to Neon-backed API)
       const metas: StoredFileMeta[] = [];
       for (const f of selectedFiles) {
-        let previewDataUrl: string | undefined;
-        if (f.type.startsWith('image/')) {
-          previewDataUrl = await new Promise<string>((resolve, reject) => {
+        // Always read data URL for download
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(f);
+        });
+        const previewDataUrl: string | undefined = f.type.startsWith('image/')
+          ? dataUrl
+          : undefined;
+        let textContent: string | undefined;
+        if (
+          /^(text\/|application\/json|application\/csv)/.test(f.type) ||
+          /\.(csv|txt|json)$/i.test(f.name)
+        ) {
+          textContent = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result as string);
             reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(f);
+            reader.readAsText(f);
           });
         }
         metas.push({
@@ -78,6 +93,8 @@ export default function Invoices() {
           type: f.type || 'application/octet-stream',
           lastModified: f.lastModified,
           previewDataUrl,
+          dataUrl,
+          textContent,
         });
       }
       setStoredFiles(prev => {
@@ -87,7 +104,6 @@ export default function Invoices() {
       });
       setSelectedFiles(null);
     } catch (e) {
-      // Optionally surface toast; silent for now
       console.warn('Failed to import files', e);
     } finally {
       setImporting(false);
@@ -197,6 +213,62 @@ export default function Invoices() {
             </p>
           </div>
 
+          {/* Active file inline viewer */}
+          {activeFile && (
+            <div className="mb-6 rounded-lg border bg-card p-4 shadow-sm lg:col-span-3">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-semibold">Viewing: {activeFile.name}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Type: {activeFile.type || 'unknown'} · Size:{' '}
+                    {(activeFile.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFile(null)}
+                    className="rounded-md border px-3 py-1 text-xs font-medium"
+                  >
+                    Close
+                  </button>
+                  {activeFile.dataUrl && (
+                    <a
+                      href={activeFile.dataUrl}
+                      download={activeFile.name}
+                      className="rounded-md border px-3 py-1 text-xs font-medium"
+                    >
+                      Download
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-md border bg-card/50 p-3">
+                {activeFile.type.startsWith('image/') && activeFile.dataUrl ? (
+                  <img
+                    src={activeFile.dataUrl}
+                    alt={activeFile.name}
+                    className="max-h-[480px] w-auto rounded-md"
+                  />
+                ) : activeFile.type === 'application/pdf' && activeFile.dataUrl ? (
+                  <iframe
+                    src={activeFile.dataUrl}
+                    title={activeFile.name}
+                    className="h-[480px] w-full rounded-md"
+                  />
+                ) : activeFile.textContent ? (
+                  <pre className="max-h-[480px] overflow-auto text-xs leading-relaxed whitespace-pre-wrap">
+                    {activeFile.textContent}
+                  </pre>
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    No inline preview available for this file type.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Stored files list */}
           <div className="rounded-lg border bg-card p-4 shadow-sm lg:col-span-2">
             <h3 className="mb-3 text-base font-semibold">Uploaded files</h3>
@@ -236,13 +308,31 @@ export default function Invoices() {
                     <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                       <span>{(f.size / 1024).toFixed(1)} KB</span>
                       <span>{new Date(f.lastModified).toLocaleDateString()}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeStored(f.id)}
-                        className="inline-flex items-center gap-1 text-destructive hover:underline"
-                      >
-                        <Trash2 size={12} /> Remove
-                      </button>
+                      <div className="flex w-full flex-wrap gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveFile(f)}
+                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium hover:bg-accent hover:text-accent-foreground"
+                        >
+                          View
+                        </button>
+                        {f.dataUrl && (
+                          <a
+                            href={f.dataUrl}
+                            download={f.name}
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium hover:bg-accent hover:text-accent-foreground"
+                          >
+                            Download
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeStored(f.id)}
+                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 size={12} /> Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
