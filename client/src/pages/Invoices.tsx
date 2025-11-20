@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FileSpreadsheet, FileText, Image as ImageIcon, UploadCloud, Trash2 } from 'lucide-react';
+import { FileText, UploadCloud, Trash2 } from 'lucide-react';
 import {
   FileUploader,
   FileInput,
@@ -14,7 +14,7 @@ interface StoredFileMeta {
   size: number;
   type: string;
   lastModified: number;
-  previewDataUrl?: string; // thumbnail/preview (images only currently)
+  previewDataUrl?: string; // reserved (not used now, only pdf/word allowed)
   dataUrl?: string; // full data URL for download / inline view
   textContent?: string; // optional textual content for plain text / csv / json
 }
@@ -145,29 +145,33 @@ export default function Invoices() {
             <FileUploader
               value={selectedFiles}
               onValueChange={setSelectedFiles}
-              dropzoneOptions={{ multiple: true, maxFiles: 12 }}
+              dropzoneOptions={{
+                multiple: true,
+                maxFiles: 12,
+                accept: {
+                  'application/pdf': ['.pdf'],
+                  'application/msword': ['.doc'],
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+                    '.docx',
+                  ],
+                },
+              }}
               className="gap-3"
             >
               <FileInput className="text-center text-sm">
                 <div className="flex flex-col items-center gap-2">
                   <UploadCloud size={24} />
-                  <p className="font-medium">Click or drag files here</p>
-                  <p className="text-xs text-muted-foreground">Images, CSV, Excel, PDF… (max 12)</p>
+                  <p className="font-medium">Click or drag PDF / Word files</p>
+                  <p className="text-xs text-muted-foreground">
+                    Accepted: .pdf .doc .docx (max 12)
+                  </p>
                 </div>
               </FileInput>
               <FileUploaderContent>
                 {selectedFiles?.map((f, i) => (
                   <FileUploaderItem key={i} index={i} className="overflow-hidden border p-2">
                     <div className="flex items-center gap-2 text-xs">
-                      {f.type.startsWith('image/') ? (
-                        <ImageIcon size={14} />
-                      ) : f.type.includes('sheet') || /excel/i.test(f.name) ? (
-                        <FileSpreadsheet size={14} />
-                      ) : f.type.includes('pdf') ? (
-                        <FileText size={14} />
-                      ) : (
-                        <FileText size={14} />
-                      )}
+                      <FileText size={14} />
                       <span className="truncate max-w-[120px]" title={f.name}>
                         {f.name}
                       </span>
@@ -244,13 +248,7 @@ export default function Invoices() {
                 </div>
               </div>
               <div className="rounded-md border bg-card/50 p-3">
-                {activeFile.type.startsWith('image/') && activeFile.dataUrl ? (
-                  <img
-                    src={activeFile.dataUrl}
-                    alt={activeFile.name}
-                    className="max-h-[480px] w-auto rounded-md"
-                  />
-                ) : activeFile.type === 'application/pdf' && activeFile.dataUrl ? (
+                {activeFile.type === 'application/pdf' && activeFile.dataUrl ? (
                   <iframe
                     src={activeFile.dataUrl}
                     title={activeFile.name}
@@ -284,27 +282,12 @@ export default function Invoices() {
                     className="group relative flex flex-col rounded-md border p-3 text-xs shadow-sm"
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      {f.type.startsWith('image/') ? (
-                        <ImageIcon size={16} />
-                      ) : f.type.includes('sheet') || /excel/i.test(f.name) ? (
-                        <FileSpreadsheet size={16} />
-                      ) : f.type.includes('pdf') ? (
-                        <FileText size={16} />
-                      ) : (
-                        <FileText size={16} />
-                      )}
+                      <FileText size={16} />
                       <span className="truncate font-medium" title={f.name}>
                         {f.name}
                       </span>
                     </div>
-                    {f.previewDataUrl && (
-                      <img
-                        src={f.previewDataUrl}
-                        alt={f.name}
-                        className="mb-2 h-24 w-full rounded-md object-cover"
-                        loading="lazy"
-                      />
-                    )}
+                    {/* Image preview removed: only PDF/Word allowed */}
                     <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                       <span>{(f.size / 1024).toFixed(1)} KB</span>
                       <span>{new Date(f.lastModified).toLocaleDateString()}</span>
