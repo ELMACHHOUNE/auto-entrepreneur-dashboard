@@ -23,12 +23,45 @@ interface StoredFileMeta {
 // Local storage key for persistence (client-side only for now)
 const LS_KEY = 'uploadedUserFiles';
 
+// Strictly validate that a data URL is one of the allowed mime types (PDF / Word) and base64 encoded.
+function sanitizeDataUrl(url: unknown): string | undefined {
+  if (typeof url !== 'string') return undefined;
+  // Only allow data URLs for the supported file types, base64 encoded.
+  const allowedMimes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ];
+  const match = url.match(/^data:([a-zA-Z0-9_./-]+);base64,[A-Za-z0-9+/=]+$/);
+  if (!match) return undefined;
+  const mime = match[1];
+  if (!allowedMimes.includes(mime)) return undefined;
+  return url;
+}
+
 function loadStored(): StoredFileMeta[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as StoredFileMeta[];
+    if (Array.isArray(parsed)) {
+      // Sanitize each entry defensively in case localStorage was tampered with.
+      return parsed
+        .map(p => {
+          const safe: StoredFileMeta = {
+            id: typeof p.id === 'string' ? p.id : crypto.randomUUID(),
+            name: typeof p.name === 'string' ? p.name : 'unknown',
+            size: typeof p.size === 'number' ? p.size : 0,
+            type: typeof p.type === 'string' ? p.type : 'application/octet-stream',
+            lastModified: typeof p.lastModified === 'number' ? p.lastModified : Date.now(),
+            previewDataUrl: undefined, // not used currently
+            dataUrl: sanitizeDataUrl(p.dataUrl),
+            textContent: typeof p.textContent === 'string' ? p.textContent : undefined,
+          };
+          return safe;
+        })
+        .filter(f => !!f.id && typeof f.name === 'string');
+    }
   } catch (e) {
     console.warn('Failed to parse stored files', e);
   }
@@ -319,21 +352,26 @@ export default function Invoices() {
                   >
                     Close
                   </button>
-                  {activeFile.dataUrl && (
-                    <a
-                      href={activeFile.dataUrl}
-                      download={activeFile.name}
-                      className="rounded-md border px-3 py-1 text-xs font-medium"
-                    >
-                      Download
-                    </a>
-                  )}
+                  {activeFile.dataUrl &&
+                    (() => {
+                      const safeUrl = sanitizeDataUrl(activeFile.dataUrl);
+                      if (!safeUrl) return null;
+                      return (
+                        <a
+                          href={safeUrl}
+                          download={activeFile.name}
+                          className="rounded-md border px-3 py-1 text-xs font-medium"
+                        >
+                          Download
+                        </a>
+                      );
+                    })()}
                 </div>
               </div>
               <div className="rounded-md border bg-card/50 p-3">
-                {activeFile.type === 'application/pdf' && activeFile.dataUrl ? (
+                {activeFile.type === 'application/pdf' && sanitizeDataUrl(activeFile.dataUrl) ? (
                   <iframe
-                    src={activeFile.dataUrl}
+                    src={sanitizeDataUrl(activeFile.dataUrl)!}
                     title={activeFile.name}
                     className="h-[480px] w-full rounded-md"
                   />
@@ -382,9 +420,9 @@ export default function Invoices() {
                         >
                           View
                         </button>
-                        {f.dataUrl && (
+                        {sanitizeDataUrl(f.dataUrl) && (
                           <a
-                            href={f.dataUrl}
+                            href={sanitizeDataUrl(f.dataUrl)!}
                             download={f.name}
                             className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium hover:bg-accent hover:text-accent-foreground"
                           >
