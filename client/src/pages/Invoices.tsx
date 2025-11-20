@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/file-upload';
 import RequireAuth from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface StoredFileMeta {
   id: string;
@@ -161,7 +162,8 @@ export default function Invoices() {
 
   return (
     <RequireAuth>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
+      <DashboardLayout>
+        {/* ...existing invoices content... */}
         <div className="mb-6 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
@@ -444,7 +446,7 @@ export default function Invoices() {
             )}
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     </RequireAuth>
   );
 }
