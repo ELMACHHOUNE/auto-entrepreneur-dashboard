@@ -236,6 +236,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       });
       await fetchInvoices();
       await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
+      await queryClient.invalidateQueries({ queryKey: ['invoices-all'], exact: false });
     } catch {
       // optionally surface error UI; we keep silent for now
     } finally {
@@ -277,6 +278,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       });
       await fetchInvoices();
       await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
+      await queryClient.invalidateQueries({ queryKey: ['invoices-all'], exact: false });
     } catch {
       // silent for now
     } finally {
@@ -292,6 +294,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         await api.delete(`/api/invoices/${row.id}`);
         await fetchInvoices();
         await queryClient.invalidateQueries({ queryKey: ['invoices'], exact: false });
+        await queryClient.invalidateQueries({ queryKey: ['invoices-all'], exact: false });
       } catch {
         // silent
       }

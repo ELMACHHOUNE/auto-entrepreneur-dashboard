@@ -6,6 +6,7 @@ export interface QuarterlySidebarProps {
   year: number;
   quarterTotals: { T1: number; T2: number; T3: number; T4: number };
   yearTotals: { amount: number; tva: number };
+  lifetimeTotals?: { amount: number; tva: number }; // all-time totals across every invoice
   rateDisplay: number; // percent multiplier shown & applied
   onRateDisplayChange: (rate: number) => void;
   onRequestClose?: () => void; // optional close callback rendered as button in shell
@@ -16,6 +17,7 @@ export default function QuarterlySidebar({
   year,
   quarterTotals,
   yearTotals,
+  lifetimeTotals,
   rateDisplay,
   onRateDisplayChange,
 }: QuarterlySidebarProps) {
@@ -29,6 +31,12 @@ export default function QuarterlySidebar({
     const val = (yearTotals.amount * rateDisplay) / 100;
     return Number.isFinite(val) ? parseFloat(val.toFixed(2)) : 0;
   }, [yearTotals.amount, rateDisplay]);
+
+  const lifetimeVatAtRate = useMemo(() => {
+    const base = lifetimeTotals?.amount || 0;
+    const val = (base * rateDisplay) / 100;
+    return Number.isFinite(val) ? parseFloat(val.toFixed(2)) : 0;
+  }, [lifetimeTotals?.amount, rateDisplay]);
 
   return (
     <div className="flex h-full flex-col gap-3" aria-label="Quarterly totals panel">
@@ -77,6 +85,20 @@ export default function QuarterlySidebar({
           Total VAT ({rateDisplay}%): {yearlyVatAtRate.toLocaleString('en-US')} DH
         </div>
       </div>
+      {lifetimeTotals && (
+        <div className="rounded-md border border-accent/60 p-3 bg-card/40 flex flex-col gap-1 text-foreground mt-1">
+          <div className="text-xs font-medium flex justify-between">
+            <span>All-Time Total</span>
+            <span className="text-secondary">VAT</span>
+          </div>
+          <div className="text-sm font-semibold text-primary">
+            {lifetimeTotals.amount.toLocaleString('en-US')} DH
+          </div>
+          <div className="text-xs text-secondary">
+            VAT ({rateDisplay}%): {lifetimeVatAtRate.toLocaleString('en-US')} DH
+          </div>
+        </div>
+      )}
     </div>
   );
 }

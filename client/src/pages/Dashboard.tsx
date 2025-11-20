@@ -5,6 +5,7 @@ import LazyVisible from '@/components/ui/LazyVisible';
 import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
 import QuarterlySidebarCompact from '@/components/layout/QuarterlySidebarCompact';
+import { useAllInvoices } from '@/hooks/useAllInvoices';
 const QuarterLinesChart = lazy(() => import('@/components/charts/QuarterLinesChart'));
 const QuarterLinesTvaChart = lazy(() => import('@/components/charts/QuarterLinesTvaChart'));
 const LineBarAreaComposedChart = lazy(() => import('@/components/charts/LineBarAreaComposedChart'));
@@ -37,6 +38,20 @@ export default function Dashboard() {
     [monthlyTotals]
   );
 
+  // Fetch all invoices (lifetime) and compute all-time totals
+  const { data: allInvoices } = useAllInvoices();
+  const lifetimeTotals = useMemo(() => {
+    if (!allInvoices?.length) return { amount: 0, tva: 0 };
+    let amount = 0;
+    let tva = 0;
+    allInvoices.forEach(inv => {
+      amount += inv.amount || 0;
+      const rate = inv.tvaRate || 0;
+      tva += (inv.amount || 0) * (rate / 100);
+    });
+    return { amount: parseFloat(amount.toFixed(2)), tva: parseFloat(tva.toFixed(2)) };
+  }, [allInvoices]);
+
   const handleQuarterSummary = useCallback(
     (summary: {
       year: number;
@@ -56,12 +71,18 @@ export default function Dashboard() {
       year={year}
       quarterTotals={quarterTotals}
       yearTotals={yearTotals}
+      lifetimeTotals={lifetimeTotals}
       rateDisplay={rateDisplay}
       onRateDisplayChange={setRateDisplay}
     />
   );
   const rightSidebarCollapsed = (
-    <QuarterlySidebarCompact year={year} quarterTotals={quarterTotals} yearTotals={yearTotals} />
+    <QuarterlySidebarCompact
+      year={year}
+      quarterTotals={quarterTotals}
+      yearTotals={yearTotals}
+      lifetimeTotals={lifetimeTotals}
+    />
   );
 
   // Idle prefetch of chart chunks to make viewport-lazy charts snappy when scrolled into view
