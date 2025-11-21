@@ -69,6 +69,56 @@
       "remove": "Remove",
       "futureImprovement": "Future improvement: persist files in a Neon/Postgres-backed service. Consider a Docker compose setup for local development with a storage adapter & signed URLs.",
       "profilePlanAria": "Subscription plan: {{plan}}"
+    },
+    "profile": {
+      "title": "Profile settings",
+      "avatar": {
+        "label": "Profile picture",
+        "helper": "Square image (1:1) works best. PNG, JPG, GIF, or WEBP up to 2MB.",
+        "noAvatar": "No avatar",
+        "clearSelection": "Clear selection",
+        "uploadAria": "Upload profile picture",
+        "uploadCta": "Click to upload",
+        "uploadDrag": "or drag and drop",
+        "uploadTypes": "PNG, JPG, GIF, WEBP (max 2MB)"
+      },
+      "emailPlaceholder": "Email",
+      "fullNamePlaceholder": "Full name",
+      "phonePlaceholder": "Phone",
+      "icePlaceholder": "ICE (15 digits)",
+      "profileKindPlaceholder": "Select profile type",
+      "profileKind": {
+        "guide": "Auto-entrepreneur guide",
+        "company": "Company guide"
+      },
+      "categoryPlaceholder": "Select category",
+      "typePlaceholder": "Select type",
+      "activityPlaceholder": "Select activity",
+      "companyTypeCodePlaceholder": "Select company type code",
+      "errors": {
+        "fullNameTooShort": "Full name is too short",
+        "phoneInvalid": "Enter a valid phone number",
+        "iceInvalid": "ICE must be 15 digits",
+        "emailRequired": "Email is required"
+      },
+      "updateFailedTitle": "Update failed",
+      "updateFailedDescription": "Failed to update profile",
+      "updateSuccessTitle": "Profile updated",
+      "updateSuccessDescription": "Your changes have been saved.",
+      "saveChanges": "Save changes",
+      "password": {
+        "sectionTitle": "Change password",
+        "currentPlaceholder": "Current password (if set)",
+        "newPlaceholder": "New password",
+        "confirmPlaceholder": "Confirm new password",
+        "updateFailedTitle": "Password update failed",
+        "updateFailedDescription": "Failed to change password",
+        "changedTitle": "Password changed",
+        "changedDescription": "Your password was updated successfully.",
+        "newTooShort": "New password must be at least 6 characters",
+        "mismatch": "Passwords do not match",
+        "updateButton": "Update password"
+      }
     }
   },
   "auth": {

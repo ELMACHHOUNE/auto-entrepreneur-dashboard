@@ -69,6 +69,56 @@
       "remove": "Supprimer",
       "futureImprovement": "Amélioration future : persister les fichiers via un service Neon/Postgres. Envisager un Docker compose pour le développement local avec adaptateur de stockage et URLs signées.",
       "profilePlanAria": "Forfait d'abonnement : {{plan}}"
+    },
+    "profile": {
+      "title": "Paramètres du profil",
+      "avatar": {
+        "label": "Photo de profil",
+        "helper": "Une image carrée (1:1) est idéale. PNG, JPG, GIF ou WEBP jusqu'à 2 Mo.",
+        "noAvatar": "Pas d'avatar",
+        "clearSelection": "Effacer la sélection",
+        "uploadAria": "Téléverser la photo de profil",
+        "uploadCta": "Cliquer pour téléverser",
+        "uploadDrag": "ou glisser-déposer",
+        "uploadTypes": "PNG, JPG, GIF, WEBP (max 2 Mo)"
+      },
+      "emailPlaceholder": "E-mail",
+      "fullNamePlaceholder": "Nom complet",
+      "phonePlaceholder": "Téléphone",
+      "icePlaceholder": "ICE (15 chiffres)",
+      "profileKindPlaceholder": "Sélectionner le type de profil",
+      "profileKind": {
+        "guide": "Guide auto-entrepreneur",
+        "company": "Guide entreprise"
+      },
+      "categoryPlaceholder": "Sélectionner une catégorie",
+      "typePlaceholder": "Sélectionner un type",
+      "activityPlaceholder": "Sélectionner une activité",
+      "companyTypeCodePlaceholder": "Sélectionner le code type d'entreprise",
+      "errors": {
+        "fullNameTooShort": "Le nom complet est trop court",
+        "phoneInvalid": "Entrez un numéro de téléphone valide",
+        "iceInvalid": "L'ICE doit comporter 15 chiffres",
+        "emailRequired": "L'e-mail est requis"
+      },
+      "updateFailedTitle": "Échec de la mise à jour",
+      "updateFailedDescription": "Échec de la mise à jour du profil",
+      "updateSuccessTitle": "Profil mis à jour",
+      "updateSuccessDescription": "Vos modifications ont été enregistrées.",
+      "saveChanges": "Enregistrer les modifications",
+      "password": {
+        "sectionTitle": "Changer le mot de passe",
+        "currentPlaceholder": "Mot de passe actuel (si défini)",
+        "newPlaceholder": "Nouveau mot de passe",
+        "confirmPlaceholder": "Confirmer le nouveau mot de passe",
+        "updateFailedTitle": "Échec de la mise à jour du mot de passe",
+        "updateFailedDescription": "Échec du changement de mot de passe",
+        "changedTitle": "Mot de passe changé",
+        "changedDescription": "Votre mot de passe a été mis à jour avec succès.",
+        "newTooShort": "Le nouveau mot de passe doit contenir au moins 6 caractères",
+        "mismatch": "Les mots de passe ne correspondent pas",
+        "updateButton": "Mettre à jour le mot de passe"
+      }
     }
   },
   "auth": {
