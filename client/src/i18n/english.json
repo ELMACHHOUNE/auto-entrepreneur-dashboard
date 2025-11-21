@@ -38,6 +38,39 @@
       "allTime": "All-Time"
     }
   },
+  "page": {
+    "invoices": {
+      "title": "Invoices Files",
+      "subtitle": "Upload and manage your invoice documents (PDF / Word). Storage limited by subscription plan.",
+      "upgradeBanner": "Upgrade to <strong>Premium</strong> for 10× more storage.",
+      "plan": "Plan",
+      "planPremium": "Premium",
+      "planFreemium": "Freemium",
+      "storageUsed": "Storage used",
+      "filesStored": "Files stored",
+      "capacityUsed": "{{percent}}% of capacity used.",
+      "remainingWarning": "Only {{remaining}} remaining.",
+      "importTitle": "Import files",
+      "uploaderCta": "Click or drag PDF / Word files",
+      "uploaderAccepted": "Accepted: .pdf .doc .docx (max 12)",
+      "saveFiles": "Save files",
+      "clear": "Clear",
+      "viewing": "Viewing: {{name}}",
+      "type": "Type",
+      "size": "Size",
+      "showFull": "Show full file",
+      "collapseView": "Collapse view",
+      "download": "Download",
+      "close": "Close",
+      "noPreview": "No inline preview available for this file type.",
+      "uploadedTitle": "Uploaded files",
+      "emptyState": "No files uploaded yet.",
+      "view": "View",
+      "remove": "Remove",
+      "futureImprovement": "Future improvement: persist files in a Neon/Postgres-backed service. Consider a Docker compose setup for local development with a storage adapter & signed URLs.",
+      "profilePlanAria": "Subscription plan: {{plan}}"
+    }
+  },
   "auth": {
     "login": {
       "title": "Login",

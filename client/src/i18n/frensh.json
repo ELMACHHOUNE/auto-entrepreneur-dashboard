@@ -38,6 +38,39 @@
       "allTime": "Historique"
     }
   },
+  "page": {
+    "invoices": {
+      "title": "Fichiers factures",
+      "subtitle": "Téléversez et gérez vos documents de factures (PDF / Word). Stockage limité selon l'abonnement.",
+      "upgradeBanner": "Passez en <strong>Premium</strong> pour 10× plus de stockage.",
+      "plan": "Forfait",
+      "planPremium": "Premium",
+      "planFreemium": "Gratuit",
+      "storageUsed": "Stockage utilisé",
+      "filesStored": "Fichiers stockés",
+      "capacityUsed": "{{percent}}% de la capacité utilisée.",
+      "remainingWarning": "Il ne reste que {{remaining}}.",
+      "importTitle": "Importer des fichiers",
+      "uploaderCta": "Cliquer ou glisser des fichiers PDF / Word",
+      "uploaderAccepted": "Acceptés : .pdf .doc .docx (max 12)",
+      "saveFiles": "Enregistrer",
+      "clear": "Effacer",
+      "viewing": "Affichage : {{name}}",
+      "type": "Type",
+      "size": "Taille",
+      "showFull": "Afficher tout le fichier",
+      "collapseView": "Réduire",
+      "download": "Télécharger",
+      "close": "Fermer",
+      "noPreview": "Aucun aperçu disponible pour ce type de fichier.",
+      "uploadedTitle": "Fichiers téléversés",
+      "emptyState": "Aucun fichier téléversé.",
+      "view": "Voir",
+      "remove": "Supprimer",
+      "futureImprovement": "Amélioration future : persister les fichiers via un service Neon/Postgres. Envisager un Docker compose pour le développement local avec adaptateur de stockage et URLs signées.",
+      "profilePlanAria": "Forfait d'abonnement : {{plan}}"
+    }
+  },
   "auth": {
     "login": {
       "title": "Connexion",
