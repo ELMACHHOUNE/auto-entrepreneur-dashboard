@@ -28,6 +28,7 @@ export interface QuarterLinesChartUIProps {
   showLegend?: boolean;
   colors?: Partial<Record<QuarterKey, string>>;
   valueFormatter?: (value: number) => string;
+  labelFormatter?: (label: string) => string;
   animate?: boolean; // disable animations by default for smoother layout resizes
   xTickFormatter?: (label: string) => string;
   xTickAngle?: number;
@@ -52,6 +53,7 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
   showLegend = true,
   colors = defaultColors,
   valueFormatter,
+  labelFormatter,
   animate = false,
   xTickFormatter,
   xTickAngle,
@@ -74,12 +76,13 @@ export const QuarterLinesChartUI: React.FC<QuarterLinesChartUIProps> = ({
     if (!active || list.length === 0) return null;
     const items = list.filter(p => typeof p.value === 'number' && Number(p.value) !== 0);
     if (items.length === 0) return null;
+    const title = typeof label === 'string' ? (labelFormatter ? labelFormatter(label) : label) : '';
     return (
       <div
         className="rounded-md border bg-card p-2 text-xs shadow-sm"
         style={{ borderColor: 'var(--border)' }}
       >
-        <div className="mb-1 text-[11px] text-muted-foreground">{label}</div>
+        <div className="mb-1 text-[11px] text-muted-foreground">{title}</div>
         <ul className="space-y-0.5">
           {items.map(item => {
             const dk = (item.dataKey as QuarterKey) || 'T1';

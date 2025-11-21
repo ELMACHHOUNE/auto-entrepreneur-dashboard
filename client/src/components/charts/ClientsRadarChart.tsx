@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   RadarChart,
@@ -22,6 +23,7 @@ const ClientsRadarChart: React.FC<ClientsRadarChartProps> = ({
   maxClients = 12,
   noDataLabel,
 }) => {
+  const { t } = useTranslation();
   const trimmed = (data || [])
     .filter(d => !!d?.name)
     .sort((a, b) => b.count - a.count)
@@ -33,7 +35,7 @@ const ClientsRadarChart: React.FC<ClientsRadarChartProps> = ({
       <div className="w-full" style={{ height }}>
         <div className="flex h-full items-center justify-center">
           <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
-            {noDataLabel || 'No data.'}
+            {noDataLabel || t('components.charts.common.noData')}
           </span>
         </div>
       </div>
@@ -58,13 +60,16 @@ const ClientsRadarChart: React.FC<ClientsRadarChartProps> = ({
             stroke="var(--border)"
           />
           <Tooltip
-            formatter={(value: unknown) => [`${value as number} invoice(s)`, 'Count']}
+            formatter={(value: unknown) => [
+              t('components.charts.clientsRadar.invoices', { count: Number(value) }),
+              t('components.charts.clientsRadar.countLabel'),
+            ]}
             labelFormatter={(label: string) => `${label}`}
             contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             wrapperStyle={{ outline: 'none' }}
           />
           <Radar
-            name="Invoices"
+            name={t('components.charts.clientsRadar.seriesName')}
             dataKey="count"
             stroke="var(--primary)"
             fill="var(--primary)"

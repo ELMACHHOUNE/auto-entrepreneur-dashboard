@@ -43,6 +43,26 @@
       "errorLoading": "Erreur de chargement des données",
       "searchPlaceholder": "Rechercher…"
     },
+    "charts": {
+      "common": {
+        "gross": "Brut",
+        "net": "Net",
+        "vat": "TVA",
+        "totalPrice": "Prix total",
+        "totalVat": "TVA totale",
+        "noData": "Aucune donnée."
+      },
+      "clientsRadar": {
+        "countLabel": "Nombre",
+        "invoices_one": "{{count}} facture",
+        "invoices_other": "{{count}} factures",
+        "seriesName": "Factures"
+      },
+      "yearTotals": {
+        "noInvoicesYet": "Aucune facture pour le moment.",
+        "yearLabel": "Année {{year}}"
+      }
+    },
     "invoiceTable": {
       "columns": {
         "invoiceNo": "N° facture",
@@ -346,5 +366,19 @@
       "haveAccount": "Vous avez déjà un compte ?",
       "loginLink": "Se connecter"
     }
+  },
+  "months": {
+    "January": "Janvier",
+    "February": "Février",
+    "March": "Mars",
+    "April": "Avril",
+    "May": "Mai",
+    "June": "Juin",
+    "July": "Juillet",
+    "August": "Août",
+    "September": "Septembre",
+    "October": "Octobre",
+    "November": "Novembre",
+    "December": "Décembre"
   }
 }

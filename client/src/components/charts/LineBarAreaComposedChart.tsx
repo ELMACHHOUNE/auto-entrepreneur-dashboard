@@ -1,4 +1,5 @@
 import React, { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -38,8 +39,12 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
   data = defaultData,
   height = 320,
 }) => {
+  const { t, i18n } = useTranslation();
   // Memoized number formatter & function to avoid re-creating on layout/resizes
-  const nf = useMemo(() => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }), []);
+  const nf = useMemo(
+    () => new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }),
+    [i18n.language]
+  );
   const formatNumber = useCallback((n: number) => nf.format(n || 0), [nf]);
 
   type TP = {
@@ -52,6 +57,7 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
     if (!active || !payload || payload.length === 0) return null;
     const p = payload[0]?.payload ?? {};
     const month = p.name as string;
+    const monthLabel = t(`months.${month}`);
     const gross = Number(p.gross || 0);
     const vat = Number(p.vat || 0);
     const net = Number(p.net || gross - vat);
@@ -61,7 +67,7 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
         className="rounded-md border bg-card px-3 py-2 text-sm shadow-sm"
         style={{ borderColor: 'var(--border)', color: 'var(--foreground)' }}
       >
-        <div className="mb-1 font-semibold">{month}</div>
+        <div className="mb-1 font-semibold">{monthLabel}</div>
         <div className="grid gap-1">
           <div className="flex items-center gap-2">
             <span
@@ -69,7 +75,8 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
               style={{ background: 'var(--primary)' }}
             />
             <span>
-              Gross: <strong className="tabular-nums">{formatNumber(gross)} DH</strong>
+              {t('components.charts.common.gross')}:{' '}
+              <strong className="tabular-nums">{formatNumber(gross)} DH</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -78,7 +85,8 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
               style={{ background: 'var(--accent)' }}
             />
             <span>
-              Net: <strong className="tabular-nums">{formatNumber(net)} DH</strong>
+              {t('components.charts.common.net')}:{' '}
+              <strong className="tabular-nums">{formatNumber(net)} DH</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -87,7 +95,8 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
               style={{ background: 'var(--destructive)' }}
             />
             <span>
-              VAT: <strong className="tabular-nums">{formatNumber(vat)} DH</strong>
+              {t('components.charts.common.vat')}:{' '}
+              <strong className="tabular-nums">{formatNumber(vat)} DH</strong>
             </span>
           </div>
         </div>
@@ -104,6 +113,7 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
             dataKey="name"
             tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
             tickMargin={8}
+            tickFormatter={(label: string) => t(`months.${label}`)}
           />
           <YAxis tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} width={40} />
           <Tooltip
@@ -111,10 +121,18 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
             content={<CustomTooltip />}
             wrapperStyle={{ outline: 'none' }}
           />
-          <Legend wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }} />
+          <Legend
+            wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }}
+            formatter={(val: string) => {
+              if (val === 'Net') return t('components.charts.common.net');
+              if (val === 'Gross') return t('components.charts.common.gross');
+              if (val === 'VAT') return t('components.charts.common.vat');
+              return val;
+            }}
+          />
           {/* Bar: Net total (gross - VAT) */}
           <Bar
-            name="Net"
+            name={t('components.charts.common.net')}
             dataKey="net"
             fill="var(--success)"
             barSize={20}
@@ -129,7 +147,7 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
           </Bar>
           {/* Optional line overlay for Net */}
           <Line
-            name="Net"
+            name={t('components.charts.common.net')}
             type="monotone"
             dataKey="net"
             stroke="var(--accent)"
@@ -139,8 +157,18 @@ const LineBarAreaComposedChart: React.FC<LineBarAreaComposedChartProps> = ({
             isAnimationActive={false}
           />
           {/* Points: Gross and VAT */}
-          <Scatter name="Gross" dataKey="gross" fill="var(--primary)" isAnimationActive={false} />
-          <Scatter name="VAT" dataKey="vat" fill="var(--destructive)" isAnimationActive={false} />
+          <Scatter
+            name={t('components.charts.common.gross')}
+            dataKey="gross"
+            fill="var(--primary)"
+            isAnimationActive={false}
+          />
+          <Scatter
+            name={t('components.charts.common.vat')}
+            dataKey="vat"
+            fill="var(--destructive)"
+            isAnimationActive={false}
+          />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

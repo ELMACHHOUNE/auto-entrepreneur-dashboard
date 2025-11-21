@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/axios';
 import {
@@ -29,10 +30,11 @@ async function fetchAllInvoices(): Promise<ApiInvoice[]> {
 
 type Row = { name: string; total: number; vat: number };
 
-const numberFmt = (n: number) =>
-  new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(n || 0);
-
 const YearTotalsBarChart: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const numberFmt = (n: number) =>
+    new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 }).format(n || 0);
+
   // Detect mobile screens only to tweak sizing; desktop stays exactly the same
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -99,7 +101,7 @@ const YearTotalsBarChart: React.FC = () => {
       {!hasAny && !isLoading ? (
         <div className="flex h-full min-h-60 items-center justify-center">
           <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
-            No invoices yet.
+            {t('components.charts.yearTotals.noInvoicesYet')}
           </span>
         </div>
       ) : (
@@ -124,7 +126,9 @@ const YearTotalsBarChart: React.FC = () => {
               />
               <Tooltip
                 formatter={(value: unknown, n) => [numberFmt(Number(value)) + ' DH', n as string]}
-                labelFormatter={label => `Year ${label}`}
+                labelFormatter={label =>
+                  t('components.charts.yearTotals.yearLabel', { year: label })
+                }
                 contentStyle={{ background: 'var(--card)', borderColor: 'var(--border)' }}
                 wrapperStyle={{ outline: 'none' }}
               />
@@ -135,7 +139,12 @@ const YearTotalsBarChart: React.FC = () => {
                   wrapperStyle={{ fontSize: legendFontSize }}
                 />
               )}
-              <Bar dataKey="total" name="Total Price" fill="#0776c0" barSize={barSize}>
+              <Bar
+                dataKey="total"
+                name={t('components.charts.common.totalPrice')}
+                fill="#0776c0"
+                barSize={barSize}
+              >
                 <LabelList
                   dataKey="total"
                   position="top"
@@ -144,7 +153,12 @@ const YearTotalsBarChart: React.FC = () => {
                   style={{ fill: 'var(--foreground)', fontSize: 16 }}
                 />
               </Bar>
-              <Bar dataKey="vat" name="Total VAT" fill="#fdc401" barSize={barSize}>
+              <Bar
+                dataKey="vat"
+                name={t('components.charts.common.totalVat')}
+                fill="#fdc401"
+                barSize={barSize}
+              >
                 <LabelList
                   dataKey="vat"
                   position="top"
@@ -167,7 +181,7 @@ const YearTotalsBarChart: React.FC = () => {
                     borderRadius: 2,
                   }}
                 />
-                Total Price
+                {t('components.charts.common.totalPrice')}
               </span>
               <span className="inline-flex items-center gap-1">
                 <span
@@ -179,7 +193,7 @@ const YearTotalsBarChart: React.FC = () => {
                     borderRadius: 2,
                   }}
                 />
-                Total VAT
+                {t('components.charts.common.totalVat')}
               </span>
             </div>
           )}

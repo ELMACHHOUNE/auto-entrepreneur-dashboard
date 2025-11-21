@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import QuarterLinesChartUI from '@/components/ui/quarter-lines-chart';
 import type { QuarterLinePoint } from '@/components/ui/quarter-lines-chart';
 import { useInvoicesByYear } from '@/hooks/useInvoicesByYear';
@@ -9,6 +10,7 @@ export interface QuarterLinesTvaChartProps {
 }
 
 export const QuarterLinesTvaChart: React.FC<QuarterLinesTvaChartProps> = ({ year }) => {
+  const { t, i18n } = useTranslation();
   const { data: invoices, isLoading } = useInvoicesByYear(year);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -20,10 +22,18 @@ export const QuarterLinesTvaChart: React.FC<QuarterLinesTvaChartProps> = ({ year
   }, []);
 
   const compactFormat = (n: number) =>
-    new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(
+    new Intl.NumberFormat(i18n.language, { notation: 'compact', maximumFractionDigits: 1 }).format(
       n || 0
     );
-  const shorten = (label: string) => (typeof label === 'string' ? label.slice(0, 3) : label);
+  const normalFormat = (n: number) =>
+    new Intl.NumberFormat(i18n.language, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n || 0);
+  const monthShort = (label: string) => {
+    const full = t(`months.${label}`);
+    return typeof full === 'string' ? full.slice(0, 3) : (full as string);
+  };
 
   const data = useMemo<QuarterLinePoint[]>(() => {
     const arr: QuarterLinePoint[] = MONTHS.map(m => ({ name: m, T1: 0, T2: 0, T3: 0, T4: 0 }));
@@ -45,14 +55,15 @@ export const QuarterLinesTvaChart: React.FC<QuarterLinesTvaChartProps> = ({ year
       {!hasAny && !isLoading ? (
         <div className="flex h-full min-h-60 items-center justify-center">
           <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
-            No TVA data for {year}.
+            {t('page.dashboard.charts.noDataForYear', { year })}
           </span>
         </div>
       ) : (
         <QuarterLinesChartUI
           data={data}
-          valueFormatter={isMobile ? compactFormat : undefined}
-          xTickFormatter={shorten}
+          valueFormatter={isMobile ? compactFormat : normalFormat}
+          xTickFormatter={monthShort}
+          labelFormatter={(label: string) => t(`months.${label}`)}
           xTickAngle={isMobile ? 0 : -30}
           xTickInterval={isMobile ? ('preserveStartEnd' as unknown as number) : 0}
           xTickFontSize={isMobile ? 11 : 12}
