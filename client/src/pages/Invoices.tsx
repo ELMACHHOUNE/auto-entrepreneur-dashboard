@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FileText, UploadCloud, Trash2, Crown, HardDrive, Gauge } from 'lucide-react';
-import {
-  FileUploader,
-  FileInput,
-  FileUploaderContent,
-  FileUploaderItem,
-} from '@/components/ui/file-upload';
+import { FileUploader, FileInput, FileUploaderItem } from '@/components/ui/file-upload';
 import RequireAuth from '@/components/RequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -262,9 +257,9 @@ export default function Invoices() {
         </div>
 
         {/* Upload & list layout */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
           {/* Upload section */}
-          <div className="rounded-lg border bg-card p-4 shadow-sm lg:col-span-1">
+          <div className="rounded-lg border bg-card p-4 shadow-sm lg:col-span-1 self-start">
             <h3 className="mb-3 text-base font-semibold">Import files</h3>
             <FileUploader
               value={selectedFiles}
@@ -291,19 +286,22 @@ export default function Invoices() {
                   </p>
                 </div>
               </FileInput>
-              <FileUploaderContent>
+              {/* Scrollable list: prevent import panel from growing too tall with many files */}
+              <div className="mt-2 max-h-48 overflow-y-auto space-y-2 pr-1">
                 {selectedFiles?.map((f, i) => (
-                  <FileUploaderItem key={i} index={i} className="overflow-hidden border p-2">
-                    <div className="flex items-center gap-2 text-xs">
-                      <FileText size={14} />
-                      <span className="truncate max-w-[120px]" title={f.name}>
-                        {f.name}
-                      </span>
-                      <span className="ml-auto tabular-nums">{(f.size / 1024).toFixed(1)} KB</span>
-                    </div>
+                  <FileUploaderItem
+                    key={i}
+                    index={i}
+                    className="flex items-center gap-2 text-xs border rounded-md p-2 w-full"
+                  >
+                    <FileText size={14} />
+                    <span className="truncate flex-1" title={f.name}>
+                      {f.name}
+                    </span>
+                    <span className="tabular-nums ml-2">{(f.size / 1024).toFixed(1)} KB</span>
                   </FileUploaderItem>
                 ))}
-              </FileUploaderContent>
+              </div>
             </FileUploader>
             <div className="mt-4 flex gap-2">
               <button
