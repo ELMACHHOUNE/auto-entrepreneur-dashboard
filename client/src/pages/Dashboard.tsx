@@ -16,7 +16,7 @@ const YearTotalsBarChart = lazy(() => import('@/components/charts/YearTotalsBarC
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const chartsRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
   // Registry of force-mount callbacks for charts (to guarantee presence before export)
@@ -135,6 +135,12 @@ export default function Dashboard() {
         t('page.dashboard.charts.yearlyTotalsTitle'),
         t('page.dashboard.charts.composedTitle'),
       ],
+      labels: {
+        clientsCount: t('components.charts.clientsRadar.countLabel') + ': ',
+        totalPrice: t('components.charts.common.totalPrice') + ': ',
+        totalVat: t('components.charts.common.totalVat') + ': ',
+        noCharts: t('components.charts.common.noData'),
+      },
     });
   }, [year, clientCounts.length, monthlyTotals, waitNextFrames, t]);
 
@@ -165,8 +171,9 @@ export default function Dashboard() {
       title: t('page.dashboard.table.exportTitle', { year }),
       year,
       fileName: t('page.dashboard.table.fileNamePdf', { year }),
+      locale: i18n.language,
     });
-  }, [year, t]);
+  }, [year, t, i18n.language]);
 
   const onExportTableExcel = useCallback(async () => {
     const mod = await import('@/lib/excelExport');

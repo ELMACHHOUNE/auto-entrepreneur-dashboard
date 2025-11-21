@@ -380,5 +380,20 @@
     "October": "Octobre",
     "November": "Novembre",
     "December": "Décembre"
+  },
+  "exports": {
+    "invoicePdf": {
+      "headers": {
+        "invoiceNumber": "N° facture",
+        "year": "Année",
+        "month": "Mois",
+        "quarter": "Trimestre",
+        "client": "Client",
+        "amountDh": "Montant (DH)",
+        "tvaRatePercent": "Taux TVA (%)",
+        "tvaDh": "TVA (DH)",
+        "netDh": "Net (DH)"
+      }
+    }
   }
 }

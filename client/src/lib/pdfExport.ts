@@ -439,6 +439,12 @@ export async function exportChartsOnePageFromElement(
     totalAmount?: number;
     totalTva?: number;
     chartTitles?: string[];
+    labels?: {
+      clientsCount?: string; // e.g., "Numbers of clients is: "
+      totalPrice?: string; // e.g., "Total price is: "
+      totalVat?: string; // e.g., "Total TVA is: "
+      noCharts?: string; // e.g., "No charts found"
+    };
   }
 ) {
   const pdfMake = await ensurePdfMake();
@@ -540,7 +546,7 @@ export async function exportChartsOnePageFromElement(
   if (typeof meta?.clientsCount === 'number') {
     kpiItems.push({
       text: [
-        { text: 'Numbers of clients is: ', bold: true },
+        { text: meta?.labels?.clientsCount || 'Numbers of clients is: ', bold: true },
         { text: meta.clientsCount.toLocaleString() },
       ],
       fontSize: 10,
@@ -551,7 +557,7 @@ export async function exportChartsOnePageFromElement(
   if (typeof meta?.totalAmount === 'number') {
     kpiItems.push({
       text: [
-        { text: 'Total price is: ', bold: true },
+        { text: meta?.labels?.totalPrice || 'Total price is: ', bold: true },
         { text: `${normalizePdfSpaces(fmt.format(meta.totalAmount))} DH` },
       ],
       fontSize: 10,
@@ -562,7 +568,7 @@ export async function exportChartsOnePageFromElement(
   if (typeof meta?.totalTva === 'number') {
     kpiItems.push({
       text: [
-        { text: 'Total TVA is: ', bold: true },
+        { text: meta?.labels?.totalVat || 'Total TVA is: ', bold: true },
         { text: `${normalizePdfSpaces(fmt.format(meta.totalTva))} DH` },
       ],
       fontSize: 10,
@@ -619,7 +625,11 @@ export async function exportChartsOnePageFromElement(
   // 3) Then chart 4 with caption
   // 4) Then chart 5 with caption
   if (images.length === 0) {
-    content.push({ text: 'No charts found', alignment: 'center', color: '#777' });
+    content.push({
+      text: meta?.labels?.noCharts || 'No charts found',
+      alignment: 'center',
+      color: '#777',
+    });
   } else {
     // Separator line (horizontal rule) used between chart groups (not after last)
     const separator = (): import('pdfmake/interfaces').Content => ({
@@ -806,6 +816,8 @@ export async function exportAllInvoicesPdf(opts?: {
   title?: string;
   year?: number;
   fileName?: string;
+  locale?: string;
+  headers?: string[];
 }) {
   const pdfMake = await ensurePdfMake();
   const [{ api }] = await Promise.all([import('@/api/axios')]);
@@ -824,17 +836,37 @@ export async function exportAllInvoicesPdf(opts?: {
   const raw = (res.data?.invoices as RawInvoice[]) || [];
   const rows = [...raw].sort((a, b) => a.invoiceNumber - b.invoiceNumber);
 
-  const headers = [
-    'Invoice #',
-    'Year',
-    'Month',
-    'Quarter',
-    'Client',
-    'Amount (DH)',
-    'TVA Rate (%)',
-    'TVA (DH)',
-    'Net (DH)',
-  ];
+  // Build localized headers if available or use provided override
+  let headers = opts?.headers;
+  if (!headers) {
+    try {
+      const i18n = (await import('i18next')).default as unknown as { t: (k: string) => string };
+      const t = i18n.t.bind(i18n) as (k: string) => string;
+      headers = [
+        t('exports.invoicePdf.headers.invoiceNumber'),
+        t('exports.invoicePdf.headers.year'),
+        t('exports.invoicePdf.headers.month'),
+        t('exports.invoicePdf.headers.quarter'),
+        t('exports.invoicePdf.headers.client'),
+        t('exports.invoicePdf.headers.amountDh'),
+        t('exports.invoicePdf.headers.tvaRatePercent'),
+        t('exports.invoicePdf.headers.tvaDh'),
+        t('exports.invoicePdf.headers.netDh'),
+      ];
+    } catch {
+      headers = [
+        'Invoice #',
+        'Year',
+        'Month',
+        'Quarter',
+        'Client',
+        'Amount (DH)',
+        'TVA Rate (%)',
+        'TVA (DH)',
+        'Net (DH)',
+      ];
+    }
+  }
   const body: Array<Array<string | { text: string; bold?: boolean }>> = [];
   body.push(headers.map(h => ({ text: h, bold: true })));
   for (const inv of rows) {
@@ -846,10 +878,10 @@ export async function exportAllInvoicesPdf(opts?: {
       inv.month || '',
       inv.quarter || '',
       normalizePdfSpaces(inv.clientName || ''),
-      `${inv.amount.toLocaleString('en-US')}`,
-      `${(inv.tvaRate || 0).toLocaleString('en-US')}`,
-      `${vat.toLocaleString('en-US')}`,
-      `${net.toLocaleString('en-US')}`,
+      `${inv.amount.toLocaleString(opts?.locale || navigator?.language || 'en-US')}`,
+      `${(inv.tvaRate || 0).toLocaleString(opts?.locale || navigator?.language || 'en-US')}`,
+      `${vat.toLocaleString(opts?.locale || navigator?.language || 'en-US')}`,
+      `${net.toLocaleString(opts?.locale || navigator?.language || 'en-US')}`,
     ]);
   }
 

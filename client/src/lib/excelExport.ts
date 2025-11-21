@@ -209,7 +209,13 @@ async function svgToPngDataUrlExcel(svgEl: SVGSVGElement, scale = 2, scopeEl?: E
 // Export up to 5 charts from a container into a single Excel worksheet
 export async function exportChartsExcelFromElement(
   rootEl: HTMLElement,
-  meta?: { title?: string; year?: number; chartTitles?: string[]; fileName?: string }
+  meta?: {
+    title?: string;
+    sheetName?: string;
+    year?: number;
+    chartTitles?: string[];
+    fileName?: string;
+  }
 ) {
   // Create a temporary light-theme scope so charts resolve CSS vars to light colors
   const lightScope = document.createElement('div');
@@ -296,7 +302,17 @@ export async function exportChartsExcelFromElement(
     return;
   }
   const wb = new ExcelNS.Workbook();
-  const ws = wb.addWorksheet('Dashboard charts');
+  // Excel sheet names max 31 chars and disallow []:/\?*
+  const sanitizeSheetName = (name: string) => {
+    let out = String(name ?? '');
+    for (const ch of ['\\', '/', '*', '?', ':', '[', ']']) {
+      out = out.split(ch).join(' ');
+    }
+    out = out.slice(0, 31).trim();
+    return out || 'Sheet1';
+  };
+  const sheetBase = meta?.sheetName || meta?.title || 'Dashboard charts';
+  const ws = wb.addWorksheet(sanitizeSheetName(sheetBase));
   // Set consistent column widths
   const totalCols = 11;
   for (let c = 1; c <= totalCols; c++) ws.getColumn(c).width = 12;
@@ -437,19 +453,37 @@ export async function exportAllInvoicesExcelStyled(opts?: { fileName?: string; y
     ? (rawData.invoices as RawInvoice[])
     : [];
   invoices.sort((a, b) => a.invoiceNumber - b.invoiceNumber);
+  // Try to get localized headers via i18next if available
+  let header: string[];
+  try {
+    const i18nMod = (await import('i18next')).default as unknown as { t: (k: string) => string };
+    const t = i18nMod.t.bind(i18nMod) as (k: string) => string;
+    header = [
+      t('exports.invoicePdf.headers.invoiceNumber'),
+      t('exports.invoicePdf.headers.year'),
+      t('exports.invoicePdf.headers.month'),
+      t('exports.invoicePdf.headers.quarter'),
+      t('exports.invoicePdf.headers.client'),
+      t('exports.invoicePdf.headers.amountDh'),
+      t('exports.invoicePdf.headers.tvaRatePercent'),
+      t('exports.invoicePdf.headers.tvaDh'),
+      t('exports.invoicePdf.headers.netDh'),
+    ];
+  } catch {
+    header = [
+      'Invoice #',
+      'Year',
+      'Month',
+      'Quarter',
+      'Client',
+      'Amount (DH)',
+      'TVA Rate (%)',
+      'TVA (DH)',
+      'Net (DH)',
+    ];
+  }
   const wb = new ExcelNS.Workbook();
   const ws = wb.addWorksheet('Invoices');
-  const header = [
-    'Invoice #',
-    'Year',
-    'Month',
-    'Quarter',
-    'Client',
-    'Amount (DH)',
-    'TVA Rate (%)',
-    'TVA (DH)',
-    'Net (DH)',
-  ];
   ws.addRow(header);
   const headerRow = ws.getRow(1);
   headerRow.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
