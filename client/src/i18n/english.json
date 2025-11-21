@@ -119,6 +119,85 @@
         "mismatch": "Passwords do not match",
         "updateButton": "Update password"
       }
+    },
+    "admin": {
+      "title": "Admin Panel",
+      "subtitle": "Only admins can see this.",
+      "exportPdf": "Export PDF",
+      "exportTitle": "Auto Entrepreneur Dashboard",
+      "stats": {
+        "totalUsers": "Total users",
+        "loadTotalError": "Failed to load total users.",
+        "yearlySignups": "User signups per year",
+        "loadYearlyError": "Failed to load yearly stats.",
+        "usersByCategory": "Users by category",
+        "loadCategoryError": "Failed to load category stats.",
+        "loading": "Loading…",
+        "noData": "No data"
+      }
+    },
+    "adminUsers": {
+      "title": "Manage users",
+      "subtitle": "Create, update, and delete user accounts.",
+      "columns": {
+        "email": "Email",
+        "role": "Role",
+        "plan": "Plan",
+        "fullName": "Full name",
+        "phone": "Phone",
+        "ice": "ICE",
+        "service": "Service",
+        "profile": "Profile",
+        "category": "Category",
+        "type": "Type",
+        "activity": "Activity",
+        "companyCode": "Company code"
+      },
+      "profileKinds": {
+        "autoEntrepreneur": "Auto-entrepreneur",
+        "company": "Company"
+      },
+      "plans": {
+        "premium": "Premium",
+        "freemium": "Freemium"
+      },
+      "actions": {
+        "createUser": "Create user",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "saveChanges": "Save changes",
+        "create": "Create"
+      },
+      "modal": {
+        "titleCreate": "Create user",
+        "titleEdit": "Edit user"
+      },
+      "form": {
+        "email": "Email",
+        "password": "Password",
+        "passwordPlaceholder": "At least 6 characters",
+        "role": "Role",
+        "plan": "Plan",
+        "fullName": "Full name",
+        "phone": "Phone",
+        "ice": "ICE",
+        "profileType": "Profile type",
+        "none": "None",
+        "category": "Category",
+        "type": "Type",
+        "activity": "Activity",
+        "companyTypeCode": "Company type code",
+        "selectCategory": "Select category",
+        "selectType": "Select type",
+        "selectActivity": "Select activity",
+        "selectCompanyTypeCode": "Select company type code"
+      }
+    },
+    "adminServices": {
+      "title": "Manage services",
+      "subtitle": "Add, update, and organize offered services.",
+      "comingSoon": "Services management coming soon."
     }
   },
   "auth": {

@@ -119,6 +119,85 @@
         "mismatch": "Les mots de passe ne correspondent pas",
         "updateButton": "Mettre à jour le mot de passe"
       }
+    },
+    "admin": {
+      "title": "Panneau Admin",
+      "subtitle": "Seuls les administrateurs peuvent voir ceci.",
+      "exportPdf": "Exporter PDF",
+      "exportTitle": "Tableau de bord Auto-Entrepreneur",
+      "stats": {
+        "totalUsers": "Utilisateurs totaux",
+        "loadTotalError": "Échec du chargement du total des utilisateurs.",
+        "yearlySignups": "Inscriptions par année",
+        "loadYearlyError": "Échec du chargement des statistiques annuelles.",
+        "usersByCategory": "Utilisateurs par catégorie",
+        "loadCategoryError": "Échec du chargement des statistiques par catégorie.",
+        "loading": "Chargement…",
+        "noData": "Aucune donnée"
+      }
+    },
+    "adminUsers": {
+      "title": "Gérer les utilisateurs",
+      "subtitle": "Créer, mettre à jour et supprimer des comptes utilisateurs.",
+      "columns": {
+        "email": "E-mail",
+        "role": "Rôle",
+        "plan": "Forfait",
+        "fullName": "Nom complet",
+        "phone": "Téléphone",
+        "ice": "ICE",
+        "service": "Service",
+        "profile": "Profil",
+        "category": "Catégorie",
+        "type": "Type",
+        "activity": "Activité",
+        "companyCode": "Code société"
+      },
+      "profileKinds": {
+        "autoEntrepreneur": "Auto-entrepreneur",
+        "company": "Entreprise"
+      },
+      "plans": {
+        "premium": "Premium",
+        "freemium": "Gratuit"
+      },
+      "actions": {
+        "createUser": "Créer utilisateur",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "cancel": "Annuler",
+        "saveChanges": "Enregistrer les modifications",
+        "create": "Créer"
+      },
+      "modal": {
+        "titleCreate": "Créer utilisateur",
+        "titleEdit": "Modifier utilisateur"
+      },
+      "form": {
+        "email": "E-mail",
+        "password": "Mot de passe",
+        "passwordPlaceholder": "Au moins 6 caractères",
+        "role": "Rôle",
+        "plan": "Forfait",
+        "fullName": "Nom complet",
+        "phone": "Téléphone",
+        "ice": "ICE",
+        "profileType": "Type de profil",
+        "none": "Aucun",
+        "category": "Catégorie",
+        "type": "Type",
+        "activity": "Activité",
+        "companyTypeCode": "Code type société",
+        "selectCategory": "Sélectionner une catégorie",
+        "selectType": "Sélectionner un type",
+        "selectActivity": "Sélectionner une activité",
+        "selectCompanyTypeCode": "Sélectionner le code type société"
+      }
+    },
+    "adminServices": {
+      "title": "Gérer les services",
+      "subtitle": "Ajouter, mettre à jour et organiser les services proposés.",
+      "comingSoon": "Gestion des services bientôt disponible."
     }
   },
   "auth": {

@@ -14,6 +14,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import DataTable from '@/components/table/DataTable';
 import guideData from '@/assets/data.json';
 import { api } from '@/api/axios';
+import { useTranslation } from 'react-i18next';
 
 type UserRole = 'user' | 'admin';
 type IUser = {
@@ -44,6 +45,7 @@ type UsersResponse = {
 
 export default function Users() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const { user: authUser, refresh: refreshAuth } = useAuth();
   // Table state
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
@@ -103,38 +105,39 @@ export default function Users() {
   // Columns
   const columns = useMemo<MRT_ColumnDef<IUser>[]>(
     () => [
-      { accessorKey: 'email', header: 'Email' },
-      { accessorKey: 'role', header: 'Role' },
+      { accessorKey: 'email', header: t('page.adminUsers.columns.email') },
+      { accessorKey: 'role', header: t('page.adminUsers.columns.role') },
       {
         accessorKey: 'plan',
-        header: 'Plan',
+        header: t('page.adminUsers.columns.plan'),
         Cell: ({ cell }) => (
           <span className="tabular-nums font-medium">
-            {cell.getValue<string>() === 'premium' ? 'Premium' : 'Freemium'}
+            {cell.getValue<string>() === 'premium'
+              ? t('page.adminUsers.plans.premium')
+              : t('page.adminUsers.plans.freemium')}
           </span>
         ),
       },
-      { accessorKey: 'fullName', header: 'Full name' },
-      { accessorKey: 'phone', header: 'Phone' },
-      { accessorKey: 'ICE', header: 'ICE' },
-      { accessorKey: 'service', header: 'Service' },
-      // New structured columns (read-only display)
+      { accessorKey: 'fullName', header: t('page.adminUsers.columns.fullName') },
+      { accessorKey: 'phone', header: t('page.adminUsers.columns.phone') },
+      { accessorKey: 'ICE', header: t('page.adminUsers.columns.ice') },
+      { accessorKey: 'service', header: t('page.adminUsers.columns.service') },
       {
-        header: 'Profile',
+        header: t('page.adminUsers.columns.profile'),
         accessorFn: (row: IUser) =>
           row.profileKind === 'guide_auto_entrepreneur'
-            ? 'Auto-entrepreneur'
+            ? t('page.adminUsers.profileKinds.autoEntrepreneur')
             : row.profileKind === 'company_guide'
-            ? 'Company'
+            ? t('page.adminUsers.profileKinds.company')
             : '',
         id: 'profileKindLabel',
       },
-      { accessorKey: 'serviceCategory', header: 'Category' },
-      { accessorKey: 'serviceType', header: 'Type' },
-      { accessorKey: 'serviceActivity', header: 'Activity' },
-      { accessorKey: 'companyTypeCode', header: 'Company code' },
+      { accessorKey: 'serviceCategory', header: t('page.adminUsers.columns.category') },
+      { accessorKey: 'serviceType', header: t('page.adminUsers.columns.type') },
+      { accessorKey: 'serviceActivity', header: t('page.adminUsers.columns.activity') },
+      { accessorKey: 'companyTypeCode', header: t('page.adminUsers.columns.companyCode') },
     ],
-    []
+    [t]
   );
 
   // Create/Edit modal
@@ -231,23 +234,23 @@ export default function Users() {
 
   const renderRowActions = ({ row }: { row: { original: IUser } }) => (
     <Group gap="xs">
-      <Tooltip label="Edit" withArrow>
+      <Tooltip label={t('page.adminUsers.actions.edit')} withArrow>
         <ActionIcon
           variant="subtle"
           color="primary"
           size="sm"
-          aria-label="Edit user"
+          aria-label={t('page.adminUsers.actions.edit')}
           onClick={() => openEdit(row.original)}
         >
           <Pencil size={16} />
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Delete" withArrow>
+      <Tooltip label={t('page.adminUsers.actions.delete')} withArrow>
         <ActionIcon
           variant="subtle"
           color="red"
           size="sm"
-          aria-label="Delete user"
+          aria-label={t('page.adminUsers.actions.delete')}
           onClick={() => deleteMutation.mutate(row.original._id)}
         >
           <Trash2 size={16} />
@@ -258,15 +261,15 @@ export default function Users() {
 
   const topActions = () => (
     <Button onClick={openCreate} size="xs" styles={buttonAccentStyles}>
-      Create user
+      {t('page.adminUsers.actions.createUser')}
     </Button>
   );
 
   return (
     <section className="mx-auto max-w-7xl p-2">
       <header className="mb-4">
-        <h1 className="text-2xl font-semibold">Manage users</h1>
-        <p className="text-sm text-muted-foreground">Create, update, and delete user accounts.</p>
+        <h1 className="text-2xl font-semibold">{t('page.adminUsers.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('page.adminUsers.subtitle')}</p>
       </header>
       <DataTable<IUser>
         columns={columns}
@@ -289,7 +292,9 @@ export default function Users() {
       <Modal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Edit user' : 'Create user'}
+        title={
+          editing ? t('page.adminUsers.modal.titleEdit') : t('page.adminUsers.modal.titleCreate')
+        }
         size="md"
         radius="md"
         shadow="md"
@@ -298,7 +303,7 @@ export default function Users() {
       >
         <Stack>
           <TextInput
-            label="Email"
+            label={t('page.adminUsers.form.email')}
             type="email"
             placeholder="email@example.com"
             value={form.email}
@@ -309,9 +314,9 @@ export default function Users() {
           />
           {!editing && (
             <TextInput
-              label="Password"
+              label={t('page.adminUsers.form.password')}
               type="password"
-              placeholder="At least 6 characters"
+              placeholder={t('page.adminUsers.form.passwordPlaceholder')}
               value={form.password || ''}
               onChange={e => setForm(f => ({ ...f, password: e?.currentTarget?.value ?? '' }))}
               required
@@ -320,40 +325,40 @@ export default function Users() {
             />
           )}
           <Select
-            label="Role"
+            label={t('page.adminUsers.form.role')}
             value={form.role}
             onChange={(v: string | null) =>
               setForm(f => ({ ...f, role: ((v as UserRole) ?? 'user') as UserRole }))
             }
             data={[
-              { label: 'User', value: 'user' },
+              { label: t('page.adminUsers.actions.create'), value: 'user' },
               { label: 'Admin', value: 'admin' },
             ]}
             variant="filled"
             styles={selectFilledStyles}
           />
           <Select
-            label="Plan"
+            label={t('page.adminUsers.form.plan')}
             value={form.plan}
             onChange={(v: string | null) =>
               setForm(f => ({ ...f, plan: v === 'premium' ? 'premium' : 'freemium' }))
             }
             data={[
-              { label: 'Freemium (50MB)', value: 'freemium' },
-              { label: 'Premium (500MB)', value: 'premium' },
+              { label: `${t('page.adminUsers.plans.freemium')} (50MB)`, value: 'freemium' },
+              { label: `${t('page.adminUsers.plans.premium')} (500MB)`, value: 'premium' },
             ]}
             variant="filled"
             styles={selectFilledStyles}
           />
           <TextInput
-            label="Full name"
+            label={t('page.adminUsers.form.fullName')}
             value={form.fullName || ''}
             onChange={e => setForm(f => ({ ...f, fullName: e?.currentTarget?.value ?? '' }))}
             variant="filled"
             styles={inputFilledStyles}
           />
           <TextInput
-            label="Phone"
+            label={t('page.adminUsers.form.phone')}
             type="number"
             value={form.phone || ''}
             onChange={e => setForm(f => ({ ...f, phone: e?.currentTarget?.value ?? '' }))}
@@ -361,7 +366,7 @@ export default function Users() {
             styles={inputFilledStyles}
           />
           <TextInput
-            label="ICE"
+            label={t('page.adminUsers.form.ice')}
             type="number"
             value={form.ICE || ''}
             onChange={e => setForm(f => ({ ...f, ICE: e?.currentTarget?.value ?? '' }))}
@@ -370,7 +375,9 @@ export default function Users() {
           />
           {/* Profile kind selector */}
           <div>
-            <label className="mb-1 block text-sm font-medium">Profile type</label>
+            <label className="mb-1 block text-sm font-medium">
+              {t('page.adminUsers.form.profileType')}
+            </label>
             <select
               className="w-full rounded border bg-card p-2 text-foreground"
               value={form.profileKind}
@@ -385,9 +392,13 @@ export default function Users() {
                 }))
               }
             >
-              <option value="">None</option>
-              <option value="guide_auto_entrepreneur">Auto-entrepreneur guide</option>
-              <option value="company_guide">Company guide</option>
+              <option value="">{t('page.adminUsers.form.none')}</option>
+              <option value="guide_auto_entrepreneur">
+                {t('page.adminUsers.profileKinds.autoEntrepreneur')} guide
+              </option>
+              <option value="company_guide">
+                {t('page.adminUsers.profileKinds.company')} guide
+              </option>
             </select>
           </div>
 
@@ -395,7 +406,9 @@ export default function Users() {
             <>
               {/* Category */}
               <div>
-                <label className="mb-1 block text-sm font-medium">Category</label>
+                <label className="mb-1 block text-sm font-medium">
+                  {t('page.adminUsers.form.category')}
+                </label>
                 <select
                   className="w-full rounded border bg-card p-2 text-foreground"
                   value={form.serviceCategory || ''}
@@ -412,7 +425,7 @@ export default function Users() {
                     }));
                   }}
                 >
-                  <option value="">Select category</option>
+                  <option value="">{t('page.adminUsers.form.selectCategory')}</option>
                   {guideData.guide_auto_entrepreneur.sections.map(sec => (
                     <option key={sec.category} value={sec.category}>
                       {sec.category}
@@ -422,13 +435,15 @@ export default function Users() {
               </div>
               {/* Type */}
               <div>
-                <label className="mb-1 block text-sm font-medium">Type</label>
+                <label className="mb-1 block text-sm font-medium">
+                  {t('page.adminUsers.form.type')}
+                </label>
                 <select
                   className="w-full rounded border bg-card p-2 text-foreground"
                   value={form.serviceType || ''}
                   onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))}
                 >
-                  <option value="">Select type</option>
+                  <option value="">{t('page.adminUsers.form.selectType')}</option>
                   {form.serviceCategory &&
                     (() => {
                       const section = guideData.guide_auto_entrepreneur.sections.find(
@@ -440,14 +455,16 @@ export default function Users() {
               </div>
               {/* Activity */}
               <div>
-                <label className="mb-1 block text-sm font-medium">Activity</label>
+                <label className="mb-1 block text-sm font-medium">
+                  {t('page.adminUsers.form.activity')}
+                </label>
                 <select
                   className="w-full rounded border bg-card p-2 text-foreground"
                   value={form.serviceActivity || ''}
                   onChange={e => setForm(f => ({ ...f, serviceActivity: e.target.value }))}
                   disabled={!form.serviceCategory}
                 >
-                  <option value="">Select activity</option>
+                  <option value="">{t('page.adminUsers.form.selectActivity')}</option>
                   {form.serviceCategory &&
                     guideData.guide_auto_entrepreneur.sections
                       .find(s => s.category === form.serviceCategory)
@@ -463,13 +480,15 @@ export default function Users() {
 
           {form.profileKind === 'company_guide' && (
             <div>
-              <label className="mb-1 block text-sm font-medium">Company type code</label>
+              <label className="mb-1 block text-sm font-medium">
+                {t('page.adminUsers.form.companyTypeCode')}
+              </label>
               <select
                 className="w-full rounded border bg-card p-2 text-foreground"
                 value={form.companyTypeCode || ''}
                 onChange={e => setForm(f => ({ ...f, companyTypeCode: e.target.value }))}
               >
-                <option value="">Select company type code</option>
+                <option value="">{t('page.adminUsers.form.selectCompanyTypeCode')}</option>
                 {guideData.company_guide.types.map(t => (
                   <option key={t.code} value={t.code}>
                     {t.code} — {t.label}
@@ -484,14 +503,16 @@ export default function Users() {
               styles={buttonNeutralStyles}
               onClick={() => setModalOpen(false)}
             >
-              Cancel
+              {t('page.adminUsers.actions.cancel')}
             </Button>
             <Button
               styles={buttonAccentStyles}
               onClick={handleSubmit}
               loading={createMutation.isPending || updateMutation.isPending}
             >
-              {editing ? 'Save changes' : 'Create'}
+              {editing
+                ? t('page.adminUsers.actions.saveChanges')
+                : t('page.adminUsers.actions.create')}
             </Button>
           </Group>
         </Stack>

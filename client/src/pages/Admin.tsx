@@ -10,6 +10,7 @@ import {
   useAdminUsersTotal,
   useAdminUsersYearly,
 } from '@/hooks/useAdminUserStats';
+import { useTranslation } from 'react-i18next';
 // export helper is dynamically imported on demand to keep bundle small
 // number formatting handled by AnimatedNumber
 
@@ -17,6 +18,7 @@ export default function Admin() {
   const { data: yearly = [], isLoading: loadingYear, error: errorYear } = useAdminUsersYearly();
   const { data: byCat = [], isLoading: loadingCat, error: errorCat } = useAdminUsersByCategory();
   const { data: total = 0, isLoading: loadingTotal, error: errorTotal } = useAdminUsersTotal();
+  const { t } = useTranslation();
 
   const yearlyData = useMemo(() => yearly, [yearly]);
 
@@ -31,19 +33,19 @@ export default function Admin() {
     const { exportAdminPdfFromElement } = await import('@/lib/pdfExport');
     await exportAdminPdfFromElement(node, {
       totalUsers: total,
-      title: 'Auto Entrepreneur Dashboard',
+      title: t('page.admin.exportTitle'),
       yearlyData,
       catData,
     });
-  }, [total, yearlyData, catData]);
+  }, [total, yearlyData, catData, t]);
 
   return (
     <RequireRole role="admin">
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Admin Panel</h2>
-            <p className="text-sm text-muted-foreground">Only admins can see this.</p>
+            <h2 className="text-2xl font-semibold">{t('page.admin.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('page.admin.subtitle')}</p>
           </div>
           <button
             type="button"
@@ -56,7 +58,7 @@ export default function Admin() {
             }}
           >
             <FileText size={16} />
-            <span>Export PDF</span>
+            <span>{t('page.admin.exportPdf')}</span>
           </button>
         </div>
 
@@ -65,7 +67,7 @@ export default function Admin() {
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="sm:col-span-1">
               <StatsCard
-                title="Total users"
+                title={t('page.admin.stats.totalUsers')}
                 size="5xl"
                 value={
                   loadingTotal ? (
@@ -76,7 +78,9 @@ export default function Admin() {
                 }
               />
               {errorTotal && (
-                <div className="mt-1 text-xs text-destructive">Failed to load total users.</div>
+                <div className="mt-1 text-xs text-destructive">
+                  {t('page.admin.stats.loadTotalError')}
+                </div>
               )}
             </div>
           </div>
@@ -86,21 +90,23 @@ export default function Admin() {
             {/* Yearly signups (Composed-style: bar + line) */}
             <div className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-base font-semibold">User signups per year</h3>
+                <h3 className="text-base font-semibold">{t('page.admin.stats.yearlySignups')}</h3>
               </div>
               {errorYear && (
-                <div className="mb-2 text-xs text-destructive">Failed to load yearly stats.</div>
+                <div className="mb-2 text-xs text-destructive">
+                  {t('page.admin.stats.loadYearlyError')}
+                </div>
               )}
               {loadingYear ? (
                 <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
-                  Loading…
+                  {t('page.admin.stats.loading')}
                 </div>
               ) : yearlyData.length === 0 ? (
                 <div
                   className="flex h-72 items-center justify-center text-sm"
                   style={{ color: 'var(--accent)' }}
                 >
-                  No data
+                  {t('page.admin.stats.noData')}
                 </div>
               ) : (
                 <YearlySignupsChart data={yearlyData} height={320} />
@@ -110,21 +116,23 @@ export default function Admin() {
             {/* Users by category */}
             <div className="rounded-lg border bg-card p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-base font-semibold">Users by category</h3>
+                <h3 className="text-base font-semibold">{t('page.admin.stats.usersByCategory')}</h3>
               </div>
               {errorCat && (
-                <div className="mb-2 text-xs text-destructive">Failed to load category stats.</div>
+                <div className="mb-2 text-xs text-destructive">
+                  {t('page.admin.stats.loadCategoryError')}
+                </div>
               )}
               {loadingCat ? (
                 <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
-                  Loading…
+                  {t('page.admin.stats.loading')}
                 </div>
               ) : catData.length === 0 ? (
                 <div
                   className="flex h-72 items-center justify-center text-sm"
                   style={{ color: 'var(--accent)' }}
                 >
-                  No data
+                  {t('page.admin.stats.noData')}
                 </div>
               ) : (
                 <UsersByCategoryChart data={catData} height={320} />
