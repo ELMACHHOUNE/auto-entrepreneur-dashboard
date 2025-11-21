@@ -10,6 +10,7 @@ import {
 } from 'mantine-react-table';
 import type React from 'react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Generic reusable DataTable wrapper.
 // Centralizes MantineReactTable configuration and styling so pages only pass data & columns.
@@ -66,6 +67,7 @@ export function DataTable<T extends Record<string, unknown>>({
   groupWithinComparator,
   defaultSorting,
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   // Memo columns to prevent re-renders
   const memoCols = useMemo(() => columns, [columns]);
 
@@ -203,7 +205,7 @@ export function DataTable<T extends Record<string, unknown>>({
     renderRowActions,
     renderTopToolbarCustomActions,
     mantineToolbarAlertBannerProps: error
-      ? { color: 'red', children: 'Error loading data' }
+      ? { color: 'red', children: t('components.dataTable.errorLoading') }
       : undefined,
     // Global styling (token based) handled here instead of each page.
     mantinePaperProps: {
@@ -281,7 +283,7 @@ export function DataTable<T extends Record<string, unknown>>({
     },
     mantineSearchTextInputProps: {
       variant: 'filled',
-      placeholder: 'Search…',
+      placeholder: t('components.dataTable.searchPlaceholder'),
       styles: searchInputStyles,
     },
   });

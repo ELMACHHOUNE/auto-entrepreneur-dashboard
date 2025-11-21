@@ -198,6 +198,38 @@
       "title": "Manage services",
       "subtitle": "Add, update, and organize offered services.",
       "comingSoon": "Services management coming soon."
+    },
+    "dashboard": {
+      "actions": {
+        "exportChartsPdf": "Export charts as PDF",
+        "exportChartsExcel": "Export charts as Excel",
+        "exportTablePdf": "Export table PDF",
+        "exportTableExcelAll": "Export table Excel (all)"
+      },
+      "charts": {
+        "exportTitle": "Dashboard charts ({{year}})",
+        "quarterTotalsTitle": "Quarter totals by month ({{year}})",
+        "vatTotalsTitle": "VAT totals by month ({{year}})",
+        "invoicesPerClientTitle": "Invoices per client ({{year}})",
+        "yearlyTotalsTitle": "Yearly totals (Price vs VAT)",
+        "composedTitle": "Composed chart (sample)",
+        "loading": "Loading chart…",
+        "noDataForYear": "No data for {{year}}."
+      },
+      "summary": {
+        "totalPrice": "Total price ({{year}})",
+        "totalVat": "Total TVA ({{year}})"
+      },
+      "table": {
+        "title": "Data table",
+        "loading": "Loading table…",
+        "exportTitle": "Invoices table ({{year}})",
+        "fileNamePdf": "invoices-all-{{year}}.pdf",
+        "fileNameExcel": "invoices-all-{{year}}.xlsx"
+      },
+      "excel": {
+        "fileNameCharts": "dashboard-charts-{{year}}.xlsx"
+      }
     }
   },
   "auth": {
@@ -259,6 +291,60 @@
       "google": "Continue with Google",
       "haveAccount": "Already have an account?",
       "loginLink": "Login"
+    }
+  },
+  "components": {
+    "dataTable": {
+      "errorLoading": "Error loading data",
+      "searchPlaceholder": "Search…"
+    },
+    "invoiceTable": {
+      "columns": {
+        "invoiceNo": "Invoice No.",
+        "quarter": "Quarter",
+        "year": "Year",
+        "month": "Month",
+        "client": "Client",
+        "totalAmount": "Total Amount",
+        "vatPercent": "VAT %",
+        "vatAmount": "VAT Amount"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "toolbar": {
+        "addInvoice": "Add Invoice",
+        "yearPlaceholder": "Year",
+        "invoicesPillTitle": "Number of invoices in the current year",
+        "invoicesLabel": "Invoices:"
+      },
+      "addModal": {
+        "title": "Add Invoice",
+        "labels": {
+          "invoiceNo": "Invoice No.",
+          "clientName": "Client Name",
+          "month": "Month",
+          "year": "Year",
+          "amountDh": "Amount (DH)",
+          "vatPercent": "VAT %"
+        },
+        "placeholders": {
+          "clientTyping": "Start typing to pick an existing client…",
+          "clientEnter": "Enter client name"
+        },
+        "descriptions": {
+          "vatHelp": "Type any value (e.g. 0.5 or 20)"
+        },
+        "cancel": "Cancel",
+        "submit": "Add Invoice"
+      },
+      "editModal": {
+        "title": "Edit Invoice",
+        "cancel": "Cancel",
+        "saveChanges": "Save Changes"
+      },
+      "confirmDelete": "Delete this invoice?"
     }
   }
 }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
@@ -64,6 +65,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   onMonthlyTotalsChange,
   onClientCountsChange,
 }) => {
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(externalYear || currentYear);
@@ -317,36 +319,44 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   const columns = useMemo<MRT_ColumnDef<InvoiceRow>[]>(
     () => [
-      { accessorKey: 'invoiceNumber', header: 'Invoice No.', size: 150 },
-      { accessorKey: 'quarter', header: 'Quarter', size: 80 },
-      { accessorKey: 'year', header: 'Year', size: 80 },
-      { accessorKey: 'month', header: 'Month', size: 120 },
-      { accessorKey: 'clientName', header: 'Client', size: 160 },
+      {
+        accessorKey: 'invoiceNumber',
+        header: t('components.invoiceTable.columns.invoiceNo'),
+        size: 150,
+      },
+      { accessorKey: 'quarter', header: t('components.invoiceTable.columns.quarter'), size: 80 },
+      { accessorKey: 'year', header: t('components.invoiceTable.columns.year'), size: 80 },
+      { accessorKey: 'month', header: t('components.invoiceTable.columns.month'), size: 120 },
+      { accessorKey: 'clientName', header: t('components.invoiceTable.columns.client'), size: 160 },
       {
         id: 'amount',
-        header: 'Total Amount',
+        header: t('components.invoiceTable.columns.totalAmount'),
         accessorFn: row => row.amount,
         Cell: ({ row }) => (
-          <span style={{ fontWeight: 500 }}>{row.original.amount.toLocaleString('en-US')} DH</span>
+          <span style={{ fontWeight: 500 }}>
+            {row.original.amount.toLocaleString(i18n.language)} DH
+          </span>
         ),
         size: 120,
       },
       {
         id: 'tvaRate',
-        header: 'VAT %',
+        header: t('components.invoiceTable.columns.vatPercent'),
         accessorFn: row => row.tvaRate,
         Cell: ({ row }) => <span>{row.original.tvaRate}%</span>,
         size: 80,
       },
       {
         id: 'tvaAmount',
-        header: 'VAT Amount',
+        header: t('components.invoiceTable.columns.vatAmount'),
         accessorFn: row => computeTvaAmount(row),
-        Cell: ({ row }) => <span>{computeTvaAmount(row.original).toLocaleString('en-US')} DH</span>,
+        Cell: ({ row }) => (
+          <span>{computeTvaAmount(row.original).toLocaleString(i18n.language)} DH</span>
+        ),
         size: 120,
       },
     ],
-    []
+    [t, i18n.language]
   );
 
   // Provide a wider, scrollable year range and render dropdowns in a portal to avoid clipping
@@ -375,12 +385,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         enableRowActions
         renderRowActions={({ row }) => (
           <Group gap={4}>
-            <Tooltip label="Edit">
+            <Tooltip label={t('components.invoiceTable.actions.edit')}>
               <ActionIcon variant="subtle" onClick={() => startEdit(row.original)}>
                 <Pencil size={16} />
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Delete">
+            <Tooltip label={t('components.invoiceTable.actions.delete')}>
               <ActionIcon color="red" variant="subtle" onClick={() => deleteRow(row.original)}>
                 <Trash2 size={16} />
               </ActionIcon>
@@ -400,10 +410,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 }}
                 className="min-w-[110px]"
               >
-                Add Invoice
+                {t('components.invoiceTable.toolbar.addInvoice')}
               </Button>
               <Select
-                placeholder="Year"
+                placeholder={t('components.invoiceTable.toolbar.yearPlaceholder')}
                 size="xs"
                 value={year.toString()}
                 data={yearOptions}
@@ -423,10 +433,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             >
               <span
                 className="inline-flex items-center justify-center rounded-md bg-accent/60 px-4 py-1.5 text-sm sm:text-base font-semibold leading-none tracking-wide text-accent-foreground shadow-sm backdrop-blur-sm"
-                title="Number of invoices in the current year"
+                title={t('components.invoiceTable.toolbar.invoicesPillTitle')}
               >
-                Invoices:&nbsp;
-                <span className="tabular-nums">{rowsForYear.length.toLocaleString('en-US')}</span>
+                {t('components.invoiceTable.toolbar.invoicesLabel')}&nbsp;
+                <span className="tabular-nums">
+                  {rowsForYear.length.toLocaleString(i18n.language)}
+                </span>
               </span>
             </div>
             {/* Spacer to push built-in MRT controls (search, column visibility) to the end on larger screens */}
@@ -439,7 +451,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       <Modal
         opened={addOpen}
         onClose={() => setAddOpen(false)}
-        title="Add Invoice"
+        title={t('components.invoiceTable.addModal.title')}
         size="md"
         radius="md"
         shadow="md"
@@ -448,7 +460,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <TextInput
-            label="Invoice No."
+            label={t('components.invoiceTable.addModal.labels.invoiceNo')}
             type="number"
             value={invNumber}
             onChange={e => setInvNumber(e.currentTarget.value)}
@@ -457,14 +469,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             styles={inputFilledStyles}
           />
           <Autocomplete
-            label="Client Name"
+            label={t('components.invoiceTable.addModal.labels.clientName')}
             data={clientSuggestions}
             value={invClient}
             onChange={setInvClient}
             placeholder={
               clientSuggestions.length
-                ? 'Start typing to pick an existing client…'
-                : 'Enter client name'
+                ? t('components.invoiceTable.addModal.placeholders.clientTyping')
+                : t('components.invoiceTable.addModal.placeholders.clientEnter')
             }
             variant="filled"
             styles={selectFilledStyles}
@@ -473,7 +485,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             limit={15}
           />
           <Select
-            label="Month"
+            label={t('components.invoiceTable.addModal.labels.month')}
             data={MONTHS.map(m => ({ value: m, label: m }))}
             value={invMonth}
             onChange={v => setInvMonth((v as Month) || 'January')}
@@ -481,7 +493,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             styles={selectFilledStyles}
           />
           <Select
-            label="Year"
+            label={t('components.invoiceTable.addModal.labels.year')}
             data={yearOptions}
             value={invYear.toString()}
             onChange={v => setInvYear(parseInt(v || year.toString(), 10))}
@@ -491,7 +503,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             maxDropdownHeight={260}
           />
           <TextInput
-            label="Amount (DH)"
+            label={t('components.invoiceTable.addModal.labels.amountDh')}
             type="number"
             value={invAmount}
             onChange={e => setInvAmount(e.currentTarget.value)}
@@ -499,9 +511,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             styles={inputFilledStyles}
           />
           <TextInput
-            label="VAT %"
+            label={t('components.invoiceTable.addModal.labels.vatPercent')}
             type="number"
-            description="Type any value (e.g. 0.5 or 20)"
+            description={t('components.invoiceTable.addModal.descriptions.vatHelp')}
             value={invTvaRateInput}
             onChange={e => setInvTvaRateInput(e.currentTarget.value)}
             onBlur={e => {
@@ -520,10 +532,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             styles={buttonNeutralStyles}
             onClick={() => setAddOpen(false)}
           >
-            Cancel
+            {t('components.invoiceTable.addModal.cancel')}
           </Button>
           <Button size="xs" styles={buttonAccentStyles} onClick={addInvoice}>
-            Add Invoice
+            {t('components.invoiceTable.addModal.submit')}
           </Button>
         </Group>
       </Modal>
@@ -532,7 +544,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       <Modal
         opened={editOpen}
         onClose={() => setEditOpen(false)}
-        title="Edit Invoice"
+        title={t('components.invoiceTable.editModal.title')}
         size="md"
         radius="md"
         shadow="md"
@@ -542,7 +554,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         {editDraft && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <TextInput
-              label="Invoice No."
+              label={t('components.invoiceTable.addModal.labels.invoiceNo')}
               type="number"
               value={String(editDraft.invoiceNumber)}
               onChange={e => {
@@ -556,14 +568,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               styles={inputFilledStyles}
             />
             <Autocomplete
-              label="Client Name"
+              label={t('components.invoiceTable.addModal.labels.clientName')}
               data={clientSuggestions}
               value={editDraft.clientName as string}
               onChange={v => setEditDraft(d => (d ? { ...d, clientName: v } : d))}
               placeholder={
                 clientSuggestions.length
-                  ? 'Start typing to pick an existing client…'
-                  : 'Enter client name'
+                  ? t('components.invoiceTable.addModal.placeholders.clientTyping')
+                  : t('components.invoiceTable.addModal.placeholders.clientEnter')
               }
               variant="filled"
               styles={selectFilledStyles}
@@ -572,7 +584,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               limit={15}
             />
             <Select
-              label="Month"
+              label={t('components.invoiceTable.addModal.labels.month')}
               data={MONTHS.map(m => ({ value: m, label: m }))}
               value={editDraft.month as Month}
               onChange={v =>
@@ -590,7 +602,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               styles={selectFilledStyles}
             />
             <Select
-              label="Year"
+              label={t('components.invoiceTable.addModal.labels.year')}
               data={yearOptions}
               value={editDraft.year.toString()}
               onChange={v =>
@@ -602,7 +614,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               maxDropdownHeight={260}
             />
             <TextInput
-              label="Amount (DH)"
+              label={t('components.invoiceTable.addModal.labels.amountDh')}
               type="number"
               value={String(editDraft.amount)}
               onChange={e =>
@@ -612,8 +624,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               styles={inputFilledStyles}
             />
             <TextInput
-              label="VAT %"
-              description="Type any value (e.g. 0.5 or 20)"
+              label={t('components.invoiceTable.addModal.labels.vatPercent')}
+              description={t('components.invoiceTable.addModal.descriptions.vatHelp')}
               value={String(editDraft.tvaRate)}
               onChange={e => {
                 const raw = e.currentTarget.value;
@@ -636,10 +648,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             styles={buttonNeutralStyles}
             onClick={() => setEditOpen(false)}
           >
-            Cancel
+            {t('components.invoiceTable.editModal.cancel')}
           </Button>
           <Button size="xs" styles={buttonAccentStyles} onClick={saveEdit}>
-            Save Changes
+            {t('components.invoiceTable.editModal.saveChanges')}
           </Button>
         </Group>
       </Modal>

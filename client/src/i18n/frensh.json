@@ -38,6 +38,60 @@
       "allTime": "Historique"
     }
   },
+  "components": {
+    "dataTable": {
+      "errorLoading": "Erreur de chargement des données",
+      "searchPlaceholder": "Rechercher…"
+    },
+    "invoiceTable": {
+      "columns": {
+        "invoiceNo": "N° facture",
+        "quarter": "Trimestre",
+        "year": "Année",
+        "month": "Mois",
+        "client": "Client",
+        "totalAmount": "Montant total",
+        "vatPercent": "TVA %",
+        "vatAmount": "Montant TVA"
+      },
+      "actions": {
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
+      "toolbar": {
+        "addInvoice": "Ajouter facture",
+        "yearPlaceholder": "Année",
+        "invoicesPillTitle": "Nombre de factures pour l'année en cours",
+        "invoicesLabel": "Factures :"
+      },
+      "addModal": {
+        "title": "Ajouter une facture",
+        "labels": {
+          "invoiceNo": "N° facture",
+          "clientName": "Nom du client",
+          "month": "Mois",
+          "year": "Année",
+          "amountDh": "Montant (DH)",
+          "vatPercent": "TVA %"
+        },
+        "placeholders": {
+          "clientTyping": "Commencez à saisir pour choisir un client existant…",
+          "clientEnter": "Saisissez le nom du client"
+        },
+        "descriptions": {
+          "vatHelp": "Saisissez n'importe quelle valeur (ex. 0,5 ou 20)"
+        },
+        "cancel": "Annuler",
+        "submit": "Ajouter la facture"
+      },
+      "editModal": {
+        "title": "Modifier la facture",
+        "cancel": "Annuler",
+        "saveChanges": "Enregistrer"
+      },
+      "confirmDelete": "Supprimer cette facture ?"
+    }
+  },
   "page": {
     "invoices": {
       "title": "Fichiers factures",
@@ -198,6 +252,38 @@
       "title": "Gérer les services",
       "subtitle": "Ajouter, mettre à jour et organiser les services proposés.",
       "comingSoon": "Gestion des services bientôt disponible."
+    },
+    "dashboard": {
+      "actions": {
+        "exportChartsPdf": "Exporter les graphiques en PDF",
+        "exportChartsExcel": "Exporter les graphiques en Excel",
+        "exportTablePdf": "Exporter le tableau en PDF",
+        "exportTableExcelAll": "Exporter le tableau Excel (tout)"
+      },
+      "charts": {
+        "exportTitle": "Graphiques du tableau de bord ({{year}})",
+        "quarterTotalsTitle": "Totaux trimestriels par mois ({{year}})",
+        "vatTotalsTitle": "Totaux TVA par mois ({{year}})",
+        "invoicesPerClientTitle": "Factures par client ({{year}})",
+        "yearlyTotalsTitle": "Totaux annuels (Prix vs TVA)",
+        "composedTitle": "Graphique composé (exemple)",
+        "loading": "Chargement du graphique…",
+        "noDataForYear": "Aucune donnée pour {{year}}."
+      },
+      "summary": {
+        "totalPrice": "Prix total ({{year}})",
+        "totalVat": "TVA totale ({{year}})"
+      },
+      "table": {
+        "title": "Tableau des données",
+        "loading": "Chargement du tableau…",
+        "exportTitle": "Tableau des factures ({{year}})",
+        "fileNamePdf": "factures-tout-{{year}}.pdf",
+        "fileNameExcel": "factures-tout-{{year}}.xlsx"
+      },
+      "excel": {
+        "fileNameCharts": "graphiques-dashboard-{{year}}.xlsx"
+      }
     }
   },
   "auth": {

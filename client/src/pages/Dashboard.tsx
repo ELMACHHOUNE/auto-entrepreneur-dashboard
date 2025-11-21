@@ -1,6 +1,7 @@
 import { Table, FileText, FileSpreadsheet } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Suspense, lazy, useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import LazyVisible from '@/components/ui/LazyVisible';
 import type { Month } from '@/lib/dateBuckets';
 import { QuarterlySidebar } from '@/components/layout/QuarterlySidebar';
@@ -15,6 +16,7 @@ const YearTotalsBarChart = lazy(() => import('@/components/charts/YearTotalsBarC
 const InvoiceTable = lazy(() => import('@/components/invoices/InvoiceTable'));
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const chartsRef = useRef<HTMLDivElement | null>(null);
   const tableRef = useRef<HTMLDivElement | null>(null);
   // Registry of force-mount callbacks for charts (to guarantee presence before export)
@@ -120,21 +122,21 @@ export default function Dashboard() {
     const totalTva = monthlyTotals.reduce((sum, m) => sum + (m.vat || 0), 0);
     const { exportChartsOnePageFromElement } = await import('@/lib/pdfExport');
     await exportChartsOnePageFromElement(node, {
-      title: `Dashboard charts (${year})`,
+      title: t('page.dashboard.charts.exportTitle', { year }),
       year,
       clientsCount: clientCounts.length,
       totalAmount,
       totalTva,
       // Explicit captions to guarantee naming order in PDF
       chartTitles: [
-        `Quarter totals by month (${year})`,
-        `VAT totals by month (${year})`,
-        `Invoices per client (${year})`,
-        `Yearly totals (Price vs VAT)`,
-        `Composed chart (sample)`,
+        t('page.dashboard.charts.quarterTotalsTitle', { year }),
+        t('page.dashboard.charts.vatTotalsTitle', { year }),
+        t('page.dashboard.charts.invoicesPerClientTitle', { year }),
+        t('page.dashboard.charts.yearlyTotalsTitle'),
+        t('page.dashboard.charts.composedTitle'),
       ],
     });
-  }, [year, clientCounts.length, monthlyTotals, waitNextFrames]);
+  }, [year, clientCounts.length, monthlyTotals, waitNextFrames, t]);
 
   const onExportChartsExcel = useCallback(async () => {
     const node = chartsRef.current;
@@ -144,40 +146,41 @@ export default function Dashboard() {
     await waitNextFrames(2);
     const mod = await import('@/lib/excelExport');
     await mod.exportChartsExcelFromElement(node, {
-      title: `Dashboard charts (${year})`,
+      title: t('page.dashboard.charts.exportTitle', { year }),
       year,
       chartTitles: [
-        `Quarter totals by month (${year})`,
-        `VAT totals by month (${year})`,
-        `Invoices per client (${year})`,
-        `Yearly totals (Price vs VAT)`,
-        `Composed chart (sample)`,
+        t('page.dashboard.charts.quarterTotalsTitle', { year }),
+        t('page.dashboard.charts.vatTotalsTitle', { year }),
+        t('page.dashboard.charts.invoicesPerClientTitle', { year }),
+        t('page.dashboard.charts.yearlyTotalsTitle'),
+        t('page.dashboard.charts.composedTitle'),
       ],
-      fileName: `dashboard-charts-${year}.xlsx`,
+      fileName: t('page.dashboard.excel.fileNameCharts', { year }),
     });
-  }, [year, waitNextFrames]);
+  }, [year, waitNextFrames, t]);
 
   const onExportTable = useCallback(async () => {
     const { exportAllInvoicesPdf } = await import('@/lib/pdfExport');
     await exportAllInvoicesPdf({
-      title: `Invoices table (${year})`,
+      title: t('page.dashboard.table.exportTitle', { year }),
       year,
-      fileName: `invoices-all-${year}.pdf`,
+      fileName: t('page.dashboard.table.fileNamePdf', { year }),
     });
-  }, [year]);
+  }, [year, t]);
 
   const onExportTableExcel = useCallback(async () => {
     const mod = await import('@/lib/excelExport');
+    const fileName = t('page.dashboard.table.fileNameExcel', { year });
     if (mod.exportAllInvoicesExcelStyled) {
       try {
-        await mod.exportAllInvoicesExcelStyled({ fileName: `invoices-all-${year}.xlsx`, year });
+        await mod.exportAllInvoicesExcelStyled({ fileName, year });
         return;
       } catch (e) {
         console.warn('Styled Excel export failed, falling back:', e);
       }
     }
-    await mod.exportAllInvoicesExcel({ fileName: `invoices-all-${year}.xlsx`, year });
-  }, [year]);
+    await mod.exportAllInvoicesExcel({ fileName, year });
+  }, [year, t]);
 
   return (
     <DashboardLayout
@@ -198,7 +201,7 @@ export default function Dashboard() {
           }}
         >
           <FileText size={16} />
-          <span>Export charts as PDF</span>
+          <span>{t('page.dashboard.actions.exportChartsPdf')}</span>
         </button>
         <button
           type="button"
@@ -214,78 +217,105 @@ export default function Dashboard() {
           }}
         >
           <FileSpreadsheet size={16} />
-          <span>Export charts as Excel</span>
+          <span>{t('page.dashboard.actions.exportChartsExcel')}</span>
         </button>
       </div>
       {/* Chart + Table layout scaffold */}
       <section ref={chartsRef} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border p-4 min-h-80">
-          <h4 className="mb-2 text-sm font-medium">Quarter totals by month ({year})</h4>
+          <h4 className="mb-2 text-sm font-medium">
+            {t('page.dashboard.charts.quarterTotalsTitle', { year })}
+          </h4>
           <LazyVisible
             minHeight="12rem"
             fallback={
               <div className="text-xs text-muted-foreground" role="status">
-                Loading chart…
+                {t('page.dashboard.charts.loading')}
               </div>
             }
             onRegister={force => chartForcersRef.current.push(force)}
           >
             <Suspense
-              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+              fallback={
+                <div className="text-xs text-muted-foreground">
+                  {t('page.dashboard.charts.loading')}
+                </div>
+              }
             >
               <QuarterLinesChart year={year} />
             </Suspense>
           </LazyVisible>
         </div>
         <div className="rounded-lg border p-4 min-h-80">
-          <h4 className="mb-2 text-sm font-medium">VAT totals by month ({year})</h4>
+          <h4 className="mb-2 text-sm font-medium">
+            {t('page.dashboard.charts.vatTotalsTitle', { year })}
+          </h4>
           <LazyVisible
             minHeight="12rem"
             fallback={
               <div className="text-xs text-muted-foreground" role="status">
-                Loading chart…
+                {t('page.dashboard.charts.loading')}
               </div>
             }
             onRegister={force => chartForcersRef.current.push(force)}
           >
             <Suspense
-              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+              fallback={
+                <div className="text-xs text-muted-foreground">
+                  {t('page.dashboard.charts.loading')}
+                </div>
+              }
             >
               <QuarterLinesTvaChart year={year} />
             </Suspense>
           </LazyVisible>
         </div>
         <div className="rounded-lg border p-4">
-          <h4 className="mb-2 text-sm font-medium">Invoices per client ({year})</h4>
+          <h4 className="mb-2 text-sm font-medium">
+            {t('page.dashboard.charts.invoicesPerClientTitle', { year })}
+          </h4>
           <LazyVisible
             minHeight="10rem"
             fallback={
               <div className="text-xs text-muted-foreground" role="status">
-                Loading chart…
+                {t('page.dashboard.charts.loading')}
               </div>
             }
             onRegister={force => chartForcersRef.current.push(force)}
           >
             <Suspense
-              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+              fallback={
+                <div className="text-xs text-muted-foreground">
+                  {t('page.dashboard.charts.loading')}
+                </div>
+              }
             >
-              <ClientsRadarChart data={clientCounts} noDataLabel={`No data for ${year}.`} />
+              <ClientsRadarChart
+                data={clientCounts}
+                noDataLabel={t('page.dashboard.charts.noDataForYear', { year })}
+              />
             </Suspense>
           </LazyVisible>
         </div>
         <div className="rounded-lg border p-4 min-h-96">
-          <h4 className="mb-6 text-sm font-medium">Yearly totals (Price vs VAT)</h4>
+          <h4 className="mb-6 text-sm font-medium">
+            {t('page.dashboard.charts.yearlyTotalsTitle')}
+          </h4>
           <LazyVisible
             minHeight="14rem"
             fallback={
               <div className="text-xs text-muted-foreground" role="status">
-                Loading chart…
+                {t('page.dashboard.charts.loading')}
               </div>
             }
             onRegister={force => chartForcersRef.current.push(force)}
           >
             <Suspense
-              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+              fallback={
+                <div className="text-xs text-muted-foreground">
+                  {t('page.dashboard.charts.loading')}
+                </div>
+              }
             >
               <YearTotalsBarChart />
             </Suspense>
@@ -294,17 +324,21 @@ export default function Dashboard() {
         {/* Full-width composed chart row */}
         <div className="rounded-lg border p-4 md:col-span-2">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <h4 className="text-sm font-medium">Composed chart (sample)</h4>
+            <h4 className="text-sm font-medium">{t('page.dashboard.charts.composedTitle')}</h4>
             {/* Year totals summary from InvoiceTable callback */}
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-md border px-3 py-1.5">
-                <div className="text-muted-foreground">Total price ({year})</div>
+                <div className="text-muted-foreground">
+                  {t('page.dashboard.summary.totalPrice', { year })}
+                </div>
                 <div className="tabular-nums font-semibold">
                   {yearTotals.amount.toLocaleString('en-US')} DH
                 </div>
               </div>
               <div className="rounded-md border px-3 py-1.5">
-                <div className="text-muted-foreground">Total TVA ({year})</div>
+                <div className="text-muted-foreground">
+                  {t('page.dashboard.summary.totalVat', { year })}
+                </div>
                 <div className="tabular-nums font-semibold">
                   {yearTotals.tva.toLocaleString('en-US')} DH
                 </div>
@@ -315,13 +349,17 @@ export default function Dashboard() {
             minHeight="12rem"
             fallback={
               <div className="text-xs text-muted-foreground" role="status">
-                Loading chart…
+                {t('page.dashboard.charts.loading')}
               </div>
             }
             onRegister={force => chartForcersRef.current.push(force)}
           >
             <Suspense
-              fallback={<div className="text-xs text-muted-foreground">Loading chart…</div>}
+              fallback={
+                <div className="text-xs text-muted-foreground">
+                  {t('page.dashboard.charts.loading')}
+                </div>
+              }
             >
               <LineBarAreaComposedChart data={chartData} />
             </Suspense>
@@ -332,7 +370,7 @@ export default function Dashboard() {
       <section className="rounded-lg border p-4">
         <div className="mb-3 flex items-center gap-2">
           <Table size={18} />
-          <h3 className="text-lg font-medium">Data table</h3>
+          <h3 className="text-lg font-medium">{t('page.dashboard.table.title')}</h3>
         </div>
         <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
@@ -346,7 +384,7 @@ export default function Dashboard() {
             }}
           >
             <FileText size={16} />
-            <span>Export table PDF</span>
+            <span>{t('page.dashboard.actions.exportTablePdf')}</span>
           </button>
           <button
             type="button"
@@ -359,11 +397,17 @@ export default function Dashboard() {
             }}
           >
             <FileSpreadsheet size={16} />
-            <span>Export table Excel (all)</span>
+            <span>{t('page.dashboard.actions.exportTableExcelAll')}</span>
           </button>
         </div>
         <div ref={tableRef}>
-          <Suspense fallback={<div className="text-xs text-muted-foreground">Loading table…</div>}>
+          <Suspense
+            fallback={
+              <div className="text-xs text-muted-foreground">
+                {t('page.dashboard.table.loading')}
+              </div>
+            }
+          >
             <InvoiceTable
               onQuarterSummaryChange={handleQuarterSummary}
               onMonthlyTotalsChange={setMonthlyTotals}
