@@ -8,6 +8,36 @@
   "logout": "Logout",
   "goHome": "Go to home",
   "themeToggle": "Toggle theme",
+  "sidebar": {
+    "app": {
+      "title": "Signed in as",
+      "dashboard": "Dashboard",
+      "invoices": "Invoices Files",
+      "profile": "Profile",
+      "logout": "Logout",
+      "planAria": "Subscription plan: {{plan}}"
+    },
+    "admin": {
+      "title": "Admin",
+      "manageUsers": "Manage users",
+      "manageServices": "Manage services",
+      "logout": "Logout"
+    },
+    "quarterly": {
+      "panelAria": "Quarterly totals panel",
+      "title": "Quarterly Totals {{year}}",
+      "yearlyTotal": "Yearly Total",
+      "vat": "VAT",
+      "totalVat": "Total VAT ({{rate}}%): {{amount}} DH",
+      "allTimeTotal": "All-Time Total"
+    },
+    "quarterlyCompact": {
+      "aria": "Quarterly summary {{year}} (compact)",
+      "qTotals": "Q Totals {{year}}",
+      "year": "Year",
+      "allTime": "All-Time"
+    }
+  },
   "auth": {
     "login": {
       "title": "Login",

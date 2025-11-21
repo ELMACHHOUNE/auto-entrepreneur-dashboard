@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Select } from '@mantine/core';
 import { selectFilledStyles } from '@/components/ui/mantineStyles';
+import { useTranslation } from 'react-i18next';
 
 export interface QuarterlySidebarProps {
   year: number;
@@ -21,6 +22,7 @@ export default function QuarterlySidebar({
   rateDisplay,
   onRateDisplayChange,
 }: QuarterlySidebarProps) {
+  const { t } = useTranslation();
   const rateOptions = useMemo(
     () => [0.5, 1, 20].map(r => ({ value: r.toString(), label: r + '%' })),
     []
@@ -39,10 +41,10 @@ export default function QuarterlySidebar({
   }, [lifetimeTotals?.amount, rateDisplay]);
 
   return (
-    <div className="flex h-full flex-col gap-3" aria-label="Quarterly totals panel">
+    <div className="flex h-full flex-col gap-3" aria-label={t('sidebar.quarterly.panelAria')}>
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold tracking-wide text-foreground">
-          Quarterly Totals {year}
+          {t('sidebar.quarterly.title', { year })}
         </h4>
         <Select
           data={rateOptions}
@@ -75,27 +77,33 @@ export default function QuarterlySidebar({
       })}
       <div className="rounded-md border border-accent/60 p-3 bg-card/50 flex flex-col gap-1 text-foreground mt-2">
         <div className="text-xs font-medium flex justify-between">
-          <span>Yearly Total</span>
-          <span className="text-secondary">VAT</span>
+          <span>{t('sidebar.quarterly.yearlyTotal')}</span>
+          <span className="text-secondary">{t('sidebar.quarterly.vat')}</span>
         </div>
         <div className="text-sm font-semibold text-success">
           {yearTotals.amount.toLocaleString('en-US')} DH
         </div>
         <div className="text-xs text-secondary">
-          Total VAT ({rateDisplay}%): {yearlyVatAtRate.toLocaleString('en-US')} DH
+          {t('sidebar.quarterly.totalVat', {
+            rate: rateDisplay,
+            amount: yearlyVatAtRate.toLocaleString('en-US'),
+          })}
         </div>
       </div>
       {lifetimeTotals && (
         <div className="rounded-md border border-accent/60 p-3 bg-card/40 flex flex-col gap-1 text-foreground mt-1">
           <div className="text-xs font-medium flex justify-between">
-            <span>All-Time Total</span>
-            <span className="text-secondary">VAT</span>
+            <span>{t('sidebar.quarterly.allTimeTotal')}</span>
+            <span className="text-secondary">{t('sidebar.quarterly.vat')}</span>
           </div>
           <div className="text-sm font-semibold text-primary">
             {lifetimeTotals.amount.toLocaleString('en-US')} DH
           </div>
           <div className="text-xs text-secondary">
-            VAT ({rateDisplay}%): {lifetimeVatAtRate.toLocaleString('en-US')} DH
+            {t('sidebar.quarterly.totalVat', {
+              rate: rateDisplay,
+              amount: lifetimeVatAtRate.toLocaleString('en-US'),
+            })}
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 // Compact right sidebar content for quarterly totals when panel is collapsed
+import { useTranslation } from 'react-i18next';
 
 export interface QuarterlySidebarCompactProps {
   year: number;
@@ -14,9 +15,15 @@ export default function QuarterlySidebarCompact({
   yearTotals,
   lifetimeTotals,
 }: QuarterlySidebarCompactProps) {
+  const { t } = useTranslation();
   return (
-    <div className="flex h-full flex-col gap-4" aria-label={`Quarterly summary ${year} (compact)`}>
-      <div className="text-xs font-medium text-foreground/80 mb-1">Q Totals {year}</div>
+    <div
+      className="flex h-full flex-col gap-4"
+      aria-label={t('sidebar.quarterlyCompact.aria', { year })}
+    >
+      <div className="text-xs font-medium text-foreground/80 mb-1">
+        {t('sidebar.quarterlyCompact.qTotals', { year })}
+      </div>
       {(['T1', 'T2', 'T3', 'T4'] as const).map(label => {
         const base = quarterTotals[label] || 0;
         return (
@@ -33,7 +40,7 @@ export default function QuarterlySidebarCompact({
       })}
       {yearTotals && (
         <div className="rounded-md border border-accent/60 p-2 bg-card/70 flex items-center justify-between px-3 text-foreground mt-6">
-          <span className="text-sm font-medium">Year</span>
+          <span className="text-sm font-medium">{t('sidebar.quarterlyCompact.year')}</span>
           <span className="text-sm font-semibold text-success">
             {yearTotals.amount.toLocaleString('en-US')} DH
           </span>
@@ -41,7 +48,7 @@ export default function QuarterlySidebarCompact({
       )}
       {lifetimeTotals && (
         <div className="rounded-md border border-accent/60 p-2 bg-card/80 flex items-center justify-between px-3 text-foreground mt-2">
-          <span className="text-sm font-medium">All-Time</span>
+          <span className="text-sm font-medium">{t('sidebar.quarterlyCompact.allTime')}</span>
           <span className="text-sm font-semibold text-primary">
             {lifetimeTotals.amount.toLocaleString('en-US')} DH
           </span>

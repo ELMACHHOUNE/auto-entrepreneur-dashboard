@@ -1,6 +1,7 @@
 import { Users, Settings, LogOut } from 'lucide-react';
 import Sidebar, { type SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminSidebar({
   onNavigate,
@@ -10,13 +11,18 @@ export default function AdminSidebar({
   collapsed?: boolean;
 }) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const links: SidebarLink[] = [
-    { to: '/admin/users', label: 'Manage users', icon: <Users size={18} /> },
-    { to: '/admin/services', label: 'Manage services', icon: <Settings size={18} /> },
+    { to: '/admin/users', label: t('sidebar.admin.manageUsers'), icon: <Users size={18} /> },
+    {
+      to: '/admin/services',
+      label: t('sidebar.admin.manageServices'),
+      icon: <Settings size={18} />,
+    },
     {
       to: '/login',
-      label: 'Logout',
+      label: t('sidebar.admin.logout'),
       icon: <LogOut size={18} />,
       onClick: async () => {
         await logout();
@@ -30,7 +36,7 @@ export default function AdminSidebar({
 
   return (
     <Sidebar
-      title="Admin"
+      title={t('sidebar.admin.title')}
       userEmail={user?.email || ''}
       avatarUrl={user?.avatarUrl || null}
       collapsed={collapsed}

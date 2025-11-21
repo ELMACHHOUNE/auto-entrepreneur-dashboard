@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import Sidebar from '@/components/ui/sidebar';
 import type { SidebarLink } from '@/components/ui/sidebar';
+import { useTranslation } from 'react-i18next';
 
 export default function AppSidebar({
   onNavigate,
@@ -18,14 +19,15 @@ export default function AppSidebar({
   collapsed?: boolean;
 }) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const links: SidebarLink[] = [
-    { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { to: '/invoices', label: 'Invoices Files', icon: <FilesIcon size={18} /> },
-    { to: '/profile', label: 'Profile', icon: <UserIcon size={18} /> },
+    { to: '/dashboard', label: t('sidebar.app.dashboard'), icon: <LayoutDashboard size={18} /> },
+    { to: '/invoices', label: t('sidebar.app.invoices'), icon: <FilesIcon size={18} /> },
+    { to: '/profile', label: t('sidebar.app.profile'), icon: <UserIcon size={18} /> },
     {
       to: '/login',
-      label: 'Logout',
+      label: t('sidebar.app.logout'),
       icon: <LogOut size={18} />,
       onClick: async () => {
         // Trigger logout to clear auth state immediately so Navbar updates
@@ -54,8 +56,8 @@ export default function AppSidebar({
                 ? 'bg-linear-to-r from-accent/30 to-accent/10 text-accent border-accent/40'
                 : 'bg-muted text-muted-foreground border-border')
             }
-            aria-label={`Subscription plan: ${plan}`}
-            title={`Subscription plan: ${plan}`}
+            aria-label={t('sidebar.app.planAria', { plan })}
+            title={t('sidebar.app.planAria', { plan })}
           >
             {plan === 'premium' ? (
               <Crown size={14} aria-hidden />
@@ -67,7 +69,7 @@ export default function AppSidebar({
         </div>
       )}
       <Sidebar
-        title="Signed in as"
+        title={t('sidebar.app.title')}
         userEmail={user?.email || ''}
         avatarUrl={user?.avatarUrl || null}
         collapsed={collapsed}

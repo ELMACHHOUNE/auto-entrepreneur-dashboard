@@ -8,6 +8,36 @@
   "logout": "Déconnexion",
   "goHome": "Aller à l'accueil",
   "themeToggle": "Changer le thème",
+  "sidebar": {
+    "app": {
+      "title": "Connecté en tant que",
+      "dashboard": "Tableau de bord",
+      "invoices": "Fichiers factures",
+      "profile": "Profil",
+      "logout": "Déconnexion",
+      "planAria": "Forfait d'abonnement : {{plan}}"
+    },
+    "admin": {
+      "title": "Admin",
+      "manageUsers": "Gérer les utilisateurs",
+      "manageServices": "Gérer les services",
+      "logout": "Déconnexion"
+    },
+    "quarterly": {
+      "panelAria": "Panneau des totaux trimestriels",
+      "title": "Totaux trimestriels {{year}}",
+      "yearlyTotal": "Total annuel",
+      "vat": "TVA",
+      "totalVat": "TVA totale ({{rate}} %) : {{amount}} DH",
+      "allTimeTotal": "Total historique"
+    },
+    "quarterlyCompact": {
+      "aria": "Récapitulatif trimestriel {{year}} (compact)",
+      "qTotals": "Totaux T {{year}}",
+      "year": "Année",
+      "allTime": "Historique"
+    }
+  },
   "auth": {
     "login": {
       "title": "Connexion",
