@@ -8,6 +8,7 @@ import { MagicCard } from '@/components/ui/magic-card';
 import AlertBanner from '@/components/ui/alert-banner';
 import AuthSplit from '@/components/layout/AuthSplit';
 import { Eye, EyeOff, Mail, Lock, LogIn, Chrome } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type ApiError = { response?: { data?: { error?: string } } };
 
@@ -15,6 +16,7 @@ export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
   const loc = useLocation() as Location & { state?: { from?: { pathname?: string } } };
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -53,10 +55,8 @@ export default function Login() {
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="w-full max-w-sm p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">
-            <h3 className="text-lg font-semibold">Login</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter your credentials to access your account
-            </p>
+            <h3 className="text-lg font-semibold">{t('auth.login.title')}</h3>
+            <p className="text-sm text-muted-foreground">{t('auth.login.subtitle')}</p>
           </div>
           <div className="p-4">
             <form id="login-form" onSubmit={onSubmit} className="space-y-3">
@@ -67,7 +67,7 @@ export default function Login() {
                 />
                 <input
                   className="w-full border p-2 pl-9 rounded"
-                  placeholder="Email"
+                  placeholder={t('auth.login.emailPlaceholder')}
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -80,14 +80,16 @@ export default function Login() {
                 />
                 <input
                   className="w-full border p-2 pl-9 pr-10 rounded"
-                  placeholder="Password"
+                  placeholder={t('auth.login.passwordPlaceholder')}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={
+                    showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')
+                  }
                   onClick={() => setShowPassword(s => !s)}
                   className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                 >
@@ -97,8 +99,8 @@ export default function Login() {
               <AlertBanner
                 open={Boolean(err)}
                 variant="error"
-                title="Login failed"
-                description={err || 'Login failed'}
+                title={t('auth.login.failedTitle')}
+                description={err || t('auth.login.failedGeneric')}
                 onClose={() => setErr(null)}
               />
             </form>
@@ -108,7 +110,7 @@ export default function Login() {
               <InteractiveHoverButton type="submit" form="login-form">
                 <span className="inline-flex items-center gap-2">
                   <LogIn size={16} />
-                  Login
+                  {t('auth.login.submit')}
                 </span>
               </InteractiveHoverButton>
               <InteractiveHoverButton
@@ -117,14 +119,14 @@ export default function Login() {
               >
                 <span className="inline-flex items-center gap-2">
                   <Chrome size={16} />
-                  Continue with Google
+                  {t('auth.login.google')}
                 </span>
               </InteractiveHoverButton>
             </div>
             <p className="mt-3 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              {t('auth.login.noAccount')}
               <Link className="text-primary underline-offset-4 hover:underline" to="/register">
-                Register
+                {t('auth.login.registerLink')}
               </Link>
             </p>
           </div>

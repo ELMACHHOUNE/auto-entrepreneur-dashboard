@@ -1,0 +1,72 @@
+{
+  "brand": "AutoDash",
+  "home": "Accueil",
+  "dashboard": "Tableau de bord",
+  "admin": "Admin",
+  "login": "Connexion",
+  "register": "S'inscrire",
+  "logout": "Déconnexion",
+  "goHome": "Aller à l'accueil",
+  "themeToggle": "Changer le thème",
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Entrez vos identifiants pour accéder à votre compte",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Mot de passe",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "failedTitle": "Échec de la connexion",
+      "failedGeneric": "Échec de la connexion",
+      "submit": "Se connecter",
+      "google": "Continuer avec Google",
+      "noAccount": "Pas de compte ?",
+      "registerLink": "S'inscrire"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Renseignez vos informations pour commencer",
+      "profilePicture": "Photo de profil (optionnel)",
+      "profilePictureHelp": "Image carrée (1:1). PNG, JPG, GIF ou WEBP jusqu'à 2 Mo.",
+      "noAvatar": "Pas d'avatar",
+      "clearSelection": "Effacer la sélection",
+      "uploadCta": "Cliquer pour téléverser",
+      "uploadOrDrag": "ou glisser-déposer",
+      "uploadTypes": "PNG, JPG, GIF, WEBP (max 2 Mo)",
+      "fullNamePlaceholder": "Nom complet",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Mot de passe",
+      "phonePlaceholder": "Téléphone",
+      "icePlaceholder": "ICE (15 chiffres)",
+      "selectProfileType": "Sélectionner le type de profil",
+      "profileTypes": {
+        "guide": "Guide auto-entrepreneur",
+        "company": "Guide entreprise"
+      },
+      "selectCategory": "Sélectionner une catégorie",
+      "selectType": "Sélectionner un type",
+      "selectActivity": "Sélectionner une activité",
+      "selectCompanyTypeCode": "Sélectionner le code type d'entreprise",
+      "errors": {
+        "fullNameRequired": "Le nom complet est requis",
+        "phoneInvalid": "Entrez un numéro de téléphone valide",
+        "iceInvalid": "L'ICE doit comporter 15 chiffres",
+        "profileTypeRequired": "Veuillez sélectionner un type de profil",
+        "categoryRequired": "Sélectionnez une catégorie",
+        "typeRequired": "Sélectionnez un type",
+        "activityRequired": "Sélectionnez une activité",
+        "companyTypeCodeRequired": "Sélectionnez le code type d'entreprise",
+        "emailRequired": "L'e-mail est requis",
+        "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+        "fixAndRetry": "Corrigez les erreurs puis réessayez",
+        "avatarUploadFailed": "Compte créé, mais l'avatar n'a pas pu être téléchargé. Veuillez réessayer.",
+        "failedTitle": "Échec de l'inscription",
+        "failedGeneric": "Échec de l'inscription"
+      },
+      "submit": "Créer un compte",
+      "google": "Continuer avec Google",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "loginLink": "Se connecter"
+    }
+  }
+}

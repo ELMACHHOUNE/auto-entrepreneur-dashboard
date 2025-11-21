@@ -11,6 +11,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import './index.css';
 import BackgroundGrid from '@/components/layout/BackgroundGrid';
 import { initHistoryService } from '@/services/historyService';
+import '@/i18n';
 
 // Initialize history service (idempotent)
 initHistoryService();

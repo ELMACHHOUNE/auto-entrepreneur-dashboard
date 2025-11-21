@@ -11,12 +11,23 @@ import {
   MobileNavToggle,
 } from '@/components/ui/resizable-navbar';
 import { Menu, MenuItem } from '@/components/ui/navbar-menu';
+import { useTranslation } from 'react-i18next';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language?.startsWith('fr') ? 'fr' : 'en';
+  const setLang = (lng: 'en' | 'fr') => {
+    i18n.changeLanguage(lng);
+    try {
+      localStorage.setItem('lang', lng);
+    } catch {
+      /* ignore write failures (e.g., privacy mode) */
+    }
+  };
 
   return (
     <RNavbar className="sticky top-0 z-50 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60 border-b border-border">
@@ -25,9 +36,9 @@ export default function Navbar() {
         <button
           onClick={() => nav('/')}
           className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-semibold text-foreground hover:text-primary"
-          aria-label="Go to home"
+          aria-label={t('goHome')}
         >
-          <span className="text-foreground hover:underline hover:text-accent">AutoDash</span>
+          <span className="text-foreground hover:underline hover:text-accent">{t('brand')}</span>
         </button>
 
         {/* Center: Old styled menu */}
@@ -39,20 +50,20 @@ export default function Navbar() {
             <MenuItem
               setActive={(val: string) => setActive(val)}
               active={active}
-              item="Home"
+              item={t('home')}
               onClick={() => nav('/')}
             />
             <MenuItem
               setActive={(val: string) => setActive(val)}
               active={active}
-              item="Dashboard"
+              item={t('dashboard')}
               onClick={() => nav('/dashboard')}
             />
             {user?.role === 'admin' && (
               <MenuItem
                 setActive={(val: string) => setActive(val)}
                 active={active}
-                item="Admin"
+                item={t('admin')}
                 onClick={() => nav('/admin')}
               />
             )}
@@ -60,10 +71,37 @@ export default function Navbar() {
         </div>
 
         {/* Right: Theme toggle + Auth actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Language toggle */}
+          <div className="flex items-center gap-1 rounded-md border border-border bg-card p-1">
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              className={`px-2 py-1 text-xs rounded ${
+                currentLang === 'en'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent/40'
+              }`}
+              aria-pressed={currentLang === 'en'}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('fr')}
+              className={`px-2 py-1 text-xs rounded ${
+                currentLang === 'fr'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent/40'
+              }`}
+              aria-pressed={currentLang === 'fr'}
+            >
+              FR
+            </button>
+          </div>
           <AnimatedThemeToggler
             className="p-1.5 rounded hover:bg-accent text-foreground"
-            aria-label="Toggle theme"
+            aria-label={t('themeToggle')}
           />
           {user ? (
             <button
@@ -73,7 +111,7 @@ export default function Navbar() {
                 nav('/', { replace: true });
               }}
             >
-              Logout
+              {t('logout')}
             </button>
           ) : (
             <>
@@ -81,13 +119,13 @@ export default function Navbar() {
                 className="text-foreground hover:text-accent hover:underline"
                 onClick={() => nav('/login')}
               >
-                Login
+                {t('login')}
               </button>
               <button
                 className="text-foreground hover:text-accent hover:underline"
                 onClick={() => nav('/register')}
               >
-                Register
+                {t('register')}
               </button>
             </>
           )}
@@ -100,21 +138,46 @@ export default function Navbar() {
           <button
             onClick={() => nav('/')}
             className="relative z-20 flex items-center space-x-2 px-2 py-1 text-sm font-semibold text-foreground hover:text-primary"
-            aria-label="Go to home"
+            aria-label={t('goHome')}
           >
-            <span className="text-foreground">AutoDash</span>
+            <span className="text-foreground">{t('brand')}</span>
           </button>
 
           <div className="flex items-center gap-3">
             <AnimatedThemeToggler
               className="p-1.5 rounded hover:bg-accent text-foreground"
-              aria-label="Toggle theme"
+              aria-label={t('themeToggle')}
             />
             <MobileNavToggle isOpen={mobileOpen} onClick={() => setMobileOpen(v => !v)} />
           </div>
         </MobileNavHeader>
 
         <MobileNavMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)}>
+          {/* Language toggle (mobile) */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded ${
+                currentLang === 'en'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent/40'
+              }`}
+              onClick={() => setLang('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded ${
+                currentLang === 'fr'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground hover:bg-accent/40'
+              }`}
+              onClick={() => setLang('fr')}
+            >
+              FR
+            </button>
+          </div>
           <button
             className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
             onClick={() => {
@@ -122,7 +185,7 @@ export default function Navbar() {
               setMobileOpen(false);
             }}
           >
-            Home
+            {t('home')}
           </button>
           <button
             className="px-2 py-1 text-left text-foreground hover:bg-accent rounded-md"
@@ -131,7 +194,7 @@ export default function Navbar() {
               setMobileOpen(false);
             }}
           >
-            Dashboard
+            {t('dashboard')}
           </button>
           {user?.role === 'admin' && (
             <button
@@ -141,7 +204,7 @@ export default function Navbar() {
                 setMobileOpen(false);
               }}
             >
-              Admin
+              {t('admin')}
             </button>
           )}
           <div className="h-px w-full bg-border my-2" />
@@ -154,7 +217,7 @@ export default function Navbar() {
                 nav('/', { replace: true });
               }}
             >
-              Logout
+              {t('logout')}
             </button>
           ) : (
             <div className="flex flex-col gap-2">
@@ -165,7 +228,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                 }}
               >
-                Login
+                {t('login')}
               </button>
               <button
                 className="px-2 py-1 text-left text-foreground hover:bg-accent/40 rounded-md"
@@ -174,7 +237,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                 }}
               >
-                Register
+                {t('register')}
               </button>
             </div>
           )}

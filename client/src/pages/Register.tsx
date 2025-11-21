@@ -21,12 +21,14 @@ import {
   EyeOff,
   CloudUpload,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type ApiError = { response?: { data?: { error?: string } } };
 
 export default function Register() {
   const { register, updateAvatar } = useAuth();
   const nav = useNavigate();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -54,27 +56,30 @@ export default function Register() {
 
   const errors = useMemo(() => {
     const e: Partial<Record<string, string>> = {};
-    if (!form.fullName || form.fullName.trim().length < 2) e.fullName = 'Full name is required';
+    if (!form.fullName || form.fullName.trim().length < 2)
+      e.fullName = t('auth.register.errors.fullNameRequired');
     // Phone: allow +, spaces, parentheses, dashes; must contain 9-15 digits total
     const digits = form.phone.replace(/\D/g, '');
-    if (!digits || digits.length < 9 || digits.length > 15) e.phone = 'Enter a valid phone number';
+    if (!digits || digits.length < 9 || digits.length > 15)
+      e.phone = t('auth.register.errors.phoneInvalid');
     // ICE: 15 digits
     const iceDigits = form.ICE.replace(/\D/g, '');
-    if (iceDigits.length !== 15) e.ICE = 'ICE must be 15 digits';
+    if (iceDigits.length !== 15) e.ICE = t('auth.register.errors.iceInvalid');
     // New selection flow validation
-    if (!form.profileKind) e.profileKind = 'Please select a profile type';
+    if (!form.profileKind) e.profileKind = t('auth.register.errors.profileTypeRequired');
     if (form.profileKind === 'guide_auto_entrepreneur') {
-      if (!form.serviceCategory) e.serviceCategory = 'Select a category';
-      if (!form.serviceType) e.serviceType = 'Select a type';
-      if (!form.serviceActivity) e.serviceActivity = 'Select an activity';
+      if (!form.serviceCategory) e.serviceCategory = t('auth.register.errors.categoryRequired');
+      if (!form.serviceType) e.serviceType = t('auth.register.errors.typeRequired');
+      if (!form.serviceActivity) e.serviceActivity = t('auth.register.errors.activityRequired');
     } else if (form.profileKind === 'company_guide') {
-      if (!form.companyTypeCode) e.companyTypeCode = 'Select company type code';
+      if (!form.companyTypeCode)
+        e.companyTypeCode = t('auth.register.errors.companyTypeCodeRequired');
     }
-    if (!form.email) e.email = 'Email is required';
+    if (!form.email) e.email = t('auth.register.errors.emailRequired');
     if (!form.password || form.password.length < 6)
-      e.password = 'Password must be at least 6 characters';
+      e.password = t('auth.register.errors.passwordTooShort');
     return e;
-  }, [form]);
+  }, [form, t]);
 
   const isValid = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
@@ -84,7 +89,7 @@ export default function Register() {
     e.preventDefault();
     setErr(null);
     if (!isValid) {
-      setErr('Please fix the errors and try again');
+      setErr(t('auth.register.errors.fixAndRetry'));
       return;
     }
     try {
@@ -116,14 +121,14 @@ export default function Register() {
           await updateAvatar(avatarFile);
         } catch {
           // Surface avatar upload failure but keep the user on the page to retry
-          setErr('Account created, but failed to upload avatar. Please try again.');
+          setErr(t('auth.register.errors.avatarUploadFailed'));
           return;
         }
       }
       nav('/dashboard', { replace: true });
     } catch (e: unknown) {
       const apiErr = e as ApiError;
-      setErr(apiErr.response?.data?.error || 'Registration failed');
+      setErr(apiErr.response?.data?.error || t('auth.register.errors.failedGeneric'));
     }
   };
 
@@ -132,8 +137,8 @@ export default function Register() {
       <MagicCard gradientColor={isDark ? '#262626' : '#D9D9D955'} className="h-full w-full p-0">
         <div className="flex h-full flex-col">
           <div className="border-border border-b p-4 [.border-b]:pb-4">
-            <h3 className="text-lg font-semibold">Create account</h3>
-            <p className="text-sm ">Fill in your details to get started</p>
+            <h3 className="text-lg font-semibold">{t('auth.register.title')}</h3>
+            <p className="text-sm ">{t('auth.register.subtitle')}</p>
           </div>
           <div className="flex-1 p-4">
             <form id="register-form" onSubmit={onSubmit} className="space-y-3">
@@ -142,9 +147,11 @@ export default function Register() {
                 <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-5 sm:gap-6">
                   {/* Left: label + helper text */}
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium">Profile picture (optional)</label>
+                    <label className="block text-sm font-medium">
+                      {t('auth.register.profilePicture')}
+                    </label>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Square image (1:1). PNG, JPG, GIF, or WEBP up to 2MB.
+                      {t('auth.register.profilePictureHelp')}
                     </p>
                   </div>
 
@@ -162,7 +169,9 @@ export default function Register() {
                           loading="lazy"
                         />
                       ) : (
-                        <span className="text-xs text-muted-foreground">No avatar</span>
+                        <span className="text-xs text-muted-foreground">
+                          {t('auth.register.noAvatar')}
+                        </span>
                       )}
                     </div>
                     {avatarFile && (
@@ -171,7 +180,7 @@ export default function Register() {
                         onClick={() => setAvatarFile(null)}
                         className="text-xs text-muted-foreground underline-offset-2 hover:underline"
                       >
-                        Clear selection
+                        {t('auth.register.clearSelection')}
                       </button>
                     )}
                   </div>
@@ -192,7 +201,7 @@ export default function Register() {
                       className="w-full"
                     >
                       <FileInput
-                        aria-label="Upload profile picture"
+                        aria-label={t('auth.register.profilePicture')}
                         className="rounded-md border border-dashed border-muted bg-background/60 outline-none transition hover:bg-muted/30"
                       >
                         <div className="flex w-full flex-col items-center justify-center px-3 py-3 text-center text-foreground">
@@ -201,11 +210,11 @@ export default function Register() {
                             aria-hidden="true"
                           />
                           <p className="mb-1 text-xs">
-                            <span className="font-semibold">Click to upload</span>&nbsp; or drag and
-                            drop
+                            <span className="font-semibold">{t('auth.register.uploadCta')}</span>
+                            &nbsp; {t('auth.register.uploadOrDrag')}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
-                            PNG, JPG, GIF, WEBP (max 2MB)
+                            {t('auth.register.uploadTypes')}
                           </p>
                         </div>
                       </FileInput>
@@ -221,7 +230,7 @@ export default function Register() {
                 />
                 <input
                   className="w-full border p-2 pl-9 rounded"
-                  placeholder="Full name"
+                  placeholder={t('auth.register.fullNamePlaceholder')}
                   value={form.fullName}
                   onChange={e => setForm({ ...form, fullName: e.target.value })}
                 />
@@ -234,7 +243,7 @@ export default function Register() {
                 />
                 <input
                   className="w-full border p-2 pl-9 rounded"
-                  placeholder="Email"
+                  placeholder={t('auth.register.emailPlaceholder')}
                   type="email"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
@@ -248,14 +257,16 @@ export default function Register() {
                 />
                 <input
                   className="w-full border p-2 pl-9 pr-10 rounded"
-                  placeholder="Password"
+                  placeholder={t('auth.register.passwordPlaceholder')}
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={
+                    showPassword ? t('auth.login.hidePassword') : t('auth.login.showPassword')
+                  }
                   onClick={() => setShowPassword(s => !s)}
                   className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                 >
@@ -271,7 +282,7 @@ export default function Register() {
                 />
                 <input
                   className="w-full border p-2 pl-9 rounded"
-                  placeholder="Phone"
+                  placeholder={t('auth.register.phonePlaceholder')}
                   value={form.phone}
                   onChange={e => setForm({ ...form, phone: e.target.value })}
                 />
@@ -285,7 +296,7 @@ export default function Register() {
                 />
                 <input
                   className="w-full border p-2 pl-9 rounded"
-                  placeholder="ICE (15 digits)"
+                  placeholder={t('auth.register.icePlaceholder')}
                   value={form.ICE}
                   onChange={e => setForm({ ...form, ICE: e.target.value })}
                 />
@@ -315,9 +326,11 @@ export default function Register() {
                     }))
                   }
                 >
-                  <option value="">Select profile type</option>
-                  <option value="guide_auto_entrepreneur">Auto-entrepreneur guide</option>
-                  <option value="company_guide">Company guide</option>
+                  <option value="">{t('auth.register.selectProfileType')}</option>
+                  <option value="guide_auto_entrepreneur">
+                    {t('auth.register.profileTypes.guide')}
+                  </option>
+                  <option value="company_guide">{t('auth.register.profileTypes.company')}</option>
                 </select>
               </div>
               {errors.profileKind && <p className="text-red-600 text-sm">{errors.profileKind}</p>}
@@ -344,7 +357,7 @@ export default function Register() {
                         }));
                       }}
                     >
-                      <option value="">Select category</option>
+                      <option value="">{t('auth.register.selectCategory')}</option>
                       {guideData.guide_auto_entrepreneur.sections.map(sec => (
                         <option key={sec.category} value={sec.category}>
                           {sec.category}
@@ -362,7 +375,7 @@ export default function Register() {
                       value={form.serviceType}
                       onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))}
                     >
-                      <option value="">Select type</option>
+                      <option value="">{t('auth.register.selectType')}</option>
                       {/* Only one type per category in the data; offer whatever is on the section */}
                       {form.serviceCategory &&
                         (() => {
@@ -386,7 +399,7 @@ export default function Register() {
                       onChange={e => setForm(f => ({ ...f, serviceActivity: e.target.value }))}
                       disabled={!form.serviceCategory}
                     >
-                      <option value="">Select activity</option>
+                      <option value="">{t('auth.register.selectActivity')}</option>
                       {form.serviceCategory &&
                         guideData.guide_auto_entrepreneur.sections
                           .find(s => s.category === form.serviceCategory)
@@ -409,10 +422,10 @@ export default function Register() {
                     value={form.companyTypeCode}
                     onChange={e => setForm(f => ({ ...f, companyTypeCode: e.target.value }))}
                   >
-                    <option value="">Select company type code</option>
-                    {guideData.company_guide.types.map(t => (
-                      <option key={t.code} value={t.code}>
-                        {t.code}
+                    <option value="">{t('auth.register.selectCompanyTypeCode')}</option>
+                    {guideData.company_guide.types.map(ti => (
+                      <option key={ti.code} value={ti.code}>
+                        {ti.code}
                       </option>
                     ))}
                   </select>
@@ -424,8 +437,8 @@ export default function Register() {
               <AlertBanner
                 open={Boolean(err)}
                 variant="error"
-                title="Registration failed"
-                description={err || 'Registration failed'}
+                title={t('auth.register.errors.failedTitle')}
+                description={err || t('auth.register.errors.failedGeneric')}
                 onClose={() => setErr(null)}
               />
             </form>
@@ -440,7 +453,7 @@ export default function Register() {
               >
                 <span className="inline-flex items-center gap-2">
                   <UserPlus size={16} />
-                  Create account
+                  {t('auth.register.submit')}
                 </span>
               </InteractiveHoverButton>
               <InteractiveHoverButton
@@ -449,14 +462,14 @@ export default function Register() {
               >
                 <span className="inline-flex items-center gap-2">
                   <Chrome size={16} />
-                  Continue with Google
+                  {t('auth.register.google')}
                 </span>
               </InteractiveHoverButton>
             </div>
             <p className="mt-3 text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
+              {t('auth.register.haveAccount')}
               <Link className="text-primary underline-offset-4 hover:underline" to="/login">
-                Login
+                {t('auth.register.loginLink')}
               </Link>
             </p>
           </div>

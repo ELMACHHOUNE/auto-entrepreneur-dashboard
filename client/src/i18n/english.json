@@ -1,0 +1,72 @@
+{
+  "brand": "AutoDash",
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "admin": "Admin",
+  "login": "Login",
+  "register": "Register",
+  "logout": "Logout",
+  "goHome": "Go to home",
+  "themeToggle": "Toggle theme",
+  "auth": {
+    "login": {
+      "title": "Login",
+      "subtitle": "Enter your credentials to access your account",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "failedTitle": "Login failed",
+      "failedGeneric": "Login failed",
+      "submit": "Login",
+      "google": "Continue with Google",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Register"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "Fill in your details to get started",
+      "profilePicture": "Profile picture (optional)",
+      "profilePictureHelp": "Square image (1:1). PNG, JPG, GIF, or WEBP up to 2MB.",
+      "noAvatar": "No avatar",
+      "clearSelection": "Clear selection",
+      "uploadCta": "Click to upload",
+      "uploadOrDrag": "or drag and drop",
+      "uploadTypes": "PNG, JPG, GIF, WEBP (max 2MB)",
+      "fullNamePlaceholder": "Full name",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "phonePlaceholder": "Phone",
+      "icePlaceholder": "ICE (15 digits)",
+      "selectProfileType": "Select profile type",
+      "profileTypes": {
+        "guide": "Auto-entrepreneur guide",
+        "company": "Company guide"
+      },
+      "selectCategory": "Select category",
+      "selectType": "Select type",
+      "selectActivity": "Select activity",
+      "selectCompanyTypeCode": "Select company type code",
+      "errors": {
+        "fullNameRequired": "Full name is required",
+        "phoneInvalid": "Enter a valid phone number",
+        "iceInvalid": "ICE must be 15 digits",
+        "profileTypeRequired": "Please select a profile type",
+        "categoryRequired": "Select a category",
+        "typeRequired": "Select a type",
+        "activityRequired": "Select an activity",
+        "companyTypeCodeRequired": "Select company type code",
+        "emailRequired": "Email is required",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "fixAndRetry": "Please fix the errors and try again",
+        "avatarUploadFailed": "Account created, but failed to upload avatar. Please try again.",
+        "failedTitle": "Registration failed",
+        "failedGeneric": "Registration failed"
+      },
+      "submit": "Create account",
+      "google": "Continue with Google",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Login"
+    }
+  }
+}
